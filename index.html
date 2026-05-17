@@ -482,7 +482,13 @@ const SECTIONS=[
 const RL={critical:"حرج",high:"عالي الخطورة",medium:"متوسط",low:"منخفض"};
 const RW={critical:4,high:3,medium:2,low:1};
 const TOTAL_ITEMS=SECTIONS.reduce((a,s)=>a+s.items.length,0);
-
+const IDB_NAME='inspector_backup',IDB_STORE='session',IDB_KEY='current';
+let idb=null;
+function openIDB(){return new Promise(resolve=>{const req=indexedDB.open(IDB_NAME,1);req.onupgradeneeded=e=>e.target.result.createObjectStore(IDB_STORE);req.onsuccess=e=>{idb=e.target.result;resolve(idb)};req.onerror=()=>resolve(null)});}
+function saveToIDB(){if(!idb||!sessionKey)return;try{const tx=idb.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).put({sessionKey,sessionMeta,state:JSON.parse(JSON.stringify(state)),savedAt:new Date().toISOString()},IDB_KEY);}catch(e){}}
+function loadFromIDB(){return new Promise(resolve=>{if(!idb){resolve(null);return;}try{const tx=idb.transaction(IDB_STORE,'readonly');const req=tx.objectStore(IDB_STORE).get(IDB_KEY);req.onsuccess=e=>resolve(e.target.result||null);req.onerror=()=>resolve(null);}catch(e){resolve(null);}});}
+function clearIDB(){if(!idb)return;try{const tx=idb.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).delete(IDB_KEY);}catch(e){}}
+openIDB().then(()=>{loadFromIDB().then(saved=>{if(!saved)return;const ago=Math.round((Date.now()-new Date(saved.savedAt))/60000);if(ago>1440){clearIDB();return;}if(confirm(`🔄 يوجد جلسة غير مكتملة للمفتش "${saved.sessionMeta?.inspector||''}"\nآخر حفظ: منذ ${ago} دقيقة\nهل تريد استعادتها؟`)){sessionKey=saved.sessionKey;sessionMeta=saved.sessionMeta;state=saved.state;document.getElementById('setupScreen').style.display='none';document.getElementById('sessionInfo').innerHTML=`<span>👤 ${sessionMeta.inspector}</span> &nbsp;|&nbsp; <span>🏥 ${sessionMeta.center}</span> &nbsp;|&nbsp; <span>📅 ${sessionMeta.date}</span> &nbsp;|&nbsp; <span>🔄 جولة ${sessionMeta.round}</span>`;renderAll();setSyncStatus('saving');autoSave();toast('✅ تم استعادة الجلسة بنجاح');}else{clearIDB();}});});
 let state={};
 let curFilter='all';
 let sessionMeta={};
@@ -541,7 +547,7 @@ function setSyncStatus(status){
 
 function autoSave(){
   if(autoSaveTimer) clearTimeout(autoSaveTimer);
-  autoSaveTimer=setTimeout(()=>saveToFirebase(),1500);
+autoSaveTimer=setTimeout(()=>{saveToFirebase();saveToIDB();},1500);
 }
 
 function saveToFirebase(){
@@ -780,6 +786,7 @@ document.getElementById('lb').onclick=closeLB;
 
 function resetAll(){
   if(!confirm('هل تريد بدء جلسة جديدة؟ سيتم مسح البيانات الحالية.')) return;
+  clearIDB();
   state={};sessionKey=null;sessionMeta={};
   document.getElementById('setupScreen').style.display='flex';
   document.getElementById('secs').innerHTML='';
