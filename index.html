@@ -5,16 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>قائمة التحقق - الزائر السري - قطاع الصحة العامة بالرس</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ============================================================
-// 🔥 إعدادات Firebase — ضع بياناتك هنا
+// 🔥 إعدادات Firebase 
 // ============================================================
 const firebaseConfig = {
-  apiKey: "ضع-api-key-هنا", 
+  apiKey: "ضع-api-key-هنا",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
   databaseURL: "https://mystery-shopper-ras-65e4d-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "mystery-shopper-ras-65e4d",
@@ -22,7 +21,6 @@ const firebaseConfig = {
   messagingSenderId: "ضع-sender-id-هنا",
   appId: "ضع-app-id-هنا"
 };
-
 // ============================================================
 
 const app = initializeApp(firebaseConfig);
@@ -37,7 +35,7 @@ window.dispatchEvent(new Event('firebase-ready'));
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a1a2e;direction:rtl;font-size:14px}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a1a2e;direction:rtl;font-size:14px;overflow-x:hidden}
 :root{
   --pri:#1e3a5f;--pri2:#2d5986;--pri3:#3b72b0;
   --ok:#1a7a4a;--ok-bg:#e8f7ee;--ok-br:#6bcf9a;
@@ -161,15 +159,34 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a
 .setup-field input:focus,.setup-field select:focus{outline:none;border-color:var(--pri)}
 .setup-btn{width:100%;padding:12px;background:var(--pri);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer;margin-top:8px;font-family:inherit}
 .setup-btn:hover{background:var(--pri2)}
+
+/* =========================================
+   📱 إعدادات توافق الجوال (تمنع خروج الشاشة)
+   ========================================= */
+@media (max-width: 768px) {
+  .hdr, .sbar, .fbar, .secs { padding-left: 12px; padding-right: 12px; }
+  .hdr-top { flex-direction: column; align-items: stretch; gap: 12px; }
+  .hdr-actions { justify-content: space-between; width: 100%; }
+  .imain { flex-direction: column; align-items: stretch; padding: 12px; }
+  .eval-wrap { align-items: stretch; width: 100%; margin-top: 10px; }
+  .ebts { display: flex; width: 100%; justify-content: space-between; gap: 6px; }
+  .ebt { flex: 1; width: auto; padding: 8px 0; font-size: 11px; }
+  .setup-card { padding: 20px; }
+  .fsearch { width: 100%; margin-top: 8px; margin-right: 0; }
+  .fbar { padding-bottom: 12px; }
+  .fbtn { flex: 1; min-width: 30%; text-align: center; }
+  .spills { justify-content: center; width: 100%; margin-top: 8px; }
+  .prog-wrap { width: 100%; margin-top: 8px; }
+  .idetail { padding-right: 12px; }
+}
 </style>
 </head>
 <body>
 
-<!-- SETUP SCREEN -->
 <div class="setup-screen" id="setupScreen">
   <div class="setup-card">
     <h2>📋 الزائر السري — بدء جلسة جديدة</h2>
-    <p>قطاع الصحة العامة بمحافظة الرس | وحدة الجودة</p>
+    <p>قطاع الصحة العامة بمحافظة الرس</p>
     <div class="setup-field">
       <label>اسم المفتش *</label>
       <input id="setupInspector" placeholder="أدخل اسمك الكامل..." required>
@@ -194,12 +211,11 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a
   </div>
 </div>
 
-<!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
     <div style="display:flex;flex-direction:column;gap:3px">
       <h1>📋 قائمة التحقق — الزائر السري</h1>
-      <div style="font-size:11px;opacity:.8">قطاع الصحة العامة بمحافظة الرس | وحدة الجودة</div>
+      <div style="font-size:11px;opacity:.8">قطاع الصحة العامة بمحافظة الرس</div>
     </div>
     <div class="hdr-actions">
       <div class="sync-status" id="syncStatus">
@@ -213,7 +229,6 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a
   <div class="hdr-meta" id="sessionInfo" style="opacity:.85;font-size:12px;margin-top:8px;gap:16px"></div>
 </div>
 
-<!-- SCORE BAR -->
 <div class="sbar">
   <div>
     <div class="score-num" id="totalScore">0%</div>
@@ -235,7 +250,6 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a
   </div>
 </div>
 
-<!-- FILTER BAR -->
 <div class="fbar">
   <span class="fbar-label">تصفية:</span>
   <button class="fbtn act" onclick="setFilter(this,'all')">الكل</button>
@@ -249,10 +263,8 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a
   <input class="fsearch" type="text" placeholder="🔍 بحث في البنود..." oninput="applyFilter()" id="searchBox">
 </div>
 
-<!-- SECTIONS -->
 <div class="secs" id="secs"></div>
 
-<!-- LIGHTBOX -->
 <div class="lb" id="lb" onclick="closeLB()">
   <div class="lb-close">✕</div>
   <img id="lbImg" src="" alt="">
@@ -799,8 +811,8 @@ setTimeout(()=>{
 
 <div style="background:#1e3a5f;color:rgba(255,255,255,.75);text-align:center;padding:14px 20px;font-size:12px;direction:rtl;border-top:3px solid #2d5986">
   <div style="max-width:900px;margin:0 auto">
-    <div style="font-size:13px;font-weight:700;color:#fff">قطاع الصحة العامة بمحافظة الرس — وحدة الجودة</div>
-    <div>إعداد: <span style="color:#93c5fd;font-weight:700">د/ منتصر بشير الحسن</span> | وحدة الجودة بالقطاع</div>
+    <div style="font-size:13px;font-weight:700;color:#fff">قطاع الصحة العامة بمحافظة الرس</div>
+    <div>إعداد: <span style="color:#93c5fd;font-weight:700">د/ منتصر بشير الحسن</span></div>
   </div>
 </div>
 </body>
