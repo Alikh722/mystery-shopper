@@ -13,13 +13,13 @@ import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/fi
 // 🔥 إعدادات Firebase 
 // ============================================================
 const firebaseConfig = {
-  apiKey: "ضع-api-key-هنا",
+  apiKey: "AIzaSyDgwu6EfFZ10d_tT6X49kp6krpd6VtIP-k",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
   databaseURL: "https://mystery-shopper-ras-65e4d-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "mystery-shopper-ras-65e4d",
-  storageBucket: "mystery-shopper-ras-65e4d.appspot.com",
-  messagingSenderId: "ضع-sender-id-هنا",
-  appId: "ضع-app-id-هنا"
+  storageBucket: "mystery-shopper-ras-65e4d.firebasestorage.app",
+  messagingSenderId: "1017475756161",
+  appId: "1:1017475756161:web:7fb3c1b10a06093379dd80"
 };
 // ============================================================
 
@@ -801,12 +801,16 @@ window.addEventListener('scroll',()=>{
 document.getElementById('setupDate').value=new Date().toISOString().split('T')[0];
 
 // Firebase connection monitoring
-window.addEventListener('firebase-ready',()=>{
+if(window._firebaseReady){
   setSyncStatus('saved');
-});
-setTimeout(()=>{
-  if(!window._firebaseReady) setSyncStatus('offline');
-},5000);
+}else{
+  window.addEventListener('firebase-ready',()=>{
+    setSyncStatus('saved');
+  });
+  setTimeout(()=>{
+    if(!window._firebaseReady) setSyncStatus('offline');
+  },5000);
+}
 </script>
 
 <div style="background:#1e3a5f;color:rgba(255,255,255,.75);text-align:center;padding:14px 20px;font-size:12px;direction:rtl;border-top:3px solid #2d5986">
