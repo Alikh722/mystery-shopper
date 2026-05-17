@@ -10,10 +10,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ============================================================
-// 🔥 نفس إعدادات Firebase في index.html
+// 🔥 إعدادات Firebase 
 // ============================================================
 const firebaseConfig = {
-  apiKey: "ضع-api-key-هنا", 
+  apiKey: "ضع-api-key-هنا",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
   databaseURL: "https://mystery-shopper-ras-65e4d-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "mystery-shopper-ras-65e4d",
@@ -21,7 +21,6 @@ const firebaseConfig = {
   messagingSenderId: "ضع-sender-id-هنا",
   appId: "ضع-app-id-هنا"
 };
-
 // ============================================================
 
 const app = initializeApp(firebaseConfig);
@@ -131,24 +130,21 @@ tr:last-child td{border-bottom:none}
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div style="font-size:40px;margin-bottom:12px">🔐</div>
     <h2>لوحة تحكم الأدمن</h2>
-    <p>قطاع الصحة العامة بمحافظة الرس<br>وحدة الجودة — الزائر السري</p>
+    <p>قطاع الصحة العامة بالرس | وحدة الجودة - الزائر السري</p>
     <input type="password" id="pwInput" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')checkPW()">
     <div class="login-err" id="loginErr">كلمة المرور غير صحيحة</div>
     <button class="login-btn" onclick="checkPW()">دخول →</button>
-    <div style="font-size:10px;color:#9ca3af;margin-top:16px">الكلمة الافتراضية: admin123 — غيّرها في الكود</div>
   </div>
 </div>
 
-<!-- HEADER -->
 <div class="hdr">
   <div>
     <h1>📊 لوحة الأدمن — الزائر السري</h1>
-    <div style="font-size:11px;opacity:.75;margin-top:3px">قطاع الصحة العامة بمحافظة الرس | وحدة الجودة</div>
+    <div style="font-size:11px;opacity:.75;margin-top:3px">قطاع الصحة العامة بالرس | وحدة الجودة - الزائر السري</div>
   </div>
   <div class="hdr-right">
     <div style="font-size:12px;opacity:.8"><span class="live-dot"></span> مباشر — يتحدث تلقائياً</div>
@@ -156,7 +152,6 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- STATS -->
 <div class="stats-bar" id="statsBar">
   <div class="stat-card"><div class="stat-val" id="st-total" style="color:#1e3a5f">—</div><div class="stat-lbl">إجمالي الجلسات</div></div>
   <div class="stat-card"><div class="stat-val" id="st-submitted" style="color:#1a7a4a">—</div><div class="stat-lbl">تقارير مُرسلة</div></div>
@@ -164,13 +159,11 @@ tr:last-child td{border-bottom:none}
   <div class="stat-card"><div class="stat-val" id="st-avg" style="color:#185fa5">—</div><div class="stat-lbl">متوسط الدرجة</div></div>
 </div>
 
-<!-- CHARTS -->
 <div class="charts-grid" id="chartsArea" style="display:none">
   <div class="chart-box"><h4>توزيع الدرجات</h4><canvas id="chScores" height="180"></canvas></div>
   <div class="chart-box"><h4>المراكز الأعلى أداءً</h4><canvas id="chCenters" height="180"></canvas></div>
 </div>
 
-<!-- FILTER -->
 <div class="tbl-wrap">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
     <button class="fbtn act" onclick="setFilter(this,'all')">الكل</button>
@@ -180,7 +173,6 @@ tr:last-child td{border-bottom:none}
     <button class="fbtn" onclick="exportCSV()" style="margin-right:auto">📥 تصدير CSV</button>
   </div>
 
-  <!-- TABLE -->
   <div class="tbl-card">
     <div class="tbl-hdr">
       <h3>📋 سجل الجلسات</h3>
@@ -208,7 +200,6 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- DETAIL MODAL -->
 <div class="overlay" id="detailOverlay">
   <div class="modal">
     <div class="modal-hdr">
@@ -221,7 +212,7 @@ tr:last-child td{border-bottom:none}
 
 <script>
 // ============================================================
-// ADMIN PASSWORD — غيّر هذه الكلمة
+// ADMIN PASSWORD
 // ============================================================
 const ADMIN_PASSWORD = 'admin123';
 // ============================================================
@@ -470,7 +461,7 @@ document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='En
 </script>
 
 <div style="background:#1e3a5f;color:rgba(255,255,255,.6);text-align:center;padding:12px;font-size:11px;margin-top:24px">
-  قطاع الصحة العامة بمحافظة الرس — وحدة الجودة | إعداد: د/ منتصر بشير الحسن
+  قطاع الصحة العامة بالرس - وحدة الجودة | إعداد وإشراف: علي محمد الخليف | د/ منتصر بشير الحسن
 </div>
 </body>
 </html>
