@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قائمة التحقق - الزائر السري - قطاع الصحة العامة بالرس</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ============================================================
+// 🔥 إعدادات Firebase — ضع بياناتك هنا
+// ============================================================
+const firebaseConfig = {
+  apiKey: "ضع-api-key-هنا",
+  authDomain: "ضع-project-id-هنا.firebaseapp.com",
+  databaseURL: "https://ضع-project-id-هنا-default-rtdb.firebaseio.com",
+  projectId: "ضع-project-id-هنا",
+  storageBucket: "ضع-project-id-هنا.appspot.com",
+  messagingSenderId: "ضع-sender-id-هنا",
+  appId: "ضع-app-id-هنا"
+};
+// ============================================================
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+window._firebaseDB = db;
+window._firebaseRef = ref;
+window._firebaseSet = set;
+window._firebasePush = push;
+window._firebaseOnValue = onValue;
+window._firebaseReady = true;
+window.dispatchEvent(new Event('firebase-ready'));
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a1a2e;direction:rtl;font-size:14px}
+:root{
+  --pri:#1e3a5f;--pri2:#2d5986;--pri3:#3b72b0;
+  --ok:#1a7a4a;--ok-bg:#e8f7ee;--ok-br:#6bcf9a;
+  --no:#a32d2d;--no-bg:#fce8e8;--no-br:#f09595;
+  --na:#4b5563;--na-bg:#f1f5f9;--na-br:#9ca3af;
+  --warn:#854f0b;--warn-bg:#fdf3e3;
+  --info:#185fa5;--info-bg:#e6f1fb;
+  --bd:#e2e8f0;--card:#fff;--muted:#6b7280
+}
+.hdr{background:linear-gradient(135deg,#1e3a5f,#2d5986);color:#fff;padding:16px 28px 14px;position:sticky;top:0;z-index:200;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.hdr h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hdr-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.mf{display:flex;flex-direction:column;gap:2px}
+.mf label{font-size:10px;opacity:.7;font-weight:600;letter-spacing:.4px}
+.mf input,.mf select{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;width:155px;font-family:inherit}
+.mf input::placeholder{color:rgba(255,255,255,.45)}
+.mf select option{color:#1a1a2e;background:#fff}
+.hdr-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{padding:7px 16px;border-radius:7px;border:1.5px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit}
+.hbtn:hover{background:rgba(255,255,255,.28)}
+.hbtn.primary{background:rgba(255,255,255,.9);color:var(--pri);border-color:transparent}
+.hbtn.primary:hover{background:#fff}
+.sync-status{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 12px;border-radius:99px;font-weight:700;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#fbbf24;animation:pulse 1.5s infinite}
+.sync-dot.saved{background:#4ade80;animation:none}
+.sync-dot.error{background:#f87171;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sbar{background:#fff;padding:12px 28px;display:flex;align-items:center;gap:18px;border-bottom:1px solid var(--bd);flex-wrap:wrap;position:sticky;top:88px;z-index:150;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.score-num{font-size:34px;font-weight:800;color:var(--pri);min-width:72px;line-height:1}
+.score-label{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px}
+.score-grade{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;margin-top:4px}
+.prog-wrap{flex:1;min-width:180px}
+.prog-info{font-size:11px;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between}
+.prog-track{height:9px;background:#e5e7eb;border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .5s,background .5s}
+.spills{display:flex;gap:10px;flex-wrap:wrap}
+.spill{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;border:1px solid}
+.spill-ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-br)}
+.spill-no{background:var(--no-bg);color:var(--no);border-color:var(--no-br)}
+.spill-na{background:var(--na-bg);color:var(--na);border-color:var(--na-br)}
+.spill-pend{background:#fef9ec;color:#92400e;border-color:#fcd34d}
+.fbar{background:#fff;padding:8px 28px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--bd);align-items:center}
+.fbar-label{font-size:11px;color:var(--muted);font-weight:600;margin-left:4px}
+.fbtn{font-size:11px;padding:4px 13px;border-radius:99px;border:1.5px solid var(--bd);background:#fff;cursor:pointer;color:#374151;font-weight:600;transition:.12s;white-space:nowrap;font-family:inherit}
+.fbtn:hover,.fbtn.act{background:var(--pri);color:#fff;border-color:var(--pri)}
+.fsearch{margin-right:auto;padding:5px 12px;border:1px solid var(--bd);border-radius:7px;font-size:12px;width:190px;font-family:inherit}
+.fsearch:focus{outline:none;border-color:var(--pri2)}
+.secs{padding:18px 28px;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-bottom:60px}
+.sec-card{background:var(--card);border-radius:12px;border:1px solid var(--bd);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:13px 18px;cursor:pointer;background:#f8fafd;border-bottom:1px solid var(--bd);user-select:none;transition:.15s}
+.sec-hdr:hover{background:#f0f4fb}
+.sec-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.sec-title{font-size:14px;font-weight:700;flex:1;color:var(--pri)}
+.sec-stats{display:flex;gap:6px;align-items:center}
+.sec-pct-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--info-bg);color:var(--info);min-width:46px;text-align:center}
+.sec-mini-bar{width:70px;height:5px;background:#e5e7eb;border-radius:99px;overflow:hidden}
+.sec-mini-fill{height:100%;border-radius:99px;transition:width .4s}
+.sec-toggle{font-size:16px;color:var(--muted);transition:transform .2s;margin-right:4px}
+.sec-toggle.open{transform:rotate(180deg)}
+.sec-body{display:none}
+.sec-body.open{display:block}
+.irow{border-bottom:1px solid #f1f5f9;transition:.15s}
+.irow:last-child{border-bottom:none}
+.irow:hover{background:#fafcff}
+.irow.hi-compliant{background:#f0fdf6}
+.irow.hi-non{background:#fff8f8}
+.irow.hi-na{background:#f8f9fa}
+.imain{display:flex;align-items:flex-start;gap:10px;padding:11px 16px}
+.inum{font-size:11px;color:var(--muted);min-width:22px;text-align:center;padding-top:3px;font-weight:600}
+.itext-wrap{flex:1}
+.itext{font-size:13px;line-height:1.6;color:#374151}
+.ibadges{display:flex;gap:5px;align-items:center;margin-top:5px;flex-wrap:wrap}
+.risk-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:.2px}
+.risk-critical{background:#ffe0e0;color:#7a1515;border:1px solid #f09595}
+.risk-high{background:#fde8d0;color:#7a3a08;border:1px solid #f4b87b}
+.risk-medium{background:#fef3c7;color:#78450a;border:1px solid #fcd34d}
+.risk-low{background:#dcfce7;color:#14532d;border:1px solid #86efac}
+.dtoggle{font-size:11px;color:var(--info);cursor:pointer;text-decoration:underline;white-space:nowrap;padding:0 2px}
+.eval-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.ebts{display:flex;gap:5px}
+.ebt{width:82px;padding:6px 0;border-radius:7px;border:1.5px solid var(--bd);background:#fff;cursor:pointer;font-size:11px;font-weight:700;text-align:center;transition:.15s;color:var(--muted);font-family:inherit}
+.ebt:hover{background:#f8fafd;border-color:#9ca3af}
+.ebt.sel-ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.ebt.sel-no{background:var(--no-bg);border-color:var(--no);color:var(--no)}
+.ebt.sel-na{background:var(--na-bg);border-color:var(--na-br);color:var(--na)}
+.idetail{padding:0 16px 12px 48px;display:none;flex-direction:column;gap:8px}
+.idetail.open{display:flex}
+.note-ta{width:100%;border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;resize:vertical;min-height:56px;color:#374151;direction:rtl;transition:.15s}
+.note-ta:focus{outline:none;border-color:var(--pri2)}
+.photo-section{display:flex;flex-direction:column;gap:5px}
+.photo-lbl{font-size:11px;color:var(--muted);font-weight:600}
+.photo-input-row{display:flex;align-items:center;gap:8px}
+.file-btn{padding:5px 12px;border:1.5px dashed var(--bd);border-radius:7px;background:#f8fafd;font-size:11px;color:var(--info);cursor:pointer;font-family:inherit;font-weight:600;transition:.15s}
+.file-btn:hover{background:var(--info-bg);border-color:var(--info)}
+.photo-previews{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.pthumb{position:relative;display:inline-block}
+.pthumb img{width:64px;height:64px;object-fit:cover;border-radius:7px;border:1.5px solid var(--bd);cursor:pointer;display:block}
+.pthumb .pdel{position:absolute;top:-5px;right:-5px;width:17px;height:17px;background:#a32d2d;color:#fff;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700}
+.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center}
+.lb.open{display:flex}
+.lb img{max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain}
+.lb-close{position:absolute;top:16px;left:16px;color:#fff;font-size:28px;cursor:pointer;background:rgba(0,0,0,.5);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+.toast{position:fixed;bottom:24px;right:50%;transform:translateX(50%);background:#1e3a5f;color:#fff;padding:10px 22px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.scroll-top{position:fixed;bottom:20px;left:20px;width:40px;height:40px;background:var(--pri);color:#fff;border-radius:50%;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.3s;z-index:500;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.scroll-top.show{opacity:1}
+.ic1{background:#2563eb}.ic2{background:#dc2626}.ic3{background:#7c3aed}
+.ic4{background:#059669}.ic5{background:#d97706}.ic6{background:#0891b2}
+.ic7{background:#be185d}.ic8{background:#4f46e5}.ic9{background:#065f46}
+.ic10{background:#92400e}.ic11{background:#1e3a5f}.ic12{background:#374151}.ic13{background:#6d28d9}
+.hidden{display:none!important}
+/* Setup screen */
+.setup-screen{position:fixed;inset:0;background:#1e3a5f;z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+.setup-card{background:#fff;border-radius:16px;padding:32px;max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.setup-card h2{font-size:20px;font-weight:800;color:var(--pri);margin-bottom:6px;text-align:center}
+.setup-card p{font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px}
+.setup-field{margin-bottom:14px}
+.setup-field label{display:block;font-size:12px;font-weight:700;color:var(--pri);margin-bottom:5px}
+.setup-field input,.setup-field select{width:100%;padding:10px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:inherit;color:#374151;direction:rtl}
+.setup-field input:focus,.setup-field select:focus{outline:none;border-color:var(--pri)}
+.setup-btn{width:100%;padding:12px;background:var(--pri);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer;margin-top:8px;font-family:inherit}
+.setup-btn:hover{background:var(--pri2)}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-card">
+    <h2>📋 الزائر السري — بدء جلسة جديدة</h2>
+    <p>قطاع الصحة العامة بمحافظة الرس | وحدة الجودة</p>
+    <div class="setup-field">
+      <label>اسم المفتش *</label>
+      <input id="setupInspector" placeholder="أدخل اسمك الكامل..." required>
+    </div>
+    <div class="setup-field">
+      <label>المركز الصحي *</label>
+      <input id="setupCenter" placeholder="اسم المركز الصحي..." required>
+    </div>
+    <div class="setup-field">
+      <label>المنطقة</label>
+      <input id="setupRegion" placeholder="المنطقة / الحي...">
+    </div>
+    <div class="setup-field">
+      <label>رقم الجولة</label>
+      <input id="setupRound" placeholder="مثال: 1" type="number" min="1">
+    </div>
+    <div class="setup-field">
+      <label>التاريخ</label>
+      <input id="setupDate" type="date">
+    </div>
+    <button class="setup-btn" onclick="startSession()">🚀 ابدأ التفتيش</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <h1>📋 قائمة التحقق — الزائر السري</h1>
+      <div style="font-size:11px;opacity:.8">قطاع الصحة العامة بمحافظة الرس | وحدة الجودة</div>
+    </div>
+    <div class="hdr-actions">
+      <div class="sync-status" id="syncStatus">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncText">جاري الاتصال...</span>
+      </div>
+      <button class="hbtn primary" onclick="submitReport()">📤 إرسال التقرير للأدمن</button>
+      <button class="hbtn" onclick="resetAll()">🔄 جلسة جديدة</button>
+    </div>
+  </div>
+  <div class="hdr-meta" id="sessionInfo" style="opacity:.85;font-size:12px;margin-top:8px;gap:16px"></div>
+</div>
+
+<!-- SCORE BAR -->
+<div class="sbar">
+  <div>
+    <div class="score-num" id="totalScore">0%</div>
+    <div class="score-label">النتيجة المرجّحة</div>
+    <div class="score-grade" id="scoreGrade">—</div>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-info">
+      <span>التقدم: <strong id="scoredCount">0</strong> / <strong id="totalItems">0</strong> بند</span>
+      <span id="completionPct">0% مكتمل</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%;background:#1a7a4a"></div></div>
+  </div>
+  <div class="spills">
+    <div class="spill spill-ok">✔ مطابق: <span id="cOk">0</span></div>
+    <div class="spill spill-no">✖ غير مطابق: <span id="cNo">0</span></div>
+    <div class="spill spill-na">— لا ينطبق: <span id="cNa">0</span></div>
+    <div class="spill spill-pend">⏳ لم يُقيَّم: <span id="cPend">0</span></div>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="fbar">
+  <span class="fbar-label">تصفية:</span>
+  <button class="fbtn act" onclick="setFilter(this,'all')">الكل</button>
+  <button class="fbtn" onclick="setFilter(this,'pending')">⏳ لم يُقيَّم</button>
+  <button class="fbtn" onclick="setFilter(this,'compliant')">✔ مطابق</button>
+  <button class="fbtn" onclick="setFilter(this,'non')">✖ غير مطابق</button>
+  <button class="fbtn" onclick="setFilter(this,'critical')">🔴 حرج</button>
+  <button class="fbtn" onclick="setFilter(this,'high')">🟠 عالي</button>
+  <button class="fbtn" onclick="setFilter(this,'medium')">🟡 متوسط</button>
+  <button class="fbtn" onclick="setFilter(this,'low')">🟢 منخفض</button>
+  <input class="fsearch" type="text" placeholder="🔍 بحث في البنود..." oninput="applyFilter()" id="searchBox">
+</div>
+
+<!-- SECTIONS -->
+<div class="secs" id="secs"></div>
+
+<!-- LIGHTBOX -->
+<div class="lb" id="lb" onclick="closeLB()">
+  <div class="lb-close">✕</div>
+  <img id="lbImg" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">▲</button>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const SECTIONS=[
+  {id:1,title:"الفناء الخارجي ومداخل المركز وصحة البيئة",ic:"ic1",cat:"quality",items:[
+    {t:"اللوحة الخارجية للمركز موجودة وبحالة جيدة",r:"low"},
+    {t:"المواقف الخارجية للمراجعين كافية",r:"low"},
+    {t:"توجد مواقف كافية مخصصة لذوي الاحتياجات الخاصة قريبة من مدخل المركز مع سهولة الدخول",r:"medium"},
+    {t:"يتوفر مدخل للمبنى الرئيسي للمركز مهيأ لذوي الاحتياجات الخاصة (سهولة دخول الكرسي المتحرك)",r:"medium"},
+    {t:"وجود علامات على مداخل ومواقف ذوي الاحتياجات الخاصة",r:"medium"},
+    {t:"وجود حواجز جانبية على مداخل ذوي الاحتياجات الخاصة",r:"medium"},
+    {t:"مستوى ميلان مداخل ذوي الاحتياجات الخاصة مطابق للمواصفات (نسبة 1:12 تقريباً، بدون تشققات، مع علامة أرضية)",r:"medium"},
+    {t:"وجود لافتات توضح اتجاه ومكان دورة المياه الخاصة بذوي الاحتياجات الخاصة",r:"low"},
+    {t:"مستوى النظافة الخارجية للمركز جيدة",r:"low"},
+    {t:"مستوى الصيانة الخارجية للمركز جيدة",r:"low"},
+    {t:"مستوى النظافة الداخلية للمركز جيدة",r:"medium"},
+    {t:"مستوى الصيانة الداخلية للمركز جيدة",r:"low"},
+    {t:"سلامة الممرات من التشققات وجودة الإضاءة وعدم وجود عوائق",r:"high"},
+    {t:"توفر الإضاءة الخارجية التي تغطي جميع أرجاء المركز من الخارج",r:"low"},
+    {t:"توفر لوحة توضح ساعات العمل في المدخل الرئيسي للمركز",r:"low"},
+    {t:"توفر معلومات خدمات المركز بشكل واضح في مدخل المركز",r:"low"},
+    {t:"لا توجد نهايات حادة أو مخاطر تعيق الحركة في الفناء الخارجي",r:"high"},
+    {t:"الامتثال لسياسة منع التدخين (لا أعقاب سجائر، وجود لوحة ممنوع التدخين وعليها الغرامة)",r:"medium"},
+    {t:"خزانات المياه الأرضية مغلقة",r:"high"},
+    {t:"الجدران والأسقف نظيفة",r:"low"},
+    {t:"سلامة ونظافة النوافذ والزجاج",r:"low"},
+    {t:"تتوفر لوحة تعريفية بحقوق المرضى في مكان واضح",r:"medium"},
+    {t:"يتوفر كرسي متحرك صالح للاستخدام في مكان لا يعيق الحركة العادية ولا يعيق مخارج المركز",r:"high"},
+    {t:"يتوفر سرير لنقل المرضى في مكان لا يعيق الحركة العادية ولا يعيق مخارج المركز",r:"high"}
+  ]},
+  {id:2,title:"قسم الأمن والسلامة",ic:"ic2",cat:"safety",items:[
+    {t:"يتم فحص طفايات الحريق شهرياً باستخدام النماذج المعتمدة",r:"critical"},
+    {t:"عدد طفايات الحريق مناسب لمساحة المركز ونطاق خدماته",r:"critical"},
+    {t:"يتم فحص جهاز إنذار الحريق دورياً (شهرياً بالمسؤول وكل 6 أشهر بالشركة المختصة)",r:"critical"},
+    {t:"لوحة تحكم نظام إنذار الحريق تعمل بشكل صحيح (لا توجد علامة تحذير عليها)",r:"critical"},
+    {t:"كاشفات الدخان (موجودة، مرقمة، تعمل)",r:"critical"},
+    {t:"توجد علامات توضح مخارج الطوارئ",r:"high"},
+    {t:"لا توجد أجسام تعيق حركة المراجعين داخل المركز",r:"high"},
+    {t:"نقاط التجمع موجودة في مكان واضح وبعيدة عن المبنى وعددها مناسب",r:"high"},
+    {t:"وجود مخطط لمخارج الطوارئ (مخطط إخلاء) في مكان بارز بالمركز",r:"high"},
+    {t:"يتم تخزين أسطوانات الأوكسجين بطريقة آمنة وصحيحة",r:"critical"},
+    {t:"يتم حصر وعزل وتخزين المواد الخطرة في دواليب مغلقة",r:"critical"}
+  ]},
+  {id:3,title:"قسم الصيانة والمرافق العامة",ic:"ic3",cat:"quality",items:[
+    {t:"توجد لوحات إرشادية كافية",r:"low"},
+    {t:"مستوى الإضاءة جيد",r:"medium"},
+    {t:"عدم وجود أثاث رجيع بالمركز",r:"low"},
+    {t:"عدم وجود أسلاك كهربائية مكشوفة",r:"critical"},
+    {t:"عدم وجود تصدعات بالمبنى",r:"high"},
+    {t:"عدم وجود ملاحظات في السباكة",r:"medium"},
+    {t:"عدم وجود ملاحظات في التوصيلات الكهربائية",r:"high"},
+    {t:"توجد دورة مياه لذوي الاحتياجات الخاصة مطابقة للمواصفات",r:"medium"},
+    {t:"نظافة الأرضيات ودورات المياه",r:"medium"},
+    {t:"مستوى الصيانة في دورات المياه جيد",r:"medium"},
+    {t:"جميع شاشات التثقيف الصحي بالمركز تعمل",r:"low"},
+    {t:"أماكن انتظار المراجعين منظمة وكافية",r:"low"},
+    {t:"كراسي الانتظار مطابقة للمواصفات (سليمة، مريحة)",r:"low"},
+    {t:"جميع أجهزة التكييف تعمل وتتم صيانتها دورياً (كل 6 أشهر)",r:"medium"},
+    {t:"عدم وجود أجهزة معطلة",r:"medium"}
+  ]},
+  {id:4,title:"قسم الصيدلية والمستودع الطبي",ic:"ic4",cat:"pharmacy",items:[
+    {t:"يتم قياس درجة حرارة المستودع وتقع ضمن النطاق الطبيعي (18°م إلى 25°م)",r:"critical"},
+    {t:"لا يوجد تخزين علوي أو سفلي أقل من 40سم",r:"high"},
+    {t:"يتم تدوين تواريخ الصلاحية على أرفف المواد المخزنة بالمستودع",r:"high"},
+    {t:"يتم تدوين تاريخ الصلاحية على الأدوية بالصيدلية",r:"critical"},
+    {t:"يتم تطبيق سياسة الأدوية المتشابهة في اللفظ والنطق بالصيدلية",r:"critical"},
+    {t:"وجود قائمة بانتهاء صلاحية الأدوية",r:"high"},
+    {t:"يتم مراقبة الأدوية المخدرة بصورة يومية",r:"critical"},
+    {t:"لا توجد أدوية منتهية الصلاحية",r:"critical"},
+    {t:"مراقبة درجة حرارة الثلاجات يومياً ورسمها بيانياً وتقع ضمن النطاق الطبيعي (2°م إلى 8°م)",r:"critical"},
+    {t:"عدم وجود أدوية منتهية الصلاحية في الثلاجات المختلفة",r:"critical"},
+    {t:"ترتيب الأدوية بشكل صحيح داخل الثلاجة (FEFO)",r:"high"},
+    {t:"وجود آلية واضحة للتعامل مع الأدوية قريبة الانتهاء",r:"high"},
+    {t:"لا يتم استخدام الكراتين بنية اللون (السميكة) للتخزين",r:"medium"}
+  ]},
+  {id:5,title:"قسم مكافحة العدوى",ic:"ic5",cat:"infection",items:[
+    {t:"توفر معقمات الأيدي في صالات الانتظار والعيادات وجميعها تعمل",r:"critical"},
+    {t:"توفر المناديل والصابون في المكان المخصص لها",r:"high"},
+    {t:"كراسي الانتظار قابلة للتنظيف والتطهير وخالية من التشققات",r:"high"},
+    {t:"فرز ونقل وتخزين النفايات الطبية بطريقة صحيحة",r:"critical"},
+    {t:"وجود علامة الخطر البيولوجي على غرفة النفايات وعربات النقل",r:"critical"},
+    {t:"مكيف غرفة النفايات يعمل ويتم تسجيل درجة حرارة الغرفة",r:"high"},
+    {t:"وجود أدوات الوقاية الشخصية في جميع العيادات والمختبر والصيدلية",r:"critical"},
+    {t:"وجود أدوات التعامل مع الانسكابات في جميع العيادات والمختبر والصيدلية",r:"critical"},
+    {t:"وجود اتفاقية تعقيم سارية أو استخدام معدات ذات استخدام لمرة واحدة",r:"critical"},
+    {t:"توفر حاويات النفايات الطبية الحادة في (الضماد، الملاحظة، التطعيمات، الطوارئ، المختبر، الأسنان)",r:"critical"},
+    {t:"توفر حاويات النفايات الطبية المعدية في (الضماد، الملاحظة، التطعيمات، الطوارئ، المختبر، الأسنان)",r:"critical"},
+    {t:"وجود جدول تنظيف موثَّق وموقَّع في دورات المياه",r:"high"},
+    {t:"يتوفر تقرير فحص المياه المخبري كل 6 أشهر",r:"high"},
+    {t:"يتوفر جهاز للمياه المقطرة",r:"medium"}
+  ]},
+  {id:6,title:"قسم التمريض والخدمات الطبية",ic:"ic6",cat:"quality",items:[
+    {t:"وجود علامة 'الجهاز يعمل' على جميع الأجهزة الطبية",r:"high"},
+    {t:"جميع الأجهزة الطبية تعمل",r:"high"},
+    {t:"وضع علامة توضح تاريخ فتح الأدوية متعددة الاستخدام",r:"critical"},
+    {t:"وجود قائمة معتمدة توضح صلاحيات الأدوية متعددة الاستخدام",r:"critical"},
+    {t:"وجود مراقبة لتاريخ صلاحية الأدوية والمعدات في غرفة الضماد",r:"critical"},
+    {t:"وجود آلية واضحة للتعامل مع الأدوية وأدوات الضماد قاربت على الانتهاء",r:"high"},
+    {t:"في حالة وجود سيارة إسعاف: يوجد فحص يومي وجميع الأجهزة والمعدات مكتملة والسيارة في مظلة",r:"critical"},
+    {t:"قسم الأشعة يعمل أو توجد اتفاقية أشعة محدثة مع مستشفى مرجعي معتمد من سباهي",r:"high"},
+    {t:"في حالة عمل قسم الأشعة: وجود فحص التسرب الإشعاعي وعلامات تحذيرية على باب الأشعة",r:"critical"}
+  ]},
+  {id:7,title:"المختبر",ic:"ic7",cat:"quality",items:[
+    {t:"كرسي سحب العينات مطابق للمواصفات",r:"medium"},
+    {t:"وجود علامات أرضية تفصل المنطقة النظيفة عن منطقة العمل",r:"high"},
+    {t:"جميع المحاليل والأنابيب صالحة",r:"high"},
+    {t:"التخلص الآمن من العينات",r:"critical"},
+    {t:"وجود أدوات الحماية الشخصية",r:"critical"}
+  ]},
+  {id:8,title:"قسم الاستقبال وتجربة المريض",ic:"ic8",cat:"quality",items:[
+    {t:"وجود موظفي الاستقبال",r:"high"},
+    {t:"سرعة الخدمة",r:"medium"},
+    {t:"الالتزام بالزي الرسمي",r:"low"},
+    {t:"يتم التعرف على المريض عن طريق طلب إبراز الهوية الوطنية / الإقامة",r:"high"},
+    {t:"يتم التعرف على المريض بالطريقة الصحيحة في جميع محطات تقديم الخدمة",r:"critical"},
+    {t:"يتم تسجيل المراجعين في النظام الإلكتروني وتوجيههم للمحطة القادمة",r:"high"},
+    {t:"يتم قياس العلامات الحيوية للمراجعين",r:"high"},
+    {t:"يتم الحفاظ على خصوصية المراجع في جميع محطات تقديم الخدمة",r:"high"},
+    {t:"يقوم الممارس الصحي بتطهير يديه كما هو مطلوب في اللحظات الخمسة",r:"critical"},
+    {t:"سرير الكشف مطابق لإجراءات مكافحة العدوى (نظيف، خالٍ من التشققات، قابل للتطهير)",r:"critical"},
+    {t:"تتوفر مفارش ورقية أحادية الاستخدام لسرير الفحص تُستخدم في حال وجود مريض فقط",r:"high"},
+    {t:"يقوم الطبيب بأخذ التاريخ المرضي والفحص السريري وشرح الحالة بوضوح (التشخيص، الإرشادات، تعليمات الدواء)",r:"high"},
+    {t:"في حالة وجود صيدلية: تواجد الصيدلي وصرف جميع الأدوية وشرح تعليمات الاستخدام",r:"high"},
+    {t:"الاستقبال ومحطات التمريض بدون حواجز نهائياً",r:"medium"},
+    {t:"الصيدلية بدون حاجز أو حاجز بزجاج شفاف مع فتحات للتواصل",r:"medium"},
+    {t:"تم التعامل بشكل جيد في جميع محطات الخدمة",r:"high"},
+    {t:"توجد لوحات إرشادية للتواصل والاستفسارات",r:"low"},
+    {t:"تعريف الكادر الطبي بنفسه للمريض",r:"medium"}
+  ]},
+  {id:9,title:"التجهيزات",ic:"ic9",cat:"quality",items:[
+    {t:"يتوفر موقع مخصص للفرز للعلامات الحيوية (ليس مدمجاً مع أي عيادة أخرى)",r:"high"},
+    {t:"يتوفر جهاز قياس الضغط في عيادة الفرز",r:"high"},
+    {t:"يتوفر جهاز قياس الوزن والطول في عيادة الفرز",r:"medium"},
+    {t:"يتوفر جهاز قياس الحرارة في عيادة الفرز",r:"high"},
+    {t:"توفر سماعة طبية في عيادة الطبيب",r:"high"},
+    {t:"توفر لمبة الكشف في عيادة الطبيب",r:"high"},
+    {t:"توفر جهاز فحص الأذن في عيادة الطبيب",r:"medium"},
+    {t:"توفر عربة متحركة قابلة للتطهير في غرفة الضماد",r:"high"},
+    {t:"توفر أدوات الضماد في غرفة الضماد",r:"high"},
+    {t:"يتوفر موقع مخصص لعيادة الطفل السليم (ليس مدمجاً مع أي عيادة أخرى)",r:"medium"},
+    {t:"يتوفر ميزان إلكتروني في عيادة الطفل السليم",r:"high"},
+    {t:"يتوفر شريط قياس محيط الرأس في عيادة الطفل السليم",r:"medium"},
+    {t:"يتوفر مقياس الطول في عيادة الطفل السليم",r:"medium"},
+    {t:"يتوفر موقع مخصص لعيادة التطعيمات (ليس مدمجاً مع أي عيادة أخرى)",r:"high"},
+    {t:"تتوفر اللقاحات الأساسية للأطفال في غرفة التطعيمات",r:"critical"},
+    {t:"تتوفر قائمة آخر طلبية في غرفة التطعيمات",r:"medium"},
+    {t:"تتوفر ثلاجة مخصصة لحفظ اللقاحات في غرفة التطعيمات",r:"critical"},
+    {t:"يتوفر سرير مناسب ومخصص للخدمة في غرفة التطعيمات",r:"medium"},
+    {t:"يتوفر موقع مخصص لعيادة متابعة الحوامل (ليس مدمجاً مع أي عيادة أخرى)",r:"high"},
+    {t:"عيادة متابعة الحوامل متاحة طوال أيام الأسبوع",r:"high"},
+    {t:"يتوفر جهاز قياس نبض الجنين في غرفة متابعة الحوامل",r:"critical"},
+    {t:"يتوفر جهاز موجات صوتية في غرفة متابعة الحوامل",r:"high"},
+    {t:"يوجد طبيب مدرب على استخدام جهاز الموجات الصوتية الخاص بمتابعة الحوامل",r:"high"},
+    {t:"مستوى نظافة جهاز الموجات الصوتية جيد (لا يوجد جل من مستفيدة سابقة)",r:"critical"},
+    {t:"يتوفر سرير مناسب ومخصص في غرفة متابعة الحوامل",r:"medium"},
+    {t:"يتوفر كرسي أسنان بكامل تجهيزاته في عيادة الأسنان ويعمل بشكل جيد",r:"high"},
+    {t:"يتوفر جهاز أشعة في عيادة الأسنان بجميع ملحقاته (حساسات رقمية، درع واقٍ)",r:"high"},
+    {t:"كرسي الأسنان نظيف وخالٍ من التشققات",r:"high"},
+    {t:"تتوفر تجهيزات معالجة الأسنان (المواد والأدوات والأجهزة)",r:"high"},
+    {t:"يتوفر موقع مخصص لغرفة الطوارئ (ليس مدمجاً مع أي عيادة أخرى باستثناء الضماد)",r:"high"},
+    {t:"عربة الطوارئ مغلقة في غرفة الطوارئ",r:"critical"},
+    {t:"وجود فحص يومي على محتويات عربة الطوارئ",r:"critical"},
+    {t:"أدوية الطوارئ في غرفة وعربة الطوارئ متوفرة حسب القائمة المعتمدة",r:"critical"},
+    {t:"يتوفر جهاز الصدمات الكهربائي ويعمل بشكل جيد ويتم فحصه يومياً",r:"critical"},
+    {t:"توجد حقيبة طوارئ (مغلقة ومفحوصة يومياً)",r:"critical"}
+  ]},
+  {id:10,title:"قسم التحصين",ic:"ic10",cat:"quality",items:[
+    {t:"توفر جميع اللقاحات الأساسية ولقاحات البالغين",r:"critical"},
+    {t:"لا يوجد لقاح منتهي الصلاحية",r:"critical"},
+    {t:"عدد جرعات اللقاح قريب انتهاء الصلاحية بأقل من شهر بحدود احتياج المركز",r:"high"},
+    {t:"توفر جميع أنواع السرنجات المستخدمة بإعطاء اللقاح بكمية كافية وصلاحية ممتدة",r:"high"},
+    {t:"يتم التسجيل بسجل التطعيمات بمنصة صحة",r:"high"},
+    {t:"يوجد سجل إكسيل للتسجيل اليومي",r:"medium"},
+    {t:"يتم رصد درجة حرارة غرفة التطعيمات يومياً وتقع ضمن النطاق الطبيعي (18°م إلى 25°م)",r:"critical"},
+    {t:"يتم رصد درجة حرارة الثلاجات يومياً ورسمها بيانياً وتقع ضمن النطاق الطبيعي (2°م إلى 8°م)",r:"critical"},
+    {t:"تتم مراقبة سلسلة التبريد (مراقب الحرارة العادي والانفجاري والثيرمومتر)",r:"critical"},
+    {t:"ترتيب اللقاحات بشكل صحيح داخل الثلاجة (FEFO)",r:"high"},
+    {t:"وجود آلية واضحة للتعامل مع اللقاحات قريبة الانتهاء",r:"high"}
+  ]},
+  {id:11,title:"برنامج طبيب لكل أسرة",ic:"ic11",cat:"quality",items:[
+    {t:"موظف الاستقبال على علم بنموذج طبيب لكل أسرة (تثقيف المستفيد، تحويله للفريق الخاص به)",r:"medium"},
+    {t:"الطبيب على علم بنموذج طبيب لكل أسرة (معرفة أعضاء الفريق، قوائم المستفيدين، الاجتماع الأسبوعي، الرد على الاستفسارات في صحتي)",r:"medium"},
+    {t:"مدير المركز على علم بنموذج طبيب لكل أسرة (الإلمام بالنموذج، معرفة عدد الفرق وأعضائها)",r:"medium"},
+    {t:"الممرض/ة على علم بنموذج طبيب لكل أسرة",r:"medium"},
+    {t:"الفريق متوفر فعلياً في المركز",r:"high"},
+    {t:"توجد لوحات إرشادية بالمركز عن نموذج طبيب لكل أسرة",r:"low"},
+    {t:"جميع أطباء الأسرة ضمن الفريق بنموذج طبيب لكل أسرة",r:"high"},
+    {t:"يوجد اجتماع أسبوعي للفريق (وجود محضر أو ما يثبت وجود الاجتماع)",r:"medium"},
+    {t:"الرد على استفسارات المستفيدين في صحتي كل أسبوع",r:"medium"},
+    {t:"أسماء الأطباء بصحتي عند حجز الموعد مطابقة لأسماء الأطباء بالفريق في المركز",r:"high"},
+    {t:"يستطيع الطبيب إضافة المستفيدين ضمن فريقه",r:"medium"}
+  ]},
+  {id:12,title:"الموارد البشرية",ic:"ic12",cat:"quality",items:[
+    {t:"يتوفر مدير المنشأة أو من ينوب عنه",r:"high"},
+    {t:"جميع الموظفين موجودون في أماكن عملهم",r:"high"},
+    {t:"الالتزام بالزي الرسمي",r:"low"},
+    {t:"الالتزام بساعات العمل",r:"medium"}
+  ]},
+  {id:13,title:"مراقبة المخزون",ic:"ic13",cat:"quality",items:[
+    {t:"اكتمال تسجيل وترقيم العهد الطبية ومطابقتها للسجلات",r:"high"},
+    {t:"اكتمال تسجيل وترقيم العهد غير الطبية ومطابقتها للسجلات",r:"medium"},
+    {t:"تثبيت ملصقات الباركود على جميع الأصول",r:"medium"}
+  ]}
+];
+
+const RL={critical:"حرج",high:"عالي الخطورة",medium:"متوسط",low:"منخفض"};
+const RW={critical:4,high:3,medium:2,low:1};
+const TOTAL_ITEMS=SECTIONS.reduce((a,s)=>a+s.items.length,0);
+
+let state={};
+let curFilter='all';
+let sessionMeta={};
+let sessionKey=null;
+let autoSaveTimer=null;
+
+function key(sid,i){return `${sid}_${i}`}
+function initState(){
+  SECTIONS.forEach(s=>s.items.forEach((_,i)=>{
+    const k=key(s.id,i);
+    if(!state[k]) state[k]={status:'pending',note:'',photos:[]};
+  }));
+}
+
+// ============================================================
+// SESSION START
+// ============================================================
+function startSession(){
+  const inspector=document.getElementById('setupInspector').value.trim();
+  const center=document.getElementById('setupCenter').value.trim();
+  if(!inspector||!center){alert('الرجاء إدخال اسم المفتش واسم المركز');return;}
+  sessionMeta={
+    inspector,
+    center,
+    region:document.getElementById('setupRegion').value.trim()||'—',
+    round:document.getElementById('setupRound').value||'1',
+    date:document.getElementById('setupDate').value||new Date().toISOString().split('T')[0],
+    startTime:new Date().toISOString(),
+    status:'in_progress'
+  };
+  sessionKey='session_'+Date.now()+'_'+inspector.replace(/\s+/g,'_');
+  initState();
+  renderAll();
+  document.getElementById('setupScreen').style.display='none';
+  document.getElementById('sessionInfo').innerHTML=`
+    <span>👤 ${inspector}</span> &nbsp;|&nbsp;
+    <span>🏥 ${center}</span> &nbsp;|&nbsp;
+    <span>📅 ${sessionMeta.date}</span> &nbsp;|&nbsp;
+    <span>🔄 جولة ${sessionMeta.round}</span>
+  `;
+  setSyncStatus('saving');
+  autoSave();
+}
+
+// ============================================================
+// FIREBASE SYNC
+// ============================================================
+function setSyncStatus(status){
+  const dot=document.getElementById('syncDot');
+  const txt=document.getElementById('syncText');
+  if(status==='saving'){dot.className='sync-dot';txt.textContent='جاري الحفظ...';}
+  else if(status==='saved'){dot.className='sync-dot saved';txt.textContent='تم الحفظ ✔';}
+  else if(status==='error'){dot.className='sync-dot error';txt.textContent='خطأ في الاتصال';}
+  else if(status==='offline'){dot.className='sync-dot error';txt.textContent='بدون اتصال';}
+}
+
+function autoSave(){
+  if(autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(()=>saveToFirebase(),1500);
+}
+
+function saveToFirebase(){
+  if(!window._firebaseReady||!sessionKey){return;}
+  setSyncStatus('saving');
+  try{
+    const db=window._firebaseDB;
+    const refFn=window._firebaseRef;
+    const setFn=window._firebaseSet;
+    // Strip photo data to save space (save only count)
+    const lightState={};
+    Object.keys(state).forEach(k=>{
+      lightState[k]={status:state[k].status,note:state[k].note,photoCount:state[k].photos.length};
+    });
+    const payload={meta:sessionMeta,state:lightState,lastUpdate:new Date().toISOString()};
+    setFn(refFn(db,'sessions/'+sessionKey),payload)
+      .then(()=>setSyncStatus('saved'))
+      .catch(()=>setSyncStatus('error'));
+  }catch(e){setSyncStatus('error');}
+}
+
+// ============================================================
+// SUBMIT FINAL REPORT
+// ============================================================
+function submitReport(){
+  if(!sessionKey){toast('ابدأ جلسة أولاً');return;}
+  if(!confirm('هل أنت متأكد من إرسال التقرير النهائي للأدمن؟ لن تتمكن من تعديله بعد الإرسال.')) return;
+  sessionMeta.status='submitted';
+  sessionMeta.submitTime=new Date().toISOString();
+  let ok=0,no=0,na=0,wt=0,wm=0;
+  SECTIONS.forEach(s=>s.items.forEach((item,i)=>{
+    const st=state[key(s.id,i)].status;
+    const w=RW[item.r];
+    if(st==='compliant'){ok++;wt+=w;wm+=w;}
+    else if(st==='non'){no++;wm+=w;}
+    else if(st==='na') na++;
+  }));
+  sessionMeta.score=wm>0?Math.round((wt/wm)*100):0;
+  sessionMeta.ok=ok; sessionMeta.no=no; sessionMeta.na=na;
+  saveToFirebase();
+  toast('✅ تم إرسال التقرير بنجاح!');
+  setTimeout(()=>{
+    document.querySelectorAll('.ebt').forEach(b=>b.disabled=true);
+    document.querySelectorAll('.note-ta').forEach(t=>t.disabled=true);
+  },500);
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderAll(){
+  const c=document.getElementById('secs');
+  c.innerHTML='';
+  SECTIONS.forEach(s=>{
+    const card=document.createElement('div');
+    card.className='sec-card';
+    const hdr=document.createElement('div');
+    hdr.className='sec-hdr';
+    hdr.onclick=()=>toggleSection(s.id);
+    hdr.innerHTML=`
+      <div class="sec-icon ${s.ic}">${s.id}</div>
+      <div class="sec-title">${s.title}</div>
+      <div class="sec-stats">
+        <div class="sec-pct-badge" id="spct_${s.id}">—</div>
+        <div class="sec-mini-bar"><div class="sec-mini-fill" id="sbar_${s.id}" style="width:0%"></div></div>
+      </div>
+      <div class="sec-toggle open" id="stog_${s.id}">▼</div>
+    `;
+    const body=document.createElement('div');
+    body.className='sec-body open';
+    body.id='sbody_'+s.id;
+    s.items.forEach((item,i)=>{
+      const k=key(s.id,i);
+      const row=document.createElement('div');
+      row.className='irow';
+      row.id='irow_'+k;
+      row.dataset.status='pending';
+      row.dataset.risk=item.r;
+      row.innerHTML=`
+        <div class="imain">
+          <span class="inum">${i+1}</span>
+          <div class="itext-wrap">
+            <div class="itext">${item.t}</div>
+            <div class="ibadges">
+              <span class="risk-badge risk-${item.r}">${RL[item.r]}</span>
+              <span class="dtoggle" onclick="event.stopPropagation();toggleDetail('${k}')">📎 ملاحظة / صورة</span>
+            </div>
+          </div>
+          <div class="eval-wrap">
+            <div class="ebts">
+              <button class="ebt" data-v="compliant" onclick="setEval('${k}','compliant')">✔ مطابق</button>
+              <button class="ebt" data-v="non" onclick="setEval('${k}','non')">✖ غير مطابق</button>
+              <button class="ebt" data-v="na" onclick="setEval('${k}','na')">— لا ينطبق</button>
+            </div>
+          </div>
+        </div>
+        <div class="idetail" id="det_${k}">
+          <textarea class="note-ta" placeholder="أضف ملاحظتك هنا..." oninput="state['${k}'].note=this.value;autoSave()"></textarea>
+          <div class="photo-section">
+            <div class="photo-lbl">📷 إضافة صور</div>
+            <label class="file-btn">+ إضافة صورة<input type="file" accept="image/*" capture="environment" multiple style="display:none" onchange="addPhoto('${k}',this)"></label>
+            <div class="photo-previews" id="photos_${k}"></div>
+          </div>
+        </div>
+      `;
+      body.appendChild(row);
+    });
+    card.appendChild(hdr);
+    card.appendChild(body);
+    c.appendChild(card);
+  });
+  updateScores();
+}
+
+function toggleSection(id){
+  document.getElementById('sbody_'+id).classList.toggle('open');
+  document.getElementById('stog_'+id).classList.toggle('open');
+}
+function toggleDetail(k){document.getElementById('det_'+k).classList.toggle('open')}
+
+function setEval(k,val){
+  state[k].status=state[k].status===val?'pending':val;
+  refreshRow(k);
+  updateScores();
+  autoSave();
+}
+
+function refreshRow(k){
+  const row=document.getElementById('irow_'+k);
+  if(!row) return;
+  const st=state[k].status;
+  row.dataset.status=st;
+  row.className='irow'+(st==='compliant'?' hi-compliant':st==='non'?' hi-non':st==='na'?' hi-na':'');
+  row.querySelectorAll('.ebt').forEach(b=>{
+    b.className='ebt';
+    if(st===b.dataset.v) b.classList.add(st==='compliant'?'sel-ok':st==='non'?'sel-no':'sel-na');
+  });
+  applyFilter();
+}
+
+function updateScores(){
+  let ok=0,no=0,na=0,pend=0,wt=0,wm=0;
+  SECTIONS.forEach(s=>s.items.forEach((item,i)=>{
+    const st=state[key(s.id,i)].status;
+    const w=RW[item.r];
+    if(st==='compliant'){ok++;wt+=w;wm+=w;}
+    else if(st==='non'){no++;wm+=w;}
+    else if(st==='na') na++;
+    else pend++;
+  }));
+  const pct=wm>0?Math.round((wt/wm)*100):0;
+  const done=ok+no+na;
+  const compPct=Math.round((done/TOTAL_ITEMS)*100);
+  const col=pct>=90?'#1a7a4a':pct>=75?'#185fa5':pct>=60?'#d97706':'#a32d2d';
+  const grades=[{min:90,label:'ممتاز',bg:'#e8f7ee',c:'#1a7a4a'},{min:75,label:'جيد جداً',bg:'#e6f1fb',c:'#185fa5'},{min:60,label:'مقبول',bg:'#fdf3e3',c:'#854f0b'},{min:0,label:'ضعيف',bg:'#fce8e8',c:'#a32d2d'}];
+  const grade=grades.find(g=>pct>=g.min);
+  document.getElementById('totalScore').textContent=pct+'%';
+  document.getElementById('totalScore').style.color=col;
+  const gEl=document.getElementById('scoreGrade');
+  gEl.textContent=grade.label;
+  gEl.style.cssText=`background:${grade.bg};color:${grade.c}`;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progFill').style.background=col;
+  document.getElementById('scoredCount').textContent=done;
+  document.getElementById('totalItems').textContent=TOTAL_ITEMS;
+  document.getElementById('completionPct').textContent=compPct+'% مكتمل';
+  document.getElementById('cOk').textContent=ok;
+  document.getElementById('cNo').textContent=no;
+  document.getElementById('cNa').textContent=na;
+  document.getElementById('cPend').textContent=pend;
+  SECTIONS.forEach(s=>{
+    let sw=0,sm=0;
+    s.items.forEach((item,i)=>{
+      const st=state[key(s.id,i)].status;
+      const w=RW[item.r];
+      if(st==='compliant'){sw+=w;sm+=w;}
+      else if(st==='non') sm+=w;
+    });
+    const sp=sm>0?Math.round((sw/sm)*100):null;
+    const badge=document.getElementById('spct_'+s.id);
+    const fill=document.getElementById('sbar_'+s.id);
+    if(badge) badge.textContent=sp!=null?sp+'%':'—';
+    if(fill){fill.style.width=(sp||0)+'%';fill.style.background=sp>=90?'#1a7a4a':sp>=70?'#d97706':'#a32d2d';}
+  });
+}
+
+function setFilter(btn,f){
+  curFilter=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  document.getElementById('searchBox').value='';
+  applyFilter();
+}
+
+function applyFilter(){
+  const q=document.getElementById('searchBox').value.toLowerCase();
+  document.querySelectorAll('.irow').forEach(row=>{
+    const st=row.dataset.status,rk=row.dataset.risk;
+    let show=true;
+    if(curFilter==='pending') show=(st==='pending');
+    else if(curFilter==='compliant') show=(st==='compliant');
+    else if(curFilter==='non') show=(st==='non');
+    else if(['critical','high','medium','low'].includes(curFilter)) show=(rk===curFilter);
+    if(show&&q){show=row.querySelector('.itext').textContent.toLowerCase().includes(q);}
+    row.style.display=show?'':'none';
+  });
+}
+
+function addPhoto(k,input){
+  Array.from(input.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{state[k].photos.push(e.target.result);renderPhotos(k);autoSave();};
+    r.readAsDataURL(f);
+  });
+  input.value='';
+}
+function renderPhotos(k){
+  const c=document.getElementById('photos_'+k);
+  if(!c) return;
+  c.innerHTML='';
+  state[k].photos.forEach((src,i)=>{
+    const wrap=document.createElement('div');
+    wrap.className='pthumb';
+    const img=document.createElement('img');
+    img.src=src;
+    img.onclick=()=>{document.getElementById('lbImg').src=src;document.getElementById('lb').classList.add('open');};
+    const del=document.createElement('div');
+    del.className='pdel';del.textContent='✕';
+    del.onclick=()=>{state[k].photos.splice(i,1);renderPhotos(k);autoSave();};
+    wrap.appendChild(img);wrap.appendChild(del);
+    c.appendChild(wrap);
+  });
+}
+function closeLB(){document.getElementById('lb').classList.remove('open')}
+document.getElementById('lb').onclick=closeLB;
+
+function resetAll(){
+  if(!confirm('هل تريد بدء جلسة جديدة؟ سيتم مسح البيانات الحالية.')) return;
+  state={};sessionKey=null;sessionMeta={};
+  document.getElementById('setupScreen').style.display='flex';
+  document.getElementById('secs').innerHTML='';
+  document.getElementById('sessionInfo').innerHTML='';
+  ['setupInspector','setupCenter','setupRegion','setupRound'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('setupDate').value=new Date().toISOString().split('T')[0];
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+window.addEventListener('scroll',()=>{
+  document.getElementById('scrollTop').classList.toggle('show',window.scrollY>400);
+});
+
+document.getElementById('setupDate').value=new Date().toISOString().split('T')[0];
+
+// Firebase connection monitoring
+window.addEventListener('firebase-ready',()=>{
+  setSyncStatus('saved');
+});
+setTimeout(()=>{
+  if(!window._firebaseReady) setSyncStatus('offline');
+},5000);
+</script>
+
+<div style="background:#1e3a5f;color:rgba(255,255,255,.75);text-align:center;padding:14px 20px;font-size:12px;direction:rtl;border-top:3px solid #2d5986">
+  <div style="max-width:900px;margin:0 auto">
+    <div style="font-size:13px;font-weight:700;color:#fff">قطاع الصحة العامة بمحافظة الرس — وحدة الجودة</div>
+    <div>إعداد: <span style="color:#93c5fd;font-weight:700">د/ منتصر بشير الحسن</span> | وحدة الجودة بالقطاع</div>
+  </div>
+</div>
+</body>
+</html>

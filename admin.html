@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الأدمن — الزائر السري</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ============================================================
+// 🔥 نفس إعدادات Firebase في index.html
+// ============================================================
+const firebaseConfig = {
+  apiKey: "ضع-api-key-هنا",
+  authDomain: "ضع-project-id-هنا.firebaseapp.com",
+  databaseURL: "https://ضع-project-id-هنا-default-rtdb.firebaseio.com",
+  projectId: "ضع-project-id-هنا",
+  storageBucket: "ضع-project-id-هنا.appspot.com",
+  messagingSenderId: "ضع-sender-id-هنا",
+  appId: "ضع-app-id-هنا"
+};
+// ============================================================
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const sessionsRef = ref(db, 'sessions');
+onValue(sessionsRef, (snapshot) => {
+  const data = snapshot.val() || {};
+  window.allSessions = data;
+  window.renderDashboard(data);
+});
+
+window._dbRemove = (path) => remove(ref(db, path));
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f0f4f8;color:#1a1a2e;direction:rtl;font-size:14px}
+:root{--pri:#1e3a5f;--pri2:#2d5986;--ok:#1a7a4a;--no:#a32d2d;--bd:#e2e8f0;--card:#fff;--muted:#6b7280}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:#1e3a5f;z-index:9000;display:flex;align-items:center;justify-content:center}
+.login-card{background:#fff;border-radius:16px;padding:36px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center}
+.login-card h2{font-size:22px;font-weight:800;color:var(--pri);margin-bottom:8px}
+.login-card p{font-size:13px;color:var(--muted);margin-bottom:24px}
+.login-card input{width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:inherit;text-align:center;letter-spacing:4px;margin-bottom:12px}
+.login-card input:focus{outline:none;border-color:var(--pri)}
+.login-btn{width:100%;padding:12px;background:var(--pri);color:#fff;border:none;border-radius:9px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+.login-btn:hover{background:var(--pri2)}
+.login-err{color:#a32d2d;font-size:12px;margin-top:8px;display:none}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#1e3a5f,#2d5986);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.hdr h1{font-size:18px;font-weight:800}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.live-dot{width:9px;height:9px;border-radius:50%;background:#4ade80;animation:pulse 1.5s infinite;display:inline-block;margin-left:4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hbtn{padding:7px 16px;border-radius:7px;border:1.5px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.hbtn:hover{background:rgba(255,255,255,.28)}
+
+/* STATS BAR */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;padding:20px 28px;max-width:1200px;margin:0 auto}
+.stat-card{background:#fff;border-radius:12px;padding:16px 20px;border:1px solid var(--bd);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.stat-val{font-size:32px;font-weight:800;line-height:1.1}
+.stat-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-top:3px}
+
+/* FILTERS */
+.fbar{background:#fff;padding:10px 28px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--bd);align-items:center;max-width:1200px;margin:0 auto;border-radius:0}
+.fbtn{font-size:11px;padding:5px 14px;border-radius:99px;border:1.5px solid var(--bd);background:#fff;cursor:pointer;font-weight:600;font-family:inherit;transition:.12s}
+.fbtn:hover,.fbtn.act{background:var(--pri);color:#fff;border-color:var(--pri)}
+.fsearch{padding:6px 12px;border:1px solid var(--bd);border-radius:7px;font-size:12px;width:220px;font-family:inherit;margin-right:auto}
+
+/* TABLE */
+.tbl-wrap{padding:16px 28px;max-width:1200px;margin:0 auto}
+.tbl-card{background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tbl-hdr{padding:14px 20px;border-bottom:1px solid var(--bd);background:#f8fafd;display:flex;align-items:center;justify-content:space-between}
+.tbl-hdr h3{font-size:14px;font-weight:700;color:var(--pri)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:right;padding:10px 14px;background:#f8fafd;border-bottom:2px solid var(--bd);font-weight:700;color:var(--pri);font-size:12px;white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr:hover td{background:#fafcff}
+tr:last-child td{border-bottom:none}
+.status-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.sb-submitted{background:#e8f7ee;color:#1a7a4a;border:1px solid #6bcf9a}
+.sb-progress{background:#fef9ec;color:#92400e;border:1px solid #fcd34d}
+.score-chip{font-size:13px;font-weight:800}
+.action-btn{padding:4px 12px;border-radius:6px;border:1.5px solid var(--bd);background:#fff;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;transition:.12s}
+.action-btn:hover{background:#f0f4f8}
+.action-btn.view{color:var(--pri);border-color:var(--pri)}
+.action-btn.del{color:#a32d2d;border-color:#f09595}
+
+/* DETAIL MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:900;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:860px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-hdr{padding:16px 22px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:#f8fafd;flex-shrink:0}
+.modal-hdr h2{font-size:16px;font-weight:700;color:var(--pri)}
+.mclose{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:2px 8px;border-radius:5px;font-family:inherit}
+.mclose:hover{background:#f1f5f9}
+.modal-body{overflow-y:auto;flex:1;padding:20px 22px}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px}
+.meta-item{background:#f0f5ff;border-radius:8px;padding:10px 14px;font-size:12px;border:1px solid #dbe8f8}
+.meta-item span{color:var(--muted);display:block;font-size:10px;margin-bottom:2px}
+.meta-item b{color:var(--pri)}
+.sec-block{margin-bottom:18px}
+.sec-block-hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--pri);padding-bottom:6px;margin-bottom:8px}
+.sec-block-title{font-size:13px;font-weight:700;color:var(--pri)}
+.sec-block-score{font-size:12px;color:#185fa5;font-weight:700}
+.item-row{display:flex;gap:8px;padding:6px 4px;border-bottom:1px dashed #e5e7eb;align-items:flex-start;font-size:12px}
+.item-row:last-child{border-bottom:none}
+.item-status{min-width:80px;text-align:center;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:700;flex-shrink:0}
+.is-ok{background:#e8f7ee;color:#1a7a4a;border:1px solid #6bcf9a}
+.is-no{background:#fce8e8;color:#a32d2d;border:1px solid #f09595}
+.is-na{background:#f1f5f9;color:#4b5563;border:1px solid #9ca3af}
+.is-pend{background:#fef9ec;color:#92400e;border:1px solid #fcd34d}
+.item-text{flex:1;line-height:1.5;color:#374151}
+.note-text{font-size:11px;color:var(--muted);font-style:italic;margin-top:2px;padding:3px 8px;background:#f8fafd;border-radius:4px;border-right:3px solid #185fa5}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state .ei{font-size:48px;margin-bottom:12px}
+.empty-state h3{font-size:16px;font-weight:700;margin-bottom:6px}
+
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 28px 24px;max-width:1200px;margin:0 auto}
+.chart-box{background:#fff;border-radius:12px;padding:16px;border:1px solid var(--bd);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.chart-box h4{font-size:12px;font-weight:700;color:var(--pri);margin-bottom:12px;text-align:center}
+@media(max-width:700px){.charts-grid{grid-template-columns:1fr}.stats-bar{padding:12px 16px}.tbl-wrap{padding:12px 16px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div style="font-size:40px;margin-bottom:12px">🔐</div>
+    <h2>لوحة تحكم الأدمن</h2>
+    <p>قطاع الصحة العامة بمحافظة الرس<br>وحدة الجودة — الزائر السري</p>
+    <input type="password" id="pwInput" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')checkPW()">
+    <div class="login-err" id="loginErr">كلمة المرور غير صحيحة</div>
+    <button class="login-btn" onclick="checkPW()">دخول →</button>
+    <div style="font-size:10px;color:#9ca3af;margin-top:16px">الكلمة الافتراضية: admin123 — غيّرها في الكود</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <h1>📊 لوحة الأدمن — الزائر السري</h1>
+    <div style="font-size:11px;opacity:.75;margin-top:3px">قطاع الصحة العامة بمحافظة الرس | وحدة الجودة</div>
+  </div>
+  <div class="hdr-right">
+    <div style="font-size:12px;opacity:.8"><span class="live-dot"></span> مباشر — يتحدث تلقائياً</div>
+    <button class="hbtn" onclick="window.print()">🖨️ طباعة</button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat-card"><div class="stat-val" id="st-total" style="color:#1e3a5f">—</div><div class="stat-lbl">إجمالي الجلسات</div></div>
+  <div class="stat-card"><div class="stat-val" id="st-submitted" style="color:#1a7a4a">—</div><div class="stat-lbl">تقارير مُرسلة</div></div>
+  <div class="stat-card"><div class="stat-val" id="st-progress" style="color:#d97706">—</div><div class="stat-lbl">قيد التنفيذ</div></div>
+  <div class="stat-card"><div class="stat-val" id="st-avg" style="color:#185fa5">—</div><div class="stat-lbl">متوسط الدرجة</div></div>
+</div>
+
+<!-- CHARTS -->
+<div class="charts-grid" id="chartsArea" style="display:none">
+  <div class="chart-box"><h4>توزيع الدرجات</h4><canvas id="chScores" height="180"></canvas></div>
+  <div class="chart-box"><h4>المراكز الأعلى أداءً</h4><canvas id="chCenters" height="180"></canvas></div>
+</div>
+
+<!-- FILTER -->
+<div class="tbl-wrap">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+    <button class="fbtn act" onclick="setFilter(this,'all')">الكل</button>
+    <button class="fbtn" onclick="setFilter(this,'submitted')">✅ مُرسل</button>
+    <button class="fbtn" onclick="setFilter(this,'in_progress')">⏳ جاري</button>
+    <input class="fsearch" type="text" id="searchBox" placeholder="🔍 بحث بالاسم أو المركز..." oninput="renderTable()">
+    <button class="fbtn" onclick="exportCSV()" style="margin-right:auto">📥 تصدير CSV</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <h3>📋 سجل الجلسات</h3>
+      <span id="rowCount" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>المفتش</th>
+            <th>المركز</th>
+            <th>التاريخ</th>
+            <th>الجولة</th>
+            <th>الدرجة</th>
+            <th>التقدم</th>
+            <th>الحالة</th>
+            <th>وقت الإرسال</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 id="modalTitle">تفاصيل التقرير</h2>
+      <button class="mclose" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ADMIN PASSWORD — غيّر هذه الكلمة
+// ============================================================
+const ADMIN_PASSWORD = 'admin123';
+// ============================================================
+
+const RL={critical:"حرج",high:"عالي",medium:"متوسط",low:"منخفض"};
+const RW={critical:4,high:3,medium:2,low:1};
+const SECTIONS_META=[
+  {id:1,title:"الفناء الخارجي ومداخل المركز وصحة البيئة"},
+  {id:2,title:"قسم الأمن والسلامة"},
+  {id:3,title:"قسم الصيانة والمرافق العامة"},
+  {id:4,title:"قسم الصيدلية والمستودع الطبي"},
+  {id:5,title:"قسم مكافحة العدوى"},
+  {id:6,title:"قسم التمريض والخدمات الطبية"},
+  {id:7,title:"المختبر"},
+  {id:8,title:"قسم الاستقبال وتجربة المريض"},
+  {id:9,title:"التجهيزات"},
+  {id:10,title:"قسم التحصين"},
+  {id:11,title:"برنامج طبيب لكل أسرة"},
+  {id:12,title:"الموارد البشرية"},
+  {id:13,title:"مراقبة المخزون"}
+];
+
+let curFilter='all';
+let chartScores=null, chartCenters=null;
+
+function checkPW(){
+  const pw=document.getElementById('pwInput').value;
+  if(pw===ADMIN_PASSWORD){
+    document.getElementById('loginScreen').style.display='none';
+  } else {
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('pwInput').value='';
+  }
+}
+
+function setFilter(btn,f){
+  curFilter=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  renderTable();
+}
+
+window.renderDashboard=function(data){
+  const sessions=Object.entries(data||{}).map(([k,v])=>({key:k,...v}));
+  const submitted=sessions.filter(s=>s.meta?.status==='submitted');
+  const inProgress=sessions.filter(s=>s.meta?.status==='in_progress');
+  const scores=submitted.filter(s=>s.meta?.score!=null).map(s=>s.meta.score);
+  const avg=scores.length>0?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
+
+  document.getElementById('st-total').textContent=sessions.length;
+  document.getElementById('st-submitted').textContent=submitted.length;
+  document.getElementById('st-progress').textContent=inProgress.length;
+  document.getElementById('st-avg').textContent=avg!=null?avg+'%':'—';
+
+  // Charts
+  if(submitted.length>0){
+    document.getElementById('chartsArea').style.display='grid';
+    drawCharts(submitted);
+  }
+
+  renderTable(data);
+};
+
+function drawCharts(submitted){
+  // Score distribution
+  const buckets=[0,0,0,0]; // <60, 60-75, 75-90, 90+
+  submitted.forEach(s=>{
+    const sc=s.meta?.score||0;
+    if(sc>=90) buckets[3]++;
+    else if(sc>=75) buckets[2]++;
+    else if(sc>=60) buckets[1]++;
+    else buckets[0]++;
+  });
+  if(chartScores) chartScores.destroy();
+  chartScores=new Chart(document.getElementById('chScores'),{
+    type:'doughnut',
+    data:{labels:['ضعيف (<60%)','مقبول (60-75%)','جيد جداً (75-90%)','ممتاز (90%+)'],
+      datasets:[{data:buckets,backgroundColor:['#a32d2d','#d97706','#185fa5','#1a7a4a'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:8}}}}
+  });
+
+  // Top centers
+  const centerMap={};
+  submitted.forEach(s=>{
+    const c=s.meta?.center||'غير محدد';
+    if(!centerMap[c]) centerMap[c]=[];
+    centerMap[c].push(s.meta?.score||0);
+  });
+  const centers=Object.entries(centerMap).map(([c,scores])=>({
+    c,avg:Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)
+  })).sort((a,b)=>b.avg-a.avg).slice(0,6);
+
+  if(chartCenters) chartCenters.destroy();
+  chartCenters=new Chart(document.getElementById('chCenters'),{
+    type:'bar',
+    data:{labels:centers.map(c=>c.c),
+      datasets:[{label:'متوسط الدرجة %',data:centers.map(c=>c.avg),
+        backgroundColor:centers.map(c=>c.avg>=90?'#1a7a4a':c.avg>=75?'#185fa5':c.avg>=60?'#d97706':'#a32d2d'),
+        borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}
+  });
+}
+
+function renderTable(data){
+  data=data||window.allSessions||{};
+  const q=(document.getElementById('searchBox')?.value||'').toLowerCase();
+  const sessions=Object.entries(data).map(([k,v])=>({key:k,...v}));
+
+  const filtered=sessions.filter(s=>{
+    const meta=s.meta||{};
+    if(curFilter==='submitted'&&meta.status!=='submitted') return false;
+    if(curFilter==='in_progress'&&meta.status!=='in_progress') return false;
+    if(q){
+      const txt=(meta.inspector+' '+meta.center+' '+meta.region).toLowerCase();
+      if(!txt.includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b)=>(b.lastUpdate||'').localeCompare(a.lastUpdate||''));
+
+  document.getElementById('rowCount').textContent=filtered.length+' جلسة';
+
+  const tbody=document.getElementById('tblBody');
+  if(filtered.length===0){
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">لا توجد بيانات بعد</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=filtered.map((s,idx)=>{
+    const m=s.meta||{};
+    const sc=m.score!=null?m.score:null;
+    const scColor=sc==null?'#6b7280':sc>=90?'#1a7a4a':sc>=75?'#185fa5':sc>=60?'#d97706':'#a32d2d';
+    const stateObj=s.state||{};
+    const total=Object.keys(stateObj).length;
+    const done=Object.values(stateObj).filter(v=>v.status!=='pending').length;
+    const pct=total>0?Math.round((done/total)*100):0;
+    const submitTime=m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'}):'—';
+    return `<tr>
+      <td style="color:var(--muted);font-weight:600">${idx+1}</td>
+      <td style="font-weight:700">${m.inspector||'—'}</td>
+      <td>${m.center||'—'}</td>
+      <td style="white-space:nowrap">${m.date||'—'}</td>
+      <td style="text-align:center">${m.round||'—'}</td>
+      <td><span class="score-chip" style="color:${scColor}">${sc!=null?sc+'%':'—'}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:5px;background:#e5e7eb;border-radius:99px;overflow:hidden;min-width:60px">
+            <div style="width:${pct}%;height:100%;background:${pct>=90?'#1a7a4a':pct>=60?'#d97706':'#185fa5'};border-radius:99px"></div>
+          </div>
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap">${pct}%</span>
+        </div>
+      </td>
+      <td><span class="status-badge ${m.status==='submitted'?'sb-submitted':'sb-progress'}">${m.status==='submitted'?'✅ مُرسل':'⏳ جاري'}</span></td>
+      <td style="font-size:11px;white-space:nowrap">${submitTime}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="action-btn view" onclick="openDetail('${s.key}')">عرض</button>
+          <button class="action-btn del" onclick="deleteSession('${s.key}')">حذف</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openDetail(sessionKey){
+  const data=window.allSessions||{};
+  const s=data[sessionKey];
+  if(!s) return;
+  const m=s.meta||{};
+  const stateObj=s.state||{};
+  document.getElementById('modalTitle').textContent=`تقرير: ${m.inspector||'—'} — ${m.center||'—'}`;
+
+  const sc=m.score!=null?m.score:null;
+  const scColor=sc==null?'#6b7280':sc>=90?'#1a7a4a':sc>=75?'#185fa5':sc>=60?'#d97706':'#a32d2d';
+  const submitTime=m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA'):'—';
+
+  let html=`
+    <div class="meta-grid">
+      <div class="meta-item"><span>المفتش</span><b>${m.inspector||'—'}</b></div>
+      <div class="meta-item"><span>المركز</span><b>${m.center||'—'}</b></div>
+      <div class="meta-item"><span>المنطقة</span><b>${m.region||'—'}</b></div>
+      <div class="meta-item"><span>التاريخ</span><b>${m.date||'—'}</b></div>
+      <div class="meta-item"><span>الجولة</span><b>${m.round||'—'}</b></div>
+      <div class="meta-item"><span>الدرجة</span><b style="color:${scColor};font-size:18px">${sc!=null?sc+'%':'—'}</b></div>
+      <div class="meta-item"><span>مطابق</span><b style="color:#1a7a4a">${m.ok||0}</b></div>
+      <div class="meta-item"><span>غير مطابق</span><b style="color:#a32d2d">${m.no||0}</b></div>
+      <div class="meta-item"><span>الحالة</span><b>${m.status==='submitted'?'✅ مُرسل نهائياً':'⏳ جاري'}</b></div>
+      <div class="meta-item"><span>وقت الإرسال</span><b style="font-size:11px">${submitTime}</b></div>
+    </div>
+  `;
+
+  // Build sections display
+  SECTIONS_META.forEach(sec=>{
+    const items=Object.entries(stateObj).filter(([k])=>k.startsWith(sec.id+'_'));
+    if(items.length===0) return;
+    const ok=items.filter(([,v])=>v.status==='compliant').length;
+    const no=items.filter(([,v])=>v.status==='non').length;
+    html+=`<div class="sec-block">
+      <div class="sec-block-hdr">
+        <div class="sec-block-title">${sec.id}. ${sec.title}</div>
+        <div class="sec-block-score">✔ ${ok} &nbsp;✖ ${no}</div>
+      </div>`;
+    items.forEach(([k,v])=>{
+      const st=v.status||'pending';
+      const cls=st==='compliant'?'is-ok':st==='non'?'is-no':st==='na'?'is-na':'is-pend';
+      const lbl=st==='compliant'?'مطابق':st==='non'?'غير مطابق':st==='na'?'لا ينطبق':'لم يُقيَّم';
+      html+=`<div class="item-row">
+        <span class="item-status ${cls}">${lbl}</span>
+        <div style="flex:1">
+          <div class="item-text">البند رقم ${k.split('_')[1]||''} ${v.photoCount>0?`📷 (${v.photoCount} صور)`:''}</div>
+          ${v.note?`<div class="note-text">📝 ${v.note}</div>`:''}
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+
+  document.getElementById('modalBody').innerHTML=html;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('detailOverlay').classList.remove('open')}
+document.getElementById('detailOverlay').onclick=function(e){if(e.target===this) closeModal();}
+
+function deleteSession(key){
+  if(!confirm('هل تريد حذف هذه الجلسة نهائياً؟')) return;
+  if(window._dbRemove) window._dbRemove('sessions/'+key);
+}
+
+function exportCSV(){
+  const data=window.allSessions||{};
+  const sessions=Object.entries(data).map(([k,v])=>({key:k,...v}));
+  let csv='\uFEFFالمفتش,المركز,المنطقة,التاريخ,الجولة,الدرجة,الحالة,مطابق,غير مطابق,لا ينطبق,وقت الإرسال\n';
+  sessions.forEach(s=>{
+    const m=s.meta||{};
+    csv+=`"${m.inspector||''}","${m.center||''}","${m.region||''}","${m.date||''}","${m.round||''}","${m.score!=null?m.score+'%':'—'}","${m.status==='submitted'?'مُرسل':'جاري'}","${m.ok||0}","${m.no||0}","${m.na||0}","${m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA'):''}"
+`;
+  });
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='تقارير_الزائر_السري.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkPW();});
+</script>
+
+<div style="background:#1e3a5f;color:rgba(255,255,255,.6);text-align:center;padding:12px;font-size:11px;margin-top:24px">
+  قطاع الصحة العامة بمحافظة الرس — وحدة الجودة | إعداد: د/ منتصر بشير الحسن
+</div>
+</body>
+</html>
