@@ -8,7 +8,12 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 // ============================================================
 // 🔥 إعدادات Firebase 
 // ============================================================
@@ -24,8 +29,24 @@ const firebaseConfig = {
 // ============================================================
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
 
+const auth = getAuth(app);
+  onAuthStateChanged(auth,(user)=>{
+
+  if(user){
+
+    document.getElementById('loginScreen')
+      .style.display='none';
+
+  } else {
+
+    document.getElementById('loginScreen')
+      .style.display='flex';
+
+  }
+
+});
+const db = getDatabase(app);
 const sessionsRef = ref(db, 'sessions');
 onValue(sessionsRef, (snapshot) => {
   const data = snapshot.val() || {};
@@ -135,7 +156,15 @@ tr:last-child td{border-bottom:none}
     <div style="font-size:40px;margin-bottom:12px">🔐</div>
     <h2>لوحة تحكم الأدمن</h2>
     <p>قطاع الصحة العامة بالرس | وحدة الجودة - الزائر السري</p>
-    <input type="password" id="pwInput" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')checkPW()">
+<input
+  id="username"
+  placeholder="اسم المستخدم">
+
+<input
+  type="password"
+  id="password"
+  placeholder="كلمة المرور"
+  onkeydown="if(event.key==='Enter')checkPW()">
     <div class="login-err" id="loginErr">كلمة المرور غير صحيحة</div>
     <button class="login-btn" onclick="checkPW()">دخول →</button>
   </div>
@@ -214,7 +243,7 @@ tr:last-child td{border-bottom:none}
 // ============================================================
 // ADMIN PASSWORD
 // ============================================================
-const ADMIN_PASSWORD = 'admin123';
+
 // ============================================================
 
 const RL={critical:"حرج",high:"عالي",medium:"متوسط",low:"منخفض"};
@@ -240,13 +269,35 @@ const SECTIONS_DETAIL={"1_0":{"t":"اللوحة الخارجية للمركز م
 let curFilter='all';
 let chartScores=null, chartCenters=null;
 
-function checkPW(){
-  const pw=document.getElementById('pwInput').value;
-  if(pw===ADMIN_PASSWORD){
-    document.getElementById('loginScreen').style.display='none';
-  } else {
-    document.getElementById('loginErr').style.display='block';
-    document.getElementById('pwInput').value='';
+async function checkPW(){
+
+  const username =
+    document.getElementById('username')
+      .value.trim();
+
+  const password =
+    document.getElementById('password')
+      .value;
+
+  const email =
+    username + "@inspection.local";
+
+  try {
+
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    document.getElementById('loginScreen')
+      .style.display='none';
+
+  } catch(error){
+
+    document.getElementById('loginErr')
+      .style.display='block';
+
   }
 }
 
@@ -466,7 +517,13 @@ function exportCSV(){
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkPW();});
+document
+  .getElementById('password')
+  .addEventListener('keydown',e=>{
+
+    if(e.key==='Enter') checkPW();
+
+});
 </script>
 
 <div style="background:#1e3a5f;color:rgba(255,255,255,.6);text-align:center;padding:12px;font-size:11px;margin-top:24px">
