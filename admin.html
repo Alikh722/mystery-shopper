@@ -290,12 +290,14 @@ async function checkPW(){
     document.getElementById('loginScreen')
       .style.display='none';
 
-  } catch(error){
+} catch(error){
 
-    document.getElementById('loginErr')
-      .style.display='block';
+  alert(error.code);
 
-  }
+  document.getElementById('loginErr')
+    .style.display='block';
+
+}
 }
 
 function setFilter(btn,f){
