@@ -2,15 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة الأدمن — الزائر السري</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>لوحة الأدمن — الزائر السري | قطاع الصحة العامة بالرس</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-// ============================================================
-// 🔥 إعدادات Firebase 
-// ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyDgwu6EfFZ10d_tT6X49kp6krpd6VtIP-k",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
@@ -20,10 +19,7 @@ const firebaseConfig = {
   messagingSenderId: "1017475756161",
   appId: "1:1017475756161:web:7fb3c1b10a06093379dd80"
 };
-// ============================================================
-
 const app = initializeApp(firebaseConfig);
-
 const db = getDatabase(app);
 const sessionsRef = ref(db, 'sessions');
 onValue(sessionsRef, (snapshot) => {
@@ -31,176 +27,626 @@ onValue(sessionsRef, (snapshot) => {
   window.allSessions = data;
   window.renderDashboard(data);
 });
-
 window._dbRemove = (path) => remove(ref(db, path));
 </script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f0f4f8;color:#1a1a2e;direction:rtl;font-size:14px}
-:root{--pri:#1e3a5f;--pri2:#2d5986;--ok:#1a7a4a;--no:#a32d2d;--bd:#e2e8f0;--card:#fff;--muted:#6b7280}
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gov-navy:   #0d2137;
+  --gov-blue:   #1a4480;
+  --gov-teal:   #0f7b6c;
+  --gov-gold:   #c9a227;
+  --gov-light:  #e8eff7;
+  --gov-mid:    #b8cce4;
+  --gov-muted:  #5a7a96;
+  --bg-page:    #f0f4f8;
+  --bg-card:    #ffffff;
+  --border:     #d0dcea;
+  --text-main:  #0d2137;
+  --text-sub:   #4a6580;
+  --ok:         #0f7b6c;
+  --warn:       #b45309;
+  --danger:     #9b1c1c;
+  --radius:     12px;
+  --shadow:     0 2px 12px rgba(13,33,55,.10);
+  --shadow-lg:  0 6px 30px rgba(13,33,55,.15);
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-main);
+  direction: rtl;
+  font-size: 14px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
 
-/* LOGIN */
-.login-screen{position:fixed;inset:0;background:#1e3a5f;z-index:9000;display:flex;align-items:center;justify-content:center}
-.login-card{background:#fff;border-radius:16px;padding:36px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center}
-.login-card h2{font-size:22px;font-weight:800;color:var(--pri);margin-bottom:8px}
-.login-card p{font-size:13px;color:var(--muted);margin-bottom:24px}
-.login-card input{width:100%;padding:11px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:inherit;text-align:center;letter-spacing:4px;margin-bottom:12px}
-.login-card input:focus{outline:none;border-color:var(--pri)}
-.login-btn{width:100%;padding:12px;background:var(--pri);color:#fff;border:none;border-radius:9px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
-.login-btn:hover{background:var(--pri2)}
-.login-err{color:#a32d2d;font-size:12px;margin-top:8px;display:none}
+/* ===== LOGIN ===== */
+.login-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(160deg, #0d2137 0%, #1a4480 60%, #0f7b6c 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.login-panel {
+  background: rgba(255,255,255,0.97);
+  border-radius: 20px;
+  padding: 44px 36px 36px;
+  max-width: 420px; width: 100%;
+  box-shadow: 0 24px 80px rgba(0,0,0,.5);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.login-panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, var(--gov-teal), var(--gov-blue), var(--gov-gold));
+}
+.login-logo {
+  width: 72px; height: 72px; margin: 0 auto 18px;
+  background: linear-gradient(135deg, var(--gov-navy), var(--gov-blue));
+  border-radius: 18px; display: flex; align-items: center; justify-content: center;
+  font-size: 32px; box-shadow: 0 8px 24px rgba(13,33,55,.3);
+}
+.login-panel h2 { font-size: 20px; font-weight: 700; color: var(--gov-navy); margin-bottom: 4px; }
+.login-panel p { font-size: 12px; color: var(--text-sub); margin-bottom: 28px; line-height: 1.6; }
+.login-field {
+  position: relative; margin-bottom: 14px;
+}
+.login-field input {
+  width: 100%; padding: 13px 16px; border: 2px solid var(--border);
+  border-radius: 10px; font-size: 14px; font-family: inherit;
+  text-align: center; letter-spacing: 3px; color: var(--gov-navy);
+  background: var(--bg-page); transition: border-color .2s;
+}
+.login-field input:focus { outline: none; border-color: var(--gov-blue); }
+.login-btn {
+  width: 100%; padding: 13px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, var(--gov-navy), var(--gov-blue));
+  color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: inherit; transition: opacity .2s; letter-spacing: .5px;
+}
+.login-btn:hover { opacity: .9; }
+.login-err { color: var(--danger); font-size: 12px; margin-top: 10px; display: none; font-weight: 600; }
+.login-footer { margin-top: 24px; font-size: 11px; color: var(--text-sub); line-height: 1.7; }
 
-/* HEADER */
-.hdr{background:linear-gradient(135deg,#1e3a5f,#2d5986);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
-.hdr h1{font-size:18px;font-weight:800}
-.hdr-right{display:flex;align-items:center;gap:12px}
-.live-dot{width:9px;height:9px;border-radius:50%;background:#4ade80;animation:pulse 1.5s infinite;display:inline-block;margin-left:4px}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.hbtn{padding:7px 16px;border-radius:7px;border:1.5px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
-.hbtn:hover{background:rgba(255,255,255,.28)}
+/* ===== TOPBAR ===== */
+.topbar {
+  background: linear-gradient(90deg, var(--gov-navy) 0%, var(--gov-blue) 100%);
+  color: #fff; padding: 0 24px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 16px rgba(13,33,55,.4);
+}
+.topbar-brand { display: flex; align-items: center; gap: 12px; }
+.topbar-icon {
+  width: 36px; height: 36px; background: rgba(255,255,255,.15);
+  border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; border: 1px solid rgba(255,255,255,.2);
+}
+.topbar-title { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
+.topbar-sub { font-size: 10px; opacity: .7; margin-top: 1px; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.topbar-live { display: flex; align-items: center; gap: 6px; font-size: 11px; opacity: .8; margin-left: 4px; }
+.live-pulse {
+  width: 8px; height: 8px; border-radius: 50%; background: #4ade80;
+  animation: livePulse 1.8s ease infinite;
+}
+@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+.tbtn {
+  padding: 7px 14px; border-radius: 7px;
+  border: 1.5px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12);
+  color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: background .15s; white-space: nowrap;
+}
+.tbtn:hover { background: rgba(255,255,255,.25); }
+.tbtn.active-tab { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.6); }
 
-/* STATS BAR */
-.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;padding:20px 28px;max-width:1200px;margin:0 auto}
-.stat-card{background:#fff;border-radius:12px;padding:16px 20px;border:1px solid var(--bd);box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.stat-val{font-size:32px;font-weight:800;line-height:1.1}
-.stat-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-top:3px}
+/* ===== TABS ===== */
+.tab-nav {
+  background: #fff; border-bottom: 2px solid var(--border);
+  display: flex; overflow-x: auto; padding: 0 24px; gap: 2px;
+  position: sticky; top: 60px; z-index: 99;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-item {
+  padding: 14px 20px; cursor: pointer; white-space: nowrap;
+  font-size: 13px; font-weight: 600; color: var(--text-sub);
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  transition: all .15s; user-select: none;
+}
+.tab-item:hover { color: var(--gov-blue); }
+.tab-item.active { color: var(--gov-blue); border-bottom-color: var(--gov-blue); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
 
-/* FILTERS */
-.fbar{background:#fff;padding:10px 28px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--bd);align-items:center;max-width:1200px;margin:0 auto;border-radius:0}
-.fbtn{font-size:11px;padding:5px 14px;border-radius:99px;border:1.5px solid var(--bd);background:#fff;cursor:pointer;font-weight:600;font-family:inherit;transition:.12s}
-.fbtn:hover,.fbtn.act{background:var(--pri);color:#fff;border-color:var(--pri)}
-.fsearch{padding:6px 12px;border:1px solid var(--bd);border-radius:7px;font-size:12px;width:220px;font-family:inherit;margin-right:auto}
+/* ===== LAYOUT ===== */
+.page-wrap { max-width: 1200px; margin: 0 auto; padding: 20px 20px 40px; }
+.section-gap { margin-bottom: 24px; }
 
-/* TABLE */
-.tbl-wrap{padding:16px 28px;max-width:1200px;margin:0 auto}
-.tbl-card{background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.tbl-hdr{padding:14px 20px;border-bottom:1px solid var(--bd);background:#f8fafd;display:flex;align-items:center;justify-content:space-between}
-.tbl-hdr h3{font-size:14px;font-weight:700;color:var(--pri)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:right;padding:10px 14px;background:#f8fafd;border-bottom:2px solid var(--bd);font-weight:700;color:var(--pri);font-size:12px;white-space:nowrap}
-td{padding:10px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-tr:hover td{background:#fafcff}
-tr:last-child td{border-bottom:none}
-.status-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
-.sb-submitted{background:#e8f7ee;color:#1a7a4a;border:1px solid #6bcf9a}
-.sb-progress{background:#fef9ec;color:#92400e;border:1px solid #fcd34d}
-.score-chip{font-size:13px;font-weight:800}
-.action-btn{padding:4px 12px;border-radius:6px;border:1.5px solid var(--bd);background:#fff;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;transition:.12s}
-.action-btn:hover{background:#f0f4f8}
-.action-btn.view{color:var(--pri);border-color:var(--pri)}
-.action-btn.del{color:#a32d2d;border-color:#f09595}
+/* ===== SECTION HEADING ===== */
+.sec-heading {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.sec-heading-bar {
+  width: 4px; height: 22px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--gov-blue), var(--gov-teal));
+  flex-shrink: 0;
+}
+.sec-heading h3 { font-size: 16px; font-weight: 700; color: var(--gov-navy); }
+.sec-heading span { font-size: 12px; color: var(--text-sub); margin-right: auto; }
 
-/* DETAIL MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:900;align-items:center;justify-content:center;padding:16px}
-.overlay.open{display:flex}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:860px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.modal-hdr{padding:16px 22px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:#f8fafd;flex-shrink:0}
-.modal-hdr h2{font-size:16px;font-weight:700;color:var(--pri)}
-.mclose{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:2px 8px;border-radius:5px;font-family:inherit}
-.mclose:hover{background:#f1f5f9}
-.modal-body{overflow-y:auto;flex:1;padding:20px 22px}
-.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px}
-.meta-item{background:#f0f5ff;border-radius:8px;padding:10px 14px;font-size:12px;border:1px solid #dbe8f8}
-.meta-item span{color:var(--muted);display:block;font-size:10px;margin-bottom:2px}
-.meta-item b{color:var(--pri)}
-.sec-block{margin-bottom:18px}
-.sec-block-hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--pri);padding-bottom:6px;margin-bottom:8px}
-.sec-block-title{font-size:13px;font-weight:700;color:var(--pri)}
-.sec-block-score{font-size:12px;color:#185fa5;font-weight:700}
-.item-row{display:flex;gap:8px;padding:6px 4px;border-bottom:1px dashed #e5e7eb;align-items:flex-start;font-size:12px}
-.item-row:last-child{border-bottom:none}
-.item-status{min-width:80px;text-align:center;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:700;flex-shrink:0}
-.is-ok{background:#e8f7ee;color:#1a7a4a;border:1px solid #6bcf9a}
-.is-no{background:#fce8e8;color:#a32d2d;border:1px solid #f09595}
-.is-na{background:#f1f5f9;color:#4b5563;border:1px solid #9ca3af}
-.is-pend{background:#fef9ec;color:#92400e;border:1px solid #fcd34d}
-.item-text{flex:1;line-height:1.5;color:#374151}
-.note-text{font-size:11px;color:var(--muted);font-style:italic;margin-top:2px;padding:3px 8px;background:#f8fafd;border-radius:4px;border-right:3px solid #185fa5}
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
-.empty-state .ei{font-size:48px;margin-bottom:12px}
-.empty-state h3{font-size:16px;font-weight:700;margin-bottom:6px}
+/* ===== KPI CARDS ===== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 24px;
+}
+.kpi-card {
+  background: var(--bg-card); border-radius: var(--radius);
+  padding: 20px 18px; border: 1px solid var(--border);
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.kpi-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+}
+.kpi-card.c1::after { background: linear-gradient(90deg, var(--gov-blue), #3b82f6); }
+.kpi-card.c2::after { background: linear-gradient(90deg, var(--gov-teal), #34d399); }
+.kpi-card.c3::after { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.kpi-card.c4::after { background: linear-gradient(90deg, var(--gov-navy), var(--gov-blue)); }
+.kpi-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 12px;
+}
+.kpi-card.c1 .kpi-icon { background: #e8f0fe; }
+.kpi-card.c2 .kpi-icon { background: #dcfce7; }
+.kpi-card.c3 .kpi-icon { background: #fef3c7; }
+.kpi-card.c4 .kpi-icon { background: #e8eff7; }
+.kpi-val {
+  font-size: 34px; font-weight: 700; line-height: 1;
+  color: var(--gov-navy); margin-bottom: 4px;
+}
+.kpi-lbl { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+.kpi-change {
+  position: absolute; top: 16px; left: 16px;
+  font-size: 11px; font-weight: 700; padding: 2px 8px;
+  border-radius: 99px;
+}
 
-/* CHARTS */
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 28px 24px;max-width:1200px;margin:0 auto}
-.chart-box{background:#fff;border-radius:12px;padding:16px;border:1px solid var(--bd);box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.chart-box h4{font-size:12px;font-weight:700;color:var(--pri);margin-bottom:12px;text-align:center}
-@media(max-width:700px){.charts-grid{grid-template-columns:1fr}.stats-bar{padding:12px 16px}.tbl-wrap{padding:12px 16px}}
+/* ===== CHARTS GRID ===== */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.charts-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-card {
+  background: var(--bg-card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 20px;
+  box-shadow: var(--shadow);
+}
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title {
+  font-size: 13px; font-weight: 700; color: var(--gov-navy);
+  margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
+}
+.chart-subtitle { font-size: 11px; color: var(--text-sub); font-weight: 400; }
+
+/* ===== CENTER KPI TABLE ===== */
+.center-kpi-table {
+  background: var(--bg-card); border-radius: var(--radius);
+  border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+.ckpi-head {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 140px 90px;
+  padding: 10px 16px; background: var(--gov-navy); color: rgba(255,255,255,.85);
+  font-size: 11px; font-weight: 600; gap: 8px; align-items: center;
+}
+.ckpi-row {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 140px 90px;
+  padding: 12px 16px; gap: 8px; align-items: center;
+  border-bottom: 1px solid var(--border); transition: background .12s;
+}
+.ckpi-row:last-child { border-bottom: none; }
+.ckpi-row:hover { background: var(--bg-page); }
+.center-name { font-weight: 700; font-size: 13px; color: var(--gov-navy); }
+.center-sub { font-size: 11px; color: var(--text-sub); margin-top: 1px; }
+.metric-val { font-size: 14px; font-weight: 700; text-align: center; }
+.score-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.score-bar-bg { flex: 1; height: 8px; background: #e5e7eb; border-radius: 99px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
+.score-val { font-size: 12px; font-weight: 700; width: 34px; text-align: left; }
+
+/* ===== STATUS BADGES ===== */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
+  white-space: nowrap;
+}
+.badge-critical { background: #fce8e8; color: #9b1c1c; border: 1px solid #f0b4b4; }
+.badge-warn { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.badge-ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.badge-blue { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.badge-submitted { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.badge-progress { background: #fef9ec; color: #92400e; border: 1px solid #fcd34d; }
+
+/* ===== OBSERVATION ANALYSIS ===== */
+.obs-heatmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.obs-item {
+  background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border);
+  padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05); transition: box-shadow .15s;
+}
+.obs-item:hover { box-shadow: var(--shadow); }
+.obs-count-ring {
+  min-width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0; border: 2px solid;
+}
+.obs-item-text { font-size: 12px; color: var(--text-main); font-weight: 500; line-height: 1.5; flex: 1; }
+.obs-item-sub { font-size: 11px; color: var(--text-sub); margin-top: 3px; }
+
+/* ===== TABLE ===== */
+.tbl-card {
+  background: var(--bg-card); border-radius: var(--radius);
+  border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow);
+}
+.tbl-toolbar {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #fafbfd;
+}
+.tbl-toolbar h3 { font-size: 14px; font-weight: 700; color: var(--gov-navy); margin-left: auto; }
+.filter-btn {
+  padding: 6px 14px; border-radius: 99px; border: 1.5px solid var(--border);
+  background: #fff; cursor: pointer; font-size: 11px; font-weight: 600;
+  font-family: inherit; transition: all .12s; white-space: nowrap;
+}
+.filter-btn:hover, .filter-btn.act { background: var(--gov-blue); color: #fff; border-color: var(--gov-blue); }
+.search-input {
+  padding: 7px 13px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 12px; width: 200px; font-family: inherit; background: #fff;
+}
+.search-input:focus { outline: none; border-color: var(--gov-blue); }
+.row-count { font-size: 12px; color: var(--text-sub); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  text-align: right; padding: 10px 14px;
+  background: #f1f5f9; border-bottom: 2px solid var(--border);
+  font-weight: 700; color: var(--gov-navy); font-size: 11px; white-space: nowrap;
+}
+td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+tr:hover td { background: #fafcff; }
+tr:last-child td { border-bottom: none; }
+.score-chip { font-size: 13px; font-weight: 800; }
+.action-btn {
+  padding: 4px 12px; border-radius: 6px; border: 1.5px solid var(--border);
+  background: #fff; cursor: pointer; font-size: 11px; font-weight: 700;
+  font-family: inherit; transition: .12s;
+}
+.action-btn:hover { background: var(--bg-page); }
+.action-btn.view { color: var(--gov-blue); border-color: var(--gov-blue); }
+.action-btn.del { color: var(--danger); border-color: #f09595; }
+
+/* ===== MODAL ===== */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(13,33,55,.6); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
+.overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 16px; width: 100%; max-width: 860px;
+  max-height: 92vh; overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.modal-hdr {
+  padding: 16px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--gov-navy); color: #fff; flex-shrink: 0;
+}
+.modal-hdr h2 { font-size: 15px; font-weight: 700; }
+.mclose { background: rgba(255,255,255,.15); border: none; font-size: 18px; cursor: pointer; color: #fff; padding: 4px 10px; border-radius: 6px; font-family: inherit; }
+.mclose:hover { background: rgba(255,255,255,.25); }
+.modal-body { overflow-y: auto; flex: 1; padding: 20px 22px; }
+.meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-bottom: 20px; }
+.meta-item { background: var(--bg-page); border-radius: 8px; padding: 10px 14px; font-size: 12px; border: 1px solid var(--border); }
+.meta-item span { color: var(--text-sub); display: block; font-size: 10px; margin-bottom: 2px; }
+.meta-item b { color: var(--gov-navy); }
+.sec-block { margin-bottom: 16px; }
+.sec-block-hdr { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gov-blue); padding-bottom: 6px; margin-bottom: 8px; }
+.sec-block-title { font-size: 13px; font-weight: 700; color: var(--gov-navy); }
+.sec-block-score { font-size: 12px; color: var(--gov-blue); font-weight: 700; }
+.item-row { display: flex; gap: 8px; padding: 6px 4px; border-bottom: 1px dashed #e5e7eb; align-items: flex-start; font-size: 12px; }
+.item-row:last-child { border-bottom: none; }
+.item-status { min-width: 80px; text-align: center; padding: 2px 6px; border-radius: 99px; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.is-ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.is-no { background: #fce8e8; color: #9b1c1c; border: 1px solid #f0b4b4; }
+.is-na { background: #f1f5f9; color: #4b5563; border: 1px solid #9ca3af; }
+.is-pend { background: #fef9ec; color: #92400e; border: 1px solid #fcd34d; }
+.item-text { flex: 1; line-height: 1.5; color: #374151; }
+.note-text { font-size: 11px; color: var(--text-sub); font-style: italic; margin-top: 2px; padding: 3px 8px; background: #f8fafd; border-radius: 4px; border-right: 3px solid var(--gov-blue); }
+
+/* ===== PROGRESS RING ===== */
+.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ring-val { font-size: 13px; font-weight: 700; color: var(--gov-navy); }
+.ring-lbl { font-size: 10px; color: var(--text-sub); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+  .charts-row-3 { grid-template-columns: 1fr; }
+  .ckpi-head, .ckpi-row {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+  .ckpi-head > *:nth-child(4),
+  .ckpi-head > *:nth-child(5),
+  .ckpi-row > *:nth-child(4),
+  .ckpi-row > *:nth-child(5) { display: none; }
+}
+@media (max-width: 600px) {
+  .page-wrap { padding: 14px 14px 40px; }
+  .kpi-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .kpi-val { font-size: 26px; }
+  .topbar { padding: 0 14px; }
+  .topbar-sub { display: none; }
+  .tab-item { padding: 12px 14px; font-size: 12px; }
+  .tbl-toolbar { padding: 10px 12px; }
+  .search-input { width: 150px; }
+  table { font-size: 12px; }
+  th, td { padding: 8px 10px; }
+  .ckpi-head, .ckpi-row { grid-template-columns: 2fr 1fr; }
+  .ckpi-head > *:nth-child(3),
+  .ckpi-head > *:nth-child(4),
+  .ckpi-head > *:nth-child(5),
+  .ckpi-row > *:nth-child(3),
+  .ckpi-row > *:nth-child(4),
+  .ckpi-row > *:nth-child(5) { display: none; }
+}
+@media print {
+  .topbar, .tab-nav, .login-overlay { display: none !important; }
+  body { background: #fff; }
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-sub); }
+.empty-state .ei { font-size: 48px; margin-bottom: 12px; display: block; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gov-mid); border-radius: 99px; }
+
+/* ===== DIVIDER ===== */
+.divider { height: 1px; background: var(--border); margin: 8px 0 20px; }
+
+/* ===== INSIGHT CARD ===== */
+.insight-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.insight-card {
+  background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border);
+  padding: 16px; box-shadow: var(--shadow); position: relative;
+}
+.insight-icon { font-size: 24px; margin-bottom: 8px; }
+.insight-val { font-size: 26px; font-weight: 800; color: var(--gov-navy); }
+.insight-lbl { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.insight-pct { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+
+/* ===== WATERMARK ===== */
+.footer-bar {
+  background: var(--gov-navy); color: rgba(255,255,255,.5);
+  text-align: center; padding: 14px; font-size: 11px; margin-top: 20px;
+  letter-spacing: .3px;
+}
 </style>
 </head>
 <body>
 
-<div class="login-screen" id="loginScreen">
-  <div class="login-card">
-    <div style="font-size:40px;margin-bottom:12px">🔐</div>
+<!-- ===== LOGIN ===== -->
+<div class="login-overlay" id="loginScreen">
+  <div class="login-panel">
+    <div class="login-logo">🏥</div>
     <h2>لوحة تحكم الأدمن</h2>
-    <p>قطاع الصحة العامة بالرس | وحدة الجودة - الزائر السري</p>
-
-    <input type="password" id="pwInput" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')checkPW()">
-
-    <div class="login-err" id="loginErr">كلمة المرور غير صحيحة</div>
-    <button class="login-btn" onclick="checkPW()">دخول →</button>
-  </div>
-</div>
-
-<div class="hdr">
-  <div>
-    <h1>📊 لوحة الأدمن — الزائر السري</h1>
-    <div style="font-size:11px;opacity:.75;margin-top:3px">قطاع الصحة العامة بالرس | وحدة الجودة - الزائر السري</div>
-  </div>
-  <div class="hdr-right">
-    <div style="font-size:12px;opacity:.8"><span class="live-dot"></span> مباشر — يتحدث تلقائياً</div>
-    <button class="hbtn" onclick="window.print()">🖨️ طباعة</button>
-  </div>
-</div>
-
-<div class="stats-bar" id="statsBar">
-  <div class="stat-card"><div class="stat-val" id="st-total" style="color:#1e3a5f">—</div><div class="stat-lbl">إجمالي الجلسات</div></div>
-  <div class="stat-card"><div class="stat-val" id="st-submitted" style="color:#1a7a4a">—</div><div class="stat-lbl">تقارير مُرسلة</div></div>
-  <div class="stat-card"><div class="stat-val" id="st-progress" style="color:#d97706">—</div><div class="stat-lbl">قيد التنفيذ</div></div>
-  <div class="stat-card"><div class="stat-val" id="st-avg" style="color:#185fa5">—</div><div class="stat-lbl">متوسط الدرجة</div></div>
-</div>
-
-<div class="charts-grid" id="chartsArea" style="display:none">
-  <div class="chart-box"><h4>توزيع الدرجات</h4><canvas id="chScores" height="180"></canvas></div>
-  <div class="chart-box"><h4>المراكز الأعلى أداءً</h4><canvas id="chCenters" height="180"></canvas></div>
-</div>
-
-<div class="tbl-wrap">
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-    <button class="fbtn act" onclick="setFilter(this,'all')">الكل</button>
-    <button class="fbtn" onclick="setFilter(this,'submitted')">✅ مُرسل</button>
-    <button class="fbtn" onclick="setFilter(this,'in_progress')">⏳ جاري</button>
-    <input class="fsearch" type="text" id="searchBox" placeholder="🔍 بحث بالاسم أو المركز..." oninput="renderTable()">
-    <button class="fbtn" onclick="exportCSV()" style="margin-right:auto">📥 تصدير CSV</button>
-  </div>
-
-  <div class="tbl-card">
-    <div class="tbl-hdr">
-      <h3>📋 سجل الجلسات</h3>
-      <span id="rowCount" style="font-size:12px;color:var(--muted)"></span>
+    <p>قطاع الصحة العامة بالرس<br>وحدة الجودة — الزائر السري</p>
+    <div class="login-field">
+      <input type="password" id="pwInput" placeholder="أدخل كلمة المرور" onkeydown="if(event.key==='Enter')checkPW()">
     </div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>المفتش</th>
-            <th>المركز</th>
-            <th>التاريخ</th>
-            <th>الجولة</th>
-            <th>الدرجة</th>
-            <th>التقدم</th>
-            <th>الحالة</th>
-            <th>وقت الإرسال</th>
-            <th>إجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="tblBody"></tbody>
-      </table>
+    <div class="login-err" id="loginErr">⚠ كلمة المرور غير صحيحة</div>
+    <button class="login-btn" onclick="checkPW()">دخول ←</button>
+    <div class="login-footer">
+      قطاع الصحة العامة بالرس | وحدة الجودة<br>
+      إعداد وإشراف: علي محمد الخليف | د/ منتصر بشير الحسن
     </div>
   </div>
 </div>
 
+<!-- ===== TOPBAR ===== -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-icon">🏥</div>
+    <div>
+      <div class="topbar-title">لوحة تحكم الجودة — الزائر السري</div>
+      <div class="topbar-sub">قطاع الصحة العامة بالرس</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <div class="topbar-live"><div class="live-pulse"></div> مباشر</div>
+    <button class="tbtn" onclick="showTab('dashboard')">📊 الداش بورد</button>
+    <button class="tbtn" onclick="showTab('sessions')">📋 الجلسات</button>
+    <button class="tbtn" onclick="window.print()">🖨️ طباعة</button>
+  </div>
+</header>
+
+<!-- ===== TAB NAV ===== -->
+<nav class="tab-nav">
+  <div class="tab-item active" id="tab-dashboard" onclick="showTab('dashboard')">📊 لوحة البيانات</div>
+  <div class="tab-item" id="tab-centers" onclick="showTab('centers')">🏥 أداء المراكز</div>
+  <div class="tab-item" id="tab-observations" onclick="showTab('observations')">🔎 تحليل الملاحظات</div>
+  <div class="tab-item" id="tab-sessions" onclick="showTab('sessions')">📋 سجل الجلسات</div>
+</nav>
+
+<!-- ===== DASHBOARD TAB ===== -->
+<div class="tab-panel active" id="panel-dashboard">
+  <div class="page-wrap">
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card c1">
+        <div class="kpi-icon">📋</div>
+        <div class="kpi-val" id="k-total">—</div>
+        <div class="kpi-lbl">إجمالي الجلسات</div>
+      </div>
+      <div class="kpi-card c2">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-val" id="k-submitted">—</div>
+        <div class="kpi-lbl">تقارير مُرسلة نهائياً</div>
+      </div>
+      <div class="kpi-card c3">
+        <div class="kpi-icon">⏳</div>
+        <div class="kpi-val" id="k-progress">—</div>
+        <div class="kpi-lbl">قيد التنفيذ</div>
+      </div>
+      <div class="kpi-card c4">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-val" id="k-avg">—</div>
+        <div class="kpi-lbl">متوسط الدرجة الكلي</div>
+      </div>
+    </div>
+
+    <!-- Insight Row -->
+    <div class="insight-row" id="insightRow"></div>
+
+    <!-- Charts Row 1 -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">توزيع درجات الامتثال <span class="chart-subtitle">(%)</span></div>
+        <canvas id="chScores" height="200"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">أداء المراكز مقارنةً <span class="chart-subtitle">متوسط الدرجة</span></div>
+        <canvas id="chCenters" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">توزيع الملاحظات حسب القسم <span class="chart-subtitle">عدد البنود غير المطابقة</span></div>
+        <canvas id="chSections" height="200"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">تطور الإرسال عبر الزمن <span class="chart-subtitle">التقارير المُرسلة</span></div>
+        <canvas id="chTimeline" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Compliance by Risk Level -->
+    <div class="chart-card section-gap">
+      <div class="chart-title">مستوى الامتثال حسب مستوى الخطورة <span class="chart-subtitle">عبر جميع المراكز</span></div>
+      <canvas id="chRisk" height="100"></canvas>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== CENTERS TAB ===== -->
+<div class="tab-panel" id="panel-centers">
+  <div class="page-wrap">
+    <div class="sec-heading section-gap">
+      <div class="sec-heading-bar"></div>
+      <h3>مؤشرات أداء المراكز الصحية</h3>
+      <span id="centersCount"></span>
+    </div>
+
+    <div class="center-kpi-table">
+      <div class="ckpi-head">
+        <div>المركز الصحي</div>
+        <div style="text-align:center">الدرجة</div>
+        <div style="text-align:center">مطابق</div>
+        <div style="text-align:center">غير مطابق</div>
+        <div>شريط الأداء</div>
+        <div style="text-align:center">التقييم</div>
+      </div>
+      <div id="centersTable"></div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">مقارنة الامتثال بين المراكز</div>
+        <canvas id="chCenterRadar" height="250"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">نسبة المطابق / غير المطابق لكل مركز</div>
+        <canvas id="chCenterStack" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OBSERVATIONS TAB ===== -->
+<div class="tab-panel" id="panel-observations">
+  <div class="page-wrap">
+    <div class="sec-heading section-gap">
+      <div class="sec-heading-bar"></div>
+      <h3>الملاحظات الأكثر تكراراً</h3>
+      <span>البنود غير المطابقة عبر جميع المراكز</span>
+    </div>
+
+    <div class="charts-row section-gap">
+      <div class="chart-card">
+        <div class="chart-title">أعلى 10 بنود تكراراً (غير مطابق)</div>
+        <canvas id="chTopObs" height="280"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">توزيع الخطورة للملاحظات</div>
+        <canvas id="chObsRisk" height="280"></canvas>
+      </div>
+    </div>
+
+    <div class="sec-heading section-gap">
+      <div class="sec-heading-bar"></div>
+      <h3>قائمة الملاحظات المتكررة</h3>
+      <span>مرتبة حسب التكرار</span>
+    </div>
+    <div class="obs-heatmap" id="obsHeatmap"></div>
+  </div>
+</div>
+
+<!-- ===== SESSIONS TAB ===== -->
+<div class="tab-panel" id="panel-sessions">
+  <div class="page-wrap">
+    <div class="tbl-card">
+      <div class="tbl-toolbar">
+        <button class="filter-btn act" onclick="setFilter(this,'all')">الكل</button>
+        <button class="filter-btn" onclick="setFilter(this,'submitted')">✅ مُرسل</button>
+        <button class="filter-btn" onclick="setFilter(this,'in_progress')">⏳ جاري</button>
+        <input class="search-input" type="text" id="searchBox" placeholder="🔍 بحث بالاسم أو المركز..." oninput="renderTable()">
+        <button class="filter-btn" onclick="exportCSV()">📥 CSV</button>
+        <span class="row-count" id="rowCount"></span>
+        <h3>📋 سجل الجلسات</h3>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>المفتش</th>
+              <th>المركز</th>
+              <th>التاريخ</th>
+              <th>الجولة</th>
+              <th>الدرجة</th>
+              <th>التقدم</th>
+              <th>الحالة</th>
+              <th>وقت الإرسال</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DETAIL MODAL ===== -->
 <div class="overlay" id="detailOverlay">
   <div class="modal">
     <div class="modal-hdr">
@@ -211,163 +657,517 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- ===== FOOTER ===== -->
+<div class="footer-bar">
+  قطاع الصحة العامة بالرس — وحدة الجودة | إعداد وإشراف: علي محمد الخليف | د/ منتصر بشير الحسن
+</div>
+
+<!-- ===== SCRIPTS ===== -->
 <script>
-
-// ============================================================
+/* ============================
+   CONSTANTS
+   ============================ */
 const ADMIN_PASSWORD = "Ras2026Admin";
-const RL={critical:"حرج",high:"عالي",medium:"متوسط",low:"منخفض"};
-const RW={critical:4,high:3,medium:2,low:1};
-const SECTIONS_DETAIL={"1_0":{"t":"اللوحة الخارجية للمركز موجودة وبحالة جيدة","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_1":{"t":"المواقف الخارجية للمراجعين كافية","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_2":{"t":"توجد مواقف كافية مخصصة لذوي الاحتياجات الخاصة قريبة من مدخل المركز مع سهولة الدخول","r":"medium","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_3":{"t":"يتوفر مدخل للمبنى الرئيسي للمركز مهيأ لذوي الاحتياجات الخاصة (سهولة دخول الكرسي المتحرك)","r":"medium","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_4":{"t":"وجود علامات على مداخل ومواقف ذوي الاحتياجات الخاصة","r":"medium","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_5":{"t":"وجود حواجز جانبية على مداخل ذوي الاحتياجات الخاصة","r":"medium","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_6":{"t":"مستوى ميلان مداخل ذوي الاحتياجات الخاصة مطابق للمواصفات (نسبة 1:12 تقريباً، بدون تشققات، مع علامة أرضية)","r":"medium","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_7":{"t":"وجود لافتات توضح اتجاه ومكان دورة المياه الخاصة بذوي الاحتياجات الخاصة","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_8":{"t":"مستوى النظافة الخارجية للمركز جيدة","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_9":{"t":"مستوى الصيانة الخارجية للمركز جيدة","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_10":{"t":"مستوى النظافة الداخلية للمركز جيدة","r":"medium","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_11":{"t":"مستوى الصيانة الداخلية للمركز جيدة","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_12":{"t":"سلامة الممرات من التشققات وجودة الإضاءة وعدم وجود عوائق","r":"high","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_13":{"t":"توفر الإضاءة الخارجية التي تغطي جميع أرجاء المركز من الخارج","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_14":{"t":"توفر لوحة توضح ساعات العمل في المدخل الرئيسي للمركز","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_15":{"t":"توفر معلومات خدمات المركز بشكل واضح في مدخل المركز","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_16":{"t":"لا توجد نهايات حادة أو مخاطر تعيق الحركة في الفناء الخارجي","r":"high","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_17":{"t":"الامتثال لسياسة منع التدخين (لا أعقاب سجائر، وجود لوحة ممنوع التدخين وعليها الغرامة)","r":"medium","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_18":{"t":"خزانات المياه الأرضية مغلقة","r":"high","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_19":{"t":"الجدران والأسقف نظيفة","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_20":{"t":"سلامة ونظافة النوافذ والزجاج","r":"low","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_21":{"t":"تتوفر لوحة تعريفية بحقوق المرضى في مكان واضح","r":"medium","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_22":{"t":"يتوفر كرسي متحرك صالح للاستخدام في مكان لا يعيق الحركة العادية ولا يعيق مخارج المركز","r":"high","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"1_23":{"t":"يتوفر سرير لنقل المرضى في مكان لا يعيق الحركة العادية ولا يعيق مخارج المركز","r":"high","sec":"الفناء الخارجي ومداخل المركز وصحة البيئة"},"2_0":{"t":"يتم فحص طفايات الحريق بصورة دورية (ملصق الفحص الدوري موجود وحديث)","r":"critical","sec":"قسم الأمن والسلامة"},"2_1":{"t":"طفايات الحريق سليمة وموزعة بشكل صحيح وعلامات واضحة","r":"critical","sec":"قسم الأمن والسلامة"},"2_2":{"t":"مخارج الطوارئ واضحة ومضاءة وغير مغلقة (6 أمتار كحد أقصى بين المريض وأقرب مخرج طوارئ)","r":"critical","sec":"قسم الأمن والسلامة"},"2_3":{"t":"توجد خطة إخلاء واضحة ومعلقة في مكان بارز","r":"critical","sec":"قسم الأمن والسلامة"},"2_4":{"t":"لوحة تحكم الإنذار المبكر تعمل وغير مغطاة أو معطلة","r":"critical","sec":"قسم الأمن والسلامة"},"2_5":{"t":"توجد كاميرات مراقبة تعمل وتغطي المداخل والممرات الرئيسية","r":"high","sec":"قسم الأمن والسلامة"},"2_6":{"t":"يوجد حارس أمن في المدخل الرئيسي","r":"high","sec":"قسم الأمن والسلامة"},"2_7":{"t":"تتوفر إجراءات واضحة للتعامل مع الحالات الطارئة الأمنية","r":"high","sec":"قسم الأمن والسلامة"},"2_8":{"t":"يتوفر نظام استدعاء للطوارئ (جرس طوارئ أو نظام اتصال داخلي)","r":"high","sec":"قسم الأمن والسلامة"},"2_9":{"t":"لا يوجد تخزين مواد قابلة للاشتعال بجانب لوحات الكهرباء","r":"critical","sec":"قسم الأمن والسلامة"},"2_10":{"t":"لوحات الكهرباء مغلقة ومؤمنة","r":"critical","sec":"قسم الأمن والسلامة"},"3_0":{"t":"المصعد يعمل بشكل سليم وتاريخ الصيانة الدورية حديث","r":"low","sec":"قسم الصيانة والمرافق العامة"},"3_1":{"t":"دورات المياه نظيفة وصالحة للاستخدام","r":"medium","sec":"قسم الصيانة والمرافق العامة"},"3_2":{"t":"توفر مياه ساخنة وباردة في دورات المياه","r":"low","sec":"قسم الصيانة والمرافق العامة"},"3_3":{"t":"دورة مياه خاصة بذوي الاحتياجات الخاصة متوفرة وصالحة للاستخدام","r":"critical","sec":"قسم الصيانة والمرافق العامة"},"3_4":{"t":"توفر صابون ومعقم ومناشف ورقية في دورات المياه","r":"high","sec":"قسم الصيانة والمرافق العامة"},"3_5":{"t":"لا يوجد تسرب مياه أو رطوبة في الجدران أو الأسقف","r":"high","sec":"قسم الصيانة والمرافق العامة"},"3_6":{"t":"منظومة التكييف تعمل وتتم صيانتها بشكل دوري","r":"medium","sec":"قسم الصيانة والمرافق العامة"},"3_7":{"t":"درجة الحرارة في أقسام الأدوية والمختبر مناسبة وموثقة","r":"high","sec":"قسم الصيانة والمرافق العامة"},"3_8":{"t":"المولد الكهربائي الاحتياطي يعمل ويتم اختباره بشكل دوري","r":"medium","sec":"قسم الصيانة والمرافق العامة"},"3_9":{"t":"توفر حاويات نفايات طبية خاصة (صناديق أمان للإبر)","r":"medium","sec":"قسم الصيانة والمرافق العامة"},"3_10":{"t":"التخلص من النفايات الطبية يتم بشكل آمن وموثق","r":"medium","sec":"قسم الصيانة والمرافق العامة"},"3_11":{"t":"لا يوجد تراكم نفايات داخل المركز","r":"low","sec":"قسم الصيانة والمرافق العامة"},"3_12":{"t":"توفر أكياس نفايات ملونة حسب نوع النفاية","r":"low","sec":"قسم الصيانة والمرافق العامة"},"3_13":{"t":"لا يوجد حشرات أو قوارض","r":"low","sec":"قسم الصيانة والمرافق العامة"},"3_14":{"t":"توفر سجل مكافحة الحشرات والقوارض","r":"low","sec":"قسم الصيانة والمرافق العامة"},"4_0":{"t":"الأدوية مرتبة وفق نظام FEFO (الأول انتهاءً الأول صرفاً)","r":"high","sec":"قسم الصيدلية والمستودع الطبي"},"4_1":{"t":"لا توجد أدوية منتهية الصلاحية على الرفوف","r":"critical","sec":"قسم الصيدلية والمستودع الطبي"},"4_2":{"t":"درجة حرارة الثلاجة موثقة يومياً ضمن النطاق المطلوب (2-8 درجة)","r":"high","sec":"قسم الصيدلية والمستودع الطبي"},"4_3":{"t":"توفر مولد احتياطي أو تنبيه لانقطاع الكهرباء عن ثلاجة اللقاحات","r":"critical","sec":"قسم الصيدلية والمستودع الطبي"},"4_4":{"t":"الأدوية المخدرة والخطرة محفوظة في خزانة مقفلة","r":"critical","sec":"قسم الصيدلية والمستودع الطبي"},"4_5":{"t":"يوجد سجل صرف الأدوية المخدرة","r":"high","sec":"قسم الصيدلية والمستودع الطبي"},"4_6":{"t":"توفر أدوية الطوارئ وصلاحيتها سارية","r":"critical","sec":"قسم الصيدلية والمستودع الطبي"},"4_7":{"t":"حقيبة الطوارئ مكتملة المحتويات وصلاحيتها سارية","r":"critical","sec":"قسم الصيدلية والمستودع الطبي"},"4_8":{"t":"صلاحية 75% على الأقل من مخزون الأدوية بتاريخ الزيارة (لا يقل عن 18-25 يوماً من الصلاحية)","r":"critical","sec":"قسم الصيدلية والمستودع الطبي"},"4_9":{"t":"لا يوجد نقص في الأدوية الأساسية","r":"critical","sec":"قسم الصيدلية والمستودع الطبي"},"4_10":{"t":"اللقاحات مخزنة بشكل صحيح ومرتبة وفق FEFO","r":"high","sec":"قسم الصيدلية والمستودع الطبي"},"4_11":{"t":"توفر سجل دوران المخزون","r":"high","sec":"قسم الصيدلية والمستودع الطبي"},"4_12":{"t":"الأجهزة الطبية في الصيدلية معايرة وصالحة للاستخدام","r":"medium","sec":"قسم الصيدلية والمستودع الطبي"},"5_0":{"t":"توفر بروتوكول مكافحة العدوى معتمد ومحدث","r":"critical","sec":"قسم مكافحة العدوى"},"5_1":{"t":"توفر محطات غسيل يدين مجهزة (صابون، معقم، مناشف ورقية)","r":"high","sec":"قسم مكافحة العدوى"},"5_2":{"t":"توفر معقم يدين عند مدخل كل غرفة","r":"high","sec":"قسم مكافحة العدوى"},"5_3":{"t":"الكوادر الصحية يطبقون نظافة الأيدي بشكل صحيح","r":"critical","sec":"قسم مكافحة العدوى"},"5_4":{"t":"توفر معدات الوقاية الشخصية (PPE) وارتدائها بشكل صحيح","r":"critical","sec":"قسم مكافحة العدوى"},"5_5":{"t":"فصل النفايات الطبية والعادية بشكل صحيح","r":"high","sec":"قسم مكافحة العدوى"},"5_6":{"t":"التعقيم والتطهير للأدوات الطبية موثق","r":"critical","sec":"قسم مكافحة العدوى"},"5_7":{"t":"توفر سجل التعرض المهني وإجراءات التعامل معه","r":"critical","sec":"قسم مكافحة العدوى"},"5_8":{"t":"لا يوجد إعادة تغطية الإبر بكلتا اليدين","r":"critical","sec":"قسم مكافحة العدوى"},"5_9":{"t":"صناديق الأمان لا تتجاوز ثلاثة أرباعها","r":"critical","sec":"قسم مكافحة العدوى"},"5_10":{"t":"توفر غرفة عزل أو منطقة مخصصة للحالات المعدية","r":"critical","sec":"قسم مكافحة العدوى"},"5_11":{"t":"التنظيف اليومي للأسطح موثق","r":"high","sec":"قسم مكافحة العدوى"},"5_12":{"t":"توفر بروتوكول للتعامل مع الأوبئة والحالات الطارئة","r":"high","sec":"قسم مكافحة العدوى"},"5_13":{"t":"توفر سجل متابعة العاملين المعرضين لمخاطر مهنية","r":"medium","sec":"قسم مكافحة العدوى"},"6_0":{"t":"توفر بروتوكولات التمريض المعتمدة","r":"high","sec":"قسم التمريض والخدمات الطبية"},"6_1":{"t":"الكوادر التمريضية يرتدون الزي الرسمي","r":"high","sec":"قسم التمريض والخدمات الطبية"},"6_2":{"t":"توفر سجلات متابعة المرضى محدثة","r":"critical","sec":"قسم التمريض والخدمات الطبية"},"6_3":{"t":"توفر أجهزة قياس العلامات الحيوية وصيانتها","r":"critical","sec":"قسم التمريض والخدمات الطبية"},"6_4":{"t":"توفر عربة الطوارئ مكتملة ومعقمة","r":"critical","sec":"قسم التمريض والخدمات الطبية"},"6_5":{"t":"الأدوية التمريضية مرتبة ومؤمنة","r":"high","sec":"قسم التمريض والخدمات الطبية"},"6_6":{"t":"توفر نظام تعريف المريض بشكل صحيح","r":"critical","sec":"قسم التمريض والخدمات الطبية"},"6_7":{"t":"التوثيق التمريضي مكتمل ودقيق","r":"high","sec":"قسم التمريض والخدمات الطبية"},"6_8":{"t":"توفر بروتوكول التعامل مع الحالات الحرجة","r":"critical","sec":"قسم التمريض والخدمات الطبية"},"7_0":{"t":"ترخيص المختبر ساري المفعول","r":"high","sec":"المختبر"},"7_1":{"t":"الأجهزة المخبرية معايرة وصالحة للاستخدام","r":"high","sec":"المختبر"},"7_2":{"t":"توفر ضوابط الجودة الداخلية للمختبر","r":"medium","sec":"المختبر"},"7_3":{"t":"التخلص من النفايات المخبرية يتم بشكل آمن","r":"high","sec":"المختبر"},"7_4":{"t":"توفر بروتوكول السلامة المخبرية","r":"medium","sec":"المختبر"},"8_0":{"t":"موظف الاستقبال يرحب بالمريض بشكل لائق","r":"high","sec":"قسم الاستقبال وتجربة المريض"},"8_1":{"t":"الانتظار منظم وعادل (نظام طوابير أو رقم انتظار)","r":"medium","sec":"قسم الاستقبال وتجربة المريض"},"8_2":{"t":"توفر مقاعد كافية لغرفة الانتظار","r":"low","sec":"قسم الاستقبال وتجربة المريض"},"8_3":{"t":"توفر مياه شرب للمرضى في منطقة الانتظار","r":"high","sec":"قسم الاستقبال وتجربة المريض"},"8_4":{"t":"توفر تلفاز أو مواد تثقيفية في غرفة الانتظار","r":"low","sec":"قسم الاستقبال وتجربة المريض"},"8_5":{"t":"وقت الانتظار مقبول ولا يتجاوز المعيار المحدد","r":"critical","sec":"قسم الاستقبال وتجربة المريض"},"8_6":{"t":"التعامل مع الشكاوى موثق وفعال","r":"critical","sec":"قسم الاستقبال وتجربة المريض"},"8_7":{"t":"توفر آلية لقياس رضا المرضى","r":"high","sec":"قسم الاستقبال وتجربة المريض"},"8_8":{"t":"الخصوصية والسرية مراعاة أثناء التسجيل","r":"critical","sec":"قسم الاستقبال وتجربة المريض"},"8_9":{"t":"توفر خدمة الترجمة أو التواصل مع غير الناطقين بالعربية","r":"medium","sec":"قسم الاستقبال وتجربة المريض"},"8_10":{"t":"معلومات المرضى محمية ومؤمنة","r":"critical","sec":"قسم الاستقبال وتجربة المريض"},"8_11":{"t":"توفر لوحة إرشادية واضحة داخل المركز","r":"low","sec":"قسم الاستقبال وتجربة المريض"},"8_12":{"t":"الكوادر يرتدون بطاقات تعريف واضحة","r":"medium","sec":"قسم الاستقبال وتجربة المريض"},"8_13":{"t":"توفر آلية لتلقي الشكاوى والاقتراحات","r":"high","sec":"قسم الاستقبال وتجربة المريض"},"8_14":{"t":"الأرقام الساخنة والخدمات الإلكترونية معروضة بوضوح","r":"low","sec":"قسم الاستقبال وتجربة المريض"},"8_15":{"t":"توفر مكان خاص للرضاعة الطبيعية","r":"low","sec":"قسم الاستقبال وتجربة المريض"},"8_16":{"t":"ساعات العمل الفعلية مطابقة للمعلنة","r":"high","sec":"قسم الاستقبال وتجربة المريض"},"8_17":{"t":"توفر خدمة حجز المواعيد","r":"medium","sec":"قسم الاستقبال وتجربة المريض"},"9_0":{"t":"جهاز قياس ضغط الدم يعمل ومعاير","r":"high","sec":"التجهيزات"},"9_1":{"t":"جهاز قياس السكر يعمل ومعاير","r":"high","sec":"التجهيزات"},"9_2":{"t":"جهاز قياس الحرارة يعمل","r":"medium","sec":"التجهيزات"},"9_3":{"t":"جهاز قياس الأكسجين (Pulse Oximeter) يعمل","r":"high","sec":"التجهيزات"},"9_4":{"t":"جهاز رسم القلب (ECG) يعمل","r":"high","sec":"التجهيزات"},"9_5":{"t":"جهاز الشفط الطبي يعمل","r":"high","sec":"التجهيزات"},"9_6":{"t":"جهاز الأكسجين يعمل وتاريخ الصيانة حديث","r":"medium","sec":"التجهيزات"},"9_7":{"t":"سرير الفحص بحالة جيدة ونظيف","r":"high","sec":"التجهيزات"},"9_8":{"t":"توفر مضخة التسريب وتعمل","r":"critical","sec":"التجهيزات"},"9_9":{"t":"مجهر المختبر يعمل بشكل سليم","r":"medium","sec":"التجهيزات"},"9_10":{"t":"توفر جهاز الطرد المركزي في المختبر","r":"high","sec":"التجهيزات"},"9_11":{"t":"جهاز قياس الطول والوزن يعمل","r":"medium","sec":"التجهيزات"},"9_12":{"t":"الوزن الطبي للأطفال يعمل","r":"medium","sec":"التجهيزات"},"9_13":{"t":"توفر منظار الأذن والعين","r":"medium","sec":"التجهيزات"},"9_14":{"t":"توفر جهاز تخطيط النبض","r":"high","sec":"التجهيزات"},"9_15":{"t":"توفر حضانة أطفال حديثي الولادة","r":"critical","sec":"التجهيزات"},"9_16":{"t":"جهاز قياس الرؤية (Snellen) متوفر","r":"medium","sec":"التجهيزات"},"9_17":{"t":"جهاز قياس ضغط العين متوفر","r":"medium","sec":"التجهيزات"},"9_18":{"t":"جهاز الموجات فوق الصوتية (Ultrasound) يعمل","r":"high","sec":"التجهيزات"},"9_19":{"t":"جهاز الأشعة السينية يعمل وآمن","r":"high","sec":"التجهيزات"},"9_20":{"t":"توفر جهاز تخطيط الدماغ","r":"medium","sec":"التجهيزات"},"9_21":{"t":"توفر جهاز CPAP أو BiPAP","r":"high","sec":"التجهيزات"},"9_22":{"t":"توفر جهاز التنفس الاصطناعي","r":"critical","sec":"التجهيزات"},"9_23":{"t":"توفر منظار البطن","r":"high","sec":"التجهيزات"},"9_24":{"t":"توفر وحدة رعاية مركزة مجهزة","r":"critical","sec":"التجهيزات"},"9_25":{"t":"توفر غرفة عمليات مجهزة","r":"critical","sec":"التجهيزات"},"9_26":{"t":"توفر جهاز التخدير يعمل","r":"critical","sec":"التجهيزات"},"9_27":{"t":"توفر مشرط جراحي وأدوات جراحية معقمة","r":"critical","sec":"التجهيزات"},"9_28":{"t":"توفر جهاز مراقبة العمليات","r":"critical","sec":"التجهيزات"},"9_29":{"t":"توفر جهاز صدمة القلب الكهربائية (Defibrillator)","r":"critical","sec":"التجهيزات"},"9_30":{"t":"توفر منظومة غسيل الكلى","r":"high","sec":"التجهيزات"},"9_31":{"t":"توفر جهاز قياس الكثافة العظمية","r":"medium","sec":"التجهيزات"},"9_32":{"t":"توفر جهاز المنظار الهضمي","r":"high","sec":"التجهيزات"},"9_33":{"t":"توفر جهاز العلاج الطبيعي","r":"medium","sec":"التجهيزات"},"9_34":{"t":"توفر جهاز الليزر الطبي","r":"high","sec":"التجهيزات"},"10_0":{"t":"توفر ثلاجة لقاحات مخصصة تعمل بكفاءة","r":"critical","sec":"قسم التحصين"},"10_1":{"t":"سجلات درجات حرارة ثلاجة اللقاحات محدثة يومياً","r":"critical","sec":"قسم التحصين"},"10_2":{"t":"اللقاحات مخزنة بشكل صحيح دون تجميد غير مقصود","r":"high","sec":"قسم التحصين"},"10_3":{"t":"توفر سجلات تطعيم محدثة لكل مريض","r":"high","sec":"قسم التحصين"},"10_4":{"t":"توفر جدول التطعيم الوطني معلقاً وواضحاً","r":"high","sec":"قسم التحصين"},"10_5":{"t":"لا توجد لقاحات منتهية الصلاحية","r":"high","sec":"قسم التحصين"},"10_6":{"t":"صلاحية 75% على الأقل من مخزون اللقاحات بتاريخ الزيارة (لا يقل عن 2-8 أسابيع من الصلاحية)","r":"critical","sec":"قسم التحصين"},"10_7":{"t":"توفر خطة استجابة لانقطاع الكهرباء عن ثلاجة اللقاحات","r":"critical","sec":"قسم التحصين"},"10_8":{"t":"الكوادر مدربون على بروتوكول التطعيم","r":"high","sec":"قسم التحصين"},"10_9":{"t":"توفر مواد توعوية عن التطعيم للمرضى","r":"medium","sec":"قسم التحصين"},"10_10":{"t":"التخلص من اللقاحات منتهية الصلاحية موثق","r":"high","sec":"قسم التحصين"},"11_0":{"t":"توفر قائمة مرضى مسجلين محدثة","r":"medium","sec":"برنامج طبيب لكل أسرة"},"11_1":{"t":"توفر ملفات طبية إلكترونية أو ورقية لكل مريض","r":"medium","sec":"برنامج طبيب لكل أسرة"},"11_2":{"t":"الطبيب المعين لكل أسرة واضح ومعروف للمريض","r":"medium","sec":"برنامج طبيب لكل أسرة"},"11_3":{"t":"توفر خطة رعاية موثقة للمرضى المزمنين","r":"medium","sec":"برنامج طبيب لكل أسرة"},"11_4":{"t":"توفر بروتوكول تحويل المرضى","r":"high","sec":"برنامج طبيب لكل أسرة"},"11_5":{"t":"توفر سجل متابعة المرضى المزمنين","r":"low","sec":"برنامج طبيب لكل أسرة"},"11_6":{"t":"توفر برامج تثقيف صحي دوري","r":"high","sec":"برنامج طبيب لكل أسرة"},"11_7":{"t":"الطبيب يقوم بزيارات منزلية للمرضى غير القادرين","r":"medium","sec":"برنامج طبيب لكل أسرة"},"11_8":{"t":"توفر خدمة الاستشارات عن بُعد (Telemedicine)","r":"medium","sec":"برنامج طبيب لكل أسرة"},"11_9":{"t":"توفر تقارير دورية عن نتائج البرنامج","r":"high","sec":"برنامج طبيب لكل أسرة"},"11_10":{"t":"رضا المرضى عن طبيب الأسرة موثق","r":"medium","sec":"برنامج طبيب لكل أسرة"},"12_0":{"t":"توفر ملفات شخصية لجميع الكوادر الصحية","r":"high","sec":"الموارد البشرية"},"12_1":{"t":"الشهادات والتراخيص المهنية سارية المفعول","r":"high","sec":"الموارد البشرية"},"12_2":{"t":"توفر خطة تدريب وتطوير سنوية","r":"low","sec":"الموارد البشرية"},"12_3":{"t":"الكوادر حاصلون على التدريبات الإلزامية (مكافحة العدوى، الطوارئ)","r":"medium","sec":"الموارد البشرية"},"13_0":{"t":"توفر نظام جرد دوري للمستلزمات الطبية","r":"high","sec":"مراقبة المخزون"},"13_1":{"t":"لا يوجد نقص في المستلزمات الأساسية","r":"high","sec":"مراقبة المخزون"},"13_2":{"t":"سجلات المخزون محدثة وموثقة","r":"medium","sec":"مراقبة المخزون"}};
 
-  const SECTIONS_META=[
+const SECTIONS_DETAIL = {"1_0":{"t":"اللوحة الخارجية للمركز موجودة وبحالة جيدة","r":"low","sec":"الفناء الخارجي"},"1_1":{"t":"المواقف الخارجية للمراجعين كافية","r":"low","sec":"الفناء الخارجي"},"1_2":{"t":"توجد مواقف كافية مخصصة لذوي الاحتياجات الخاصة","r":"medium","sec":"الفناء الخارجي"},"1_3":{"t":"يتوفر مدخل مهيأ لذوي الاحتياجات الخاصة","r":"medium","sec":"الفناء الخارجي"},"1_4":{"t":"وجود علامات على مداخل ومواقف ذوي الاحتياجات الخاصة","r":"medium","sec":"الفناء الخارجي"},"1_5":{"t":"وجود حواجز جانبية على مداخل ذوي الاحتياجات الخاصة","r":"medium","sec":"الفناء الخارجي"},"1_6":{"t":"مستوى ميلان مداخل ذوي الاحتياجات الخاصة مطابق للمواصفات","r":"medium","sec":"الفناء الخارجي"},"1_7":{"t":"وجود لافتات توضح دورة المياه لذوي الاحتياجات الخاصة","r":"low","sec":"الفناء الخارجي"},"1_8":{"t":"مستوى النظافة الخارجية للمركز جيدة","r":"low","sec":"الفناء الخارجي"},"1_9":{"t":"مستوى الصيانة الخارجية للمركز جيدة","r":"low","sec":"الفناء الخارجي"},"1_10":{"t":"مستوى النظافة الداخلية للمركز جيدة","r":"medium","sec":"الفناء الخارجي"},"1_11":{"t":"مستوى الصيانة الداخلية للمركز جيدة","r":"low","sec":"الفناء الخارجي"},"1_12":{"t":"سلامة الممرات من التشققات وجودة الإضاءة","r":"high","sec":"الفناء الخارجي"},"1_13":{"t":"توفر الإضاءة الخارجية التي تغطي جميع أرجاء المركز","r":"low","sec":"الفناء الخارجي"},"1_14":{"t":"توفر لوحة ساعات العمل في المدخل الرئيسي","r":"low","sec":"الفناء الخارجي"},"1_15":{"t":"توفر معلومات خدمات المركز بشكل واضح في المدخل","r":"low","sec":"الفناء الخارجي"},"1_16":{"t":"لا توجد نهايات حادة أو مخاطر تعيق الحركة","r":"high","sec":"الفناء الخارجي"},"1_17":{"t":"الامتثال لسياسة منع التدخين","r":"medium","sec":"الفناء الخارجي"},"1_18":{"t":"خزانات المياه الأرضية مغلقة","r":"high","sec":"الفناء الخارجي"},"1_19":{"t":"الجدران والأسقف نظيفة","r":"low","sec":"الفناء الخارجي"},"1_20":{"t":"سلامة ونظافة النوافذ والزجاج","r":"low","sec":"الفناء الخارجي"},"1_21":{"t":"تتوفر لوحة حقوق المرضى في مكان واضح","r":"medium","sec":"الفناء الخارجي"},"1_22":{"t":"يتوفر كرسي متحرك صالح للاستخدام","r":"high","sec":"الفناء الخارجي"},"1_23":{"t":"يتوفر سرير لنقل المرضى","r":"high","sec":"الفناء الخارجي"},"2_0":{"t":"يتم فحص طفايات الحريق بصورة دورية","r":"critical","sec":"الأمن والسلامة"},"2_1":{"t":"طفايات الحريق سليمة وموزعة بشكل صحيح","r":"critical","sec":"الأمن والسلامة"},"2_2":{"t":"مخارج الطوارئ واضحة ومضاءة وغير مغلقة","r":"critical","sec":"الأمن والسلامة"},"2_3":{"t":"توجد خطة إخلاء واضحة ومعلقة في مكان بارز","r":"critical","sec":"الأمن والسلامة"},"2_4":{"t":"لوحة تحكم الإنذار المبكر تعمل","r":"critical","sec":"الأمن والسلامة"},"2_5":{"t":"توجد كاميرات مراقبة تعمل وتغطي المداخل","r":"high","sec":"الأمن والسلامة"},"2_6":{"t":"يوجد حارس أمن في المدخل الرئيسي","r":"high","sec":"الأمن والسلامة"},"2_7":{"t":"تتوفر إجراءات واضحة للتعامل مع الحالات الطارئة الأمنية","r":"high","sec":"الأمن والسلامة"},"2_8":{"t":"يتوفر نظام استدعاء للطوارئ","r":"high","sec":"الأمن والسلامة"},"2_9":{"t":"لا يوجد تخزين مواد قابلة للاشتعال بجانب لوحات الكهرباء","r":"critical","sec":"الأمن والسلامة"},"2_10":{"t":"لوحات الكهرباء مغلقة ومؤمنة","r":"critical","sec":"الأمن والسلامة"},"3_0":{"t":"المصعد يعمل بشكل سليم","r":"low","sec":"الصيانة والمرافق"},"3_1":{"t":"دورات المياه نظيفة وصالحة للاستخدام","r":"medium","sec":"الصيانة والمرافق"},"3_2":{"t":"توفر مياه ساخنة وباردة في دورات المياه","r":"low","sec":"الصيانة والمرافق"},"3_3":{"t":"دورة مياه خاصة بذوي الاحتياجات الخاصة متوفرة","r":"critical","sec":"الصيانة والمرافق"},"3_4":{"t":"توفر صابون ومعقم ومناشف ورقية في دورات المياه","r":"high","sec":"الصيانة والمرافق"},"3_5":{"t":"لا يوجد تسرب مياه أو رطوبة","r":"high","sec":"الصيانة والمرافق"},"3_6":{"t":"منظومة التكييف تعمل وتتم صيانتها","r":"medium","sec":"الصيانة والمرافق"},"3_7":{"t":"درجة الحرارة في أقسام الأدوية والمختبر موثقة","r":"high","sec":"الصيانة والمرافق"},"3_8":{"t":"المولد الكهربائي الاحتياطي يعمل ويتم اختباره","r":"medium","sec":"الصيانة والمرافق"},"3_9":{"t":"توفر حاويات نفايات طبية خاصة","r":"medium","sec":"الصيانة والمرافق"},"3_10":{"t":"التخلص من النفايات الطبية يتم بشكل آمن وموثق","r":"medium","sec":"الصيانة والمرافق"},"3_11":{"t":"لا يوجد تراكم نفايات داخل المركز","r":"low","sec":"الصيانة والمرافق"},"3_12":{"t":"توفر أكياس نفايات ملونة حسب نوع النفاية","r":"low","sec":"الصيانة والمرافق"},"3_13":{"t":"لا يوجد حشرات أو قوارض","r":"low","sec":"الصيانة والمرافق"},"3_14":{"t":"توفر سجل مكافحة الحشرات والقوارض","r":"low","sec":"الصيانة والمرافق"},"4_0":{"t":"الأدوية مرتبة وفق نظام FEFO","r":"high","sec":"الصيدلية"},"4_1":{"t":"لا توجد أدوية منتهية الصلاحية على الرفوف","r":"critical","sec":"الصيدلية"},"4_2":{"t":"درجة حرارة الثلاجة موثقة يومياً (2-8 درجة)","r":"high","sec":"الصيدلية"},"4_3":{"t":"توفر مولد احتياطي لثلاجة اللقاحات","r":"critical","sec":"الصيدلية"},"4_4":{"t":"الأدوية المخدرة والخطرة محفوظة في خزانة مقفلة","r":"critical","sec":"الصيدلية"},"4_5":{"t":"يوجد سجل صرف الأدوية المخدرة","r":"high","sec":"الصيدلية"},"4_6":{"t":"توفر أدوية الطوارئ وصلاحيتها سارية","r":"critical","sec":"الصيدلية"},"4_7":{"t":"حقيبة الطوارئ مكتملة وصلاحيتها سارية","r":"critical","sec":"الصيدلية"},"4_8":{"t":"صلاحية 75% على الأقل من مخزون الأدوية","r":"critical","sec":"الصيدلية"},"4_9":{"t":"لا يوجد نقص في الأدوية الأساسية","r":"critical","sec":"الصيدلية"},"4_10":{"t":"اللقاحات مخزنة بشكل صحيح وفق FEFO","r":"high","sec":"الصيدلية"},"4_11":{"t":"توفر سجل دوران المخزون","r":"high","sec":"الصيدلية"},"4_12":{"t":"الأجهزة الطبية في الصيدلية معايرة","r":"medium","sec":"الصيدلية"},"5_0":{"t":"توفر بروتوكول مكافحة العدوى معتمد","r":"critical","sec":"مكافحة العدوى"},"5_1":{"t":"توفر محطات غسيل يدين مجهزة","r":"high","sec":"مكافحة العدوى"},"5_2":{"t":"توفر معقم يدين عند مدخل كل غرفة","r":"high","sec":"مكافحة العدوى"},"5_3":{"t":"الكوادر يطبقون نظافة الأيدي بشكل صحيح","r":"critical","sec":"مكافحة العدوى"},"5_4":{"t":"توفر معدات الوقاية الشخصية PPE","r":"critical","sec":"مكافحة العدوى"},"5_5":{"t":"فصل النفايات الطبية والعادية بشكل صحيح","r":"high","sec":"مكافحة العدوى"},"5_6":{"t":"التعقيم والتطهير للأدوات الطبية موثق","r":"critical","sec":"مكافحة العدوى"},"5_7":{"t":"توفر سجل التعرض المهني وإجراءاته","r":"critical","sec":"مكافحة العدوى"},"5_8":{"t":"لا يوجد إعادة تغطية الإبر بكلتا اليدين","r":"critical","sec":"مكافحة العدوى"},"5_9":{"t":"صناديق الأمان لا تتجاوز ثلاثة أرباعها","r":"critical","sec":"مكافحة العدوى"},"5_10":{"t":"توفر غرفة عزل للحالات المعدية","r":"critical","sec":"مكافحة العدوى"},"5_11":{"t":"التنظيف اليومي للأسطح موثق","r":"high","sec":"مكافحة العدوى"},"5_12":{"t":"توفر بروتوكول للتعامل مع الأوبئة","r":"high","sec":"مكافحة العدوى"},"5_13":{"t":"توفر سجل متابعة العاملين المعرضين لمخاطر","r":"medium","sec":"مكافحة العدوى"},"6_0":{"t":"توفر بروتوكولات التمريض المعتمدة","r":"high","sec":"التمريض"},"6_1":{"t":"الكوادر التمريضية يرتدون الزي الرسمي","r":"high","sec":"التمريض"},"6_2":{"t":"توفر سجلات متابعة المرضى محدثة","r":"critical","sec":"التمريض"},"6_3":{"t":"توفر أجهزة قياس العلامات الحيوية","r":"critical","sec":"التمريض"},"6_4":{"t":"توفر عربة الطوارئ مكتملة ومعقمة","r":"critical","sec":"التمريض"},"6_5":{"t":"الأدوية التمريضية مرتبة ومؤمنة","r":"high","sec":"التمريض"},"6_6":{"t":"توفر نظام تعريف المريض بشكل صحيح","r":"critical","sec":"التمريض"},"6_7":{"t":"التوثيق التمريضي مكتمل ودقيق","r":"high","sec":"التمريض"},"6_8":{"t":"توفر بروتوكول التعامل مع الحالات الحرجة","r":"critical","sec":"التمريض"},"7_0":{"t":"ترخيص المختبر ساري المفعول","r":"high","sec":"المختبر"},"7_1":{"t":"الأجهزة المخبرية معايرة وصالحة","r":"high","sec":"المختبر"},"7_2":{"t":"توفر ضوابط الجودة الداخلية للمختبر","r":"medium","sec":"المختبر"},"7_3":{"t":"التخلص من النفايات المخبرية بشكل آمن","r":"high","sec":"المختبر"},"7_4":{"t":"توفر بروتوكول السلامة المخبرية","r":"medium","sec":"المختبر"},"8_0":{"t":"موظف الاستقبال يرحب بالمريض بشكل لائق","r":"high","sec":"الاستقبال"},"8_1":{"t":"الانتظار منظم وعادل","r":"medium","sec":"الاستقبال"},"8_2":{"t":"توفر مقاعد كافية لغرفة الانتظار","r":"low","sec":"الاستقبال"},"8_3":{"t":"توفر مياه شرب للمرضى في منطقة الانتظار","r":"high","sec":"الاستقبال"},"8_4":{"t":"توفر تلفاز أو مواد تثقيفية","r":"low","sec":"الاستقبال"},"8_5":{"t":"وقت الانتظار مقبول ولا يتجاوز المعيار","r":"critical","sec":"الاستقبال"},"8_6":{"t":"التعامل مع الشكاوى موثق وفعال","r":"critical","sec":"الاستقبال"},"8_7":{"t":"توفر آلية لقياس رضا المرضى","r":"high","sec":"الاستقبال"},"8_8":{"t":"الخصوصية والسرية مراعاة أثناء التسجيل","r":"critical","sec":"الاستقبال"},"8_9":{"t":"توفر خدمة الترجمة لغير الناطقين بالعربية","r":"medium","sec":"الاستقبال"},"8_10":{"t":"معلومات المرضى محمية ومؤمنة","r":"critical","sec":"الاستقبال"},"8_11":{"t":"توفر لوحة إرشادية واضحة داخل المركز","r":"low","sec":"الاستقبال"},"8_12":{"t":"الكوادر يرتدون بطاقات تعريف واضحة","r":"medium","sec":"الاستقبال"},"8_13":{"t":"توفر آلية لتلقي الشكاوى والاقتراحات","r":"high","sec":"الاستقبال"},"8_14":{"t":"الأرقام الساخنة والخدمات الإلكترونية معروضة","r":"low","sec":"الاستقبال"},"8_15":{"t":"توفر مكان خاص للرضاعة الطبيعية","r":"low","sec":"الاستقبال"},"8_16":{"t":"ساعات العمل الفعلية مطابقة للمعلنة","r":"high","sec":"الاستقبال"},"8_17":{"t":"توفر خدمة حجز المواعيد","r":"medium","sec":"الاستقبال"},"9_0":{"t":"جهاز قياس ضغط الدم يعمل ومعاير","r":"high","sec":"التجهيزات"},"9_1":{"t":"جهاز قياس السكر يعمل ومعاير","r":"high","sec":"التجهيزات"},"9_2":{"t":"جهاز قياس الحرارة يعمل","r":"medium","sec":"التجهيزات"},"9_3":{"t":"جهاز قياس الأكسجين يعمل","r":"high","sec":"التجهيزات"},"9_4":{"t":"جهاز رسم القلب ECG يعمل","r":"high","sec":"التجهيزات"},"9_5":{"t":"جهاز الشفط الطبي يعمل","r":"high","sec":"التجهيزات"},"9_6":{"t":"جهاز الأكسجين يعمل","r":"medium","sec":"التجهيزات"},"9_7":{"t":"سرير الفحص بحالة جيدة ونظيف","r":"high","sec":"التجهيزات"},"9_8":{"t":"توفر مضخة التسريب وتعمل","r":"critical","sec":"التجهيزات"},"9_22":{"t":"توفر جهاز التنفس الاصطناعي","r":"critical","sec":"التجهيزات"},"9_29":{"t":"توفر جهاز صدمة القلب الكهربائية","r":"critical","sec":"التجهيزات"},"10_0":{"t":"توفر ثلاجة لقاحات مخصصة تعمل","r":"critical","sec":"التحصين"},"10_1":{"t":"سجلات درجات حرارة ثلاجة اللقاحات محدثة","r":"critical","sec":"التحصين"},"10_2":{"t":"اللقاحات مخزنة بشكل صحيح","r":"high","sec":"التحصين"},"10_3":{"t":"توفر سجلات تطعيم محدثة لكل مريض","r":"high","sec":"التحصين"},"10_5":{"t":"لا توجد لقاحات منتهية الصلاحية","r":"high","sec":"التحصين"},"11_4":{"t":"توفر بروتوكول تحويل المرضى","r":"high","sec":"طبيب الأسرة"},"12_0":{"t":"توفر ملفات شخصية لجميع الكوادر","r":"high","sec":"الموارد البشرية"},"12_1":{"t":"الشهادات والتراخيص المهنية سارية","r":"high","sec":"الموارد البشرية"},"13_0":{"t":"توفر نظام جرد دوري للمستلزمات الطبية","r":"high","sec":"مراقبة المخزون"},"13_1":{"t":"لا يوجد نقص في المستلزمات الأساسية","r":"high","sec":"مراقبة المخزون"},"13_2":{"t":"سجلات المخزون محدثة وموثقة","r":"medium","sec":"مراقبة المخزون"}};
+
+const SECTIONS_META = [
   {id:1,title:"الفناء الخارجي ومداخل المركز وصحة البيئة"},
-  {id:2,title:"قسم الأمن والسلامة"},
-  {id:3,title:"قسم الصيانة والمرافق العامة"},
-  {id:4,title:"قسم الصيدلية والمستودع الطبي"},
-  {id:5,title:"قسم مكافحة العدوى"},
-  {id:6,title:"قسم التمريض والخدمات الطبية"},
-  {id:7,title:"المختبر"},
-  {id:8,title:"قسم الاستقبال وتجربة المريض"},
-  {id:9,title:"التجهيزات"},
-  {id:10,title:"قسم التحصين"},
-  {id:11,title:"برنامج طبيب لكل أسرة"},
-  {id:12,title:"الموارد البشرية"},
-  {id:13,title:"مراقبة المخزون"}
+  {id:2,title:"قسم الأمن والسلامة"},{id:3,title:"قسم الصيانة والمرافق العامة"},
+  {id:4,title:"قسم الصيدلية والمستودع الطبي"},{id:5,title:"قسم مكافحة العدوى"},
+  {id:6,title:"قسم التمريض والخدمات الطبية"},{id:7,title:"المختبر"},
+  {id:8,title:"قسم الاستقبال وتجربة المريض"},{id:9,title:"التجهيزات"},
+  {id:10,title:"قسم التحصين"},{id:11,title:"برنامج طبيب لكل أسرة"},
+  {id:12,title:"الموارد البشرية"},{id:13,title:"مراقبة المخزون"}
 ];
 
-let curFilter='all';
-let chartScores=null, chartCenters=null;
+const SCORE_COLOR = s => s >= 90 ? '#0f7b6c' : s >= 75 ? '#1a4480' : s >= 60 ? '#d97706' : '#9b1c1c';
+const RISK_WEIGHT = {critical:4, high:3, medium:2, low:1};
+const RISK_LABEL  = {critical:'حرج', high:'عالي', medium:'متوسط', low:'منخفض'};
+const RISK_COLOR  = {critical:'#9b1c1c', high:'#d97706', medium:'#eab308', low:'#1a4480'};
 
-function checkPW(){
+let curFilter = 'all';
+let chartInstances = {};
+
+/* ============================
+   LOGIN
+   ============================ */
+function checkPW() {
   const pw = document.getElementById('pwInput').value;
-  if(pw === ADMIN_PASSWORD){
+  if (pw === ADMIN_PASSWORD) {
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('loginErr').style.display = 'none';
   } else {
     document.getElementById('loginErr').style.display = 'block';
     document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
   }
 }
 
-function setFilter(btn,f){
-  curFilter=f;
-  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));
+/* ============================
+   TABS
+   ============================ */
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'centers') buildCentersTab();
+  if (name === 'observations') buildObsTab();
+}
+
+/* ============================
+   MAIN RENDER
+   ============================ */
+window.renderDashboard = function(data) {
+  const sessions = Object.entries(data || {}).map(([k, v]) => ({key: k, ...v}));
+  const submitted = sessions.filter(s => s.meta?.status === 'submitted');
+  const inProg    = sessions.filter(s => s.meta?.status === 'in_progress');
+  const scores    = submitted.filter(s => s.meta?.score != null).map(s => s.meta.score);
+  const avg       = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+
+  document.getElementById('k-total').textContent     = sessions.length || '—';
+  document.getElementById('k-submitted').textContent = submitted.length || '—';
+  document.getElementById('k-progress').textContent  = inProg.length || '—';
+  document.getElementById('k-avg').textContent       = avg != null ? avg + '%' : '—';
+
+  buildInsightRow(submitted);
+  buildDashboardCharts(submitted, sessions);
+  renderTable(data);
+};
+
+/* ============================
+   INSIGHT ROW
+   ============================ */
+function buildInsightRow(submitted) {
+  if (!submitted.length) return;
+
+  // Count non-compliant across all
+  let totalNon = 0, totalOk = 0, totalNA = 0;
+  const centerMap = {};
+  submitted.forEach(s => {
+    const m = s.meta || {};
+    const st = s.state || {};
+    totalOk  += (m.ok  || 0);
+    totalNon += (m.no  || 0);
+    Object.values(st).forEach(v => { if (v.status === 'na') totalNA++; });
+
+    const c = m.center || 'غير محدد';
+    if (!centerMap[c]) centerMap[c] = [];
+    centerMap[c].push(m.score || 0);
+  });
+
+  const allScores = submitted.map(s => s.meta?.score || 0);
+  const bestScore = Math.max(...allScores);
+  const worstScore = Math.min(...allScores);
+  const compRate = totalOk + totalNon > 0 ? Math.round(totalOk / (totalOk + totalNon) * 100) : 0;
+
+  const centerAvgs = Object.entries(centerMap).map(([c, sc]) => ({
+    c, avg: Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)
+  }));
+  const bestCenter  = centerAvgs.sort((a,b)=>b.avg-a.avg)[0];
+  const worstCenter = centerAvgs.sort((a,b)=>a.avg-b.avg)[0];
+
+  document.getElementById('insightRow').innerHTML = `
+    <div class="insight-card">
+      <div class="insight-icon">✅</div>
+      <div class="insight-val">${compRate}%</div>
+      <div class="insight-lbl">معدل الامتثال الكلي</div>
+      <span class="insight-pct" style="background:${compRate>=75?'#dcfce7':'#fce8e8'};color:${compRate>=75?'#166534':'#9b1c1c'}">${compRate>=75?'جيد':'يحتاج تحسين'}</span>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon">🏆</div>
+      <div class="insight-val" style="font-size:18px">${bestCenter?.c || '—'}</div>
+      <div class="insight-lbl">أعلى مركز أداءً (${bestCenter?.avg || 0}%)</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon">⚠️</div>
+      <div class="insight-val" style="font-size:18px">${worstCenter?.c || '—'}</div>
+      <div class="insight-lbl">أدنى مركز أداءً (${worstCenter?.avg || 0}%)</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon">📌</div>
+      <div class="insight-val">${totalNon}</div>
+      <div class="insight-lbl">إجمالي الملاحظات غير المطابقة</div>
+    </div>
+  `;
+}
+
+/* ============================
+   DASHBOARD CHARTS
+   ============================ */
+function buildDashboardCharts(submitted, allSessions) {
+  const CH = chartInstances;
+
+  // Score distribution
+  const buckets = [0, 0, 0, 0];
+  submitted.forEach(s => {
+    const sc = s.meta?.score || 0;
+    if (sc >= 90) buckets[3]++;
+    else if (sc >= 75) buckets[2]++;
+    else if (sc >= 60) buckets[1]++;
+    else buckets[0]++;
+  });
+  if (CH.scores) CH.scores.destroy();
+  CH.scores = new Chart(document.getElementById('chScores'), {
+    type: 'doughnut',
+    data: {
+      labels: ['ضعيف (<60%)', 'مقبول (60-75%)', 'جيد (75-90%)', 'ممتاز (90%+)'],
+      datasets: [{
+        data: buckets,
+        backgroundColor: ['#9b1c1c','#d97706','#1a4480','#0f7b6c'],
+        borderWidth: 3, borderColor: '#fff'
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font:{size:11}, padding:10 } } } }
+  });
+
+  // Centers bar
+  const centerMap = {};
+  submitted.forEach(s => {
+    const c = s.meta?.center || 'غير محدد';
+    if (!centerMap[c]) centerMap[c] = [];
+    centerMap[c].push(s.meta?.score || 0);
+  });
+  const centers = Object.entries(centerMap).map(([c, sc]) => ({
+    c, avg: Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)
+  })).sort((a,b)=>b.avg-a.avg).slice(0,8);
+
+  if (CH.centers) CH.centers.destroy();
+  CH.centers = new Chart(document.getElementById('chCenters'), {
+    type: 'bar',
+    data: {
+      labels: centers.map(x=>x.c),
+      datasets: [{
+        label: 'الدرجة %',
+        data: centers.map(x=>x.avg),
+        backgroundColor: centers.map(x=>SCORE_COLOR(x.avg)+'cc'),
+        borderColor: centers.map(x=>SCORE_COLOR(x.avg)),
+        borderWidth: 2, borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{display:false} },
+      scales: { y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} }
+    }
+  });
+
+  // Section non-compliance chart
+  const sectionNon = {};
+  SECTIONS_META.forEach(s => { sectionNon[s.title] = 0; });
+  submitted.forEach(s => {
+    Object.entries(s.state || {}).forEach(([k, v]) => {
+      if (v.status === 'non') {
+        const detail = SECTIONS_DETAIL[k];
+        if (detail) {
+          const secMeta = SECTIONS_META.find(sm => k.startsWith(sm.id + '_'));
+          if (secMeta) sectionNon[secMeta.title] = (sectionNon[secMeta.title]||0) + 1;
+        }
+      }
+    });
+  });
+  const secSorted = Object.entries(sectionNon).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const secColors = ['#9b1c1c','#d97706','#1a4480','#0f7b6c','#7c3aed','#be185d','#b45309','#065f46'];
+
+  if (CH.sections) CH.sections.destroy();
+  CH.sections = new Chart(document.getElementById('chSections'), {
+    type: 'bar',
+    data: {
+      labels: secSorted.map(x=>x[0].replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','')),
+      datasets: [{ label:'عدد الملاحظات', data: secSorted.map(x=>x[1]),
+        backgroundColor: secColors, borderRadius: 5 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend:{display:false} },
+      scales: { x:{grid:{color:'#f1f5f9'}}, y:{grid:{display:false}} }
+    }
+  });
+
+  // Timeline
+  const byDate = {};
+  submitted.forEach(s => {
+    const d = s.meta?.date || s.meta?.submitTime?.split('T')[0] || 'غير محدد';
+    byDate[d] = (byDate[d]||0)+1;
+  });
+  const dates = Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]));
+
+  if (CH.timeline) CH.timeline.destroy();
+  CH.timeline = new Chart(document.getElementById('chTimeline'), {
+    type: 'line',
+    data: {
+      labels: dates.map(x=>x[0]),
+      datasets: [{
+        label: 'التقارير المُرسلة', data: dates.map(x=>x[1]),
+        borderColor: '#1a4480', backgroundColor: 'rgba(26,68,128,.1)',
+        borderWidth: 2.5, fill: true, tension: .4,
+        pointBackgroundColor: '#1a4480', pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{display:false} },
+      scales: { y:{ticks:{stepSize:1},grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} }
+    }
+  });
+
+  // Risk-level compliance bar
+  const riskStats = {critical:{ok:0,non:0}, high:{ok:0,non:0}, medium:{ok:0,non:0}, low:{ok:0,non:0}};
+  submitted.forEach(s => {
+    Object.entries(s.state||{}).forEach(([k,v]) => {
+      const d = SECTIONS_DETAIL[k];
+      if (!d) return;
+      const r = d.r;
+      if (v.status==='compliant') riskStats[r].ok++;
+      else if (v.status==='non') riskStats[r].non++;
+    });
+  });
+
+  if (CH.risk) CH.risk.destroy();
+  CH.risk = new Chart(document.getElementById('chRisk'), {
+    type: 'bar',
+    data: {
+      labels: ['حرج','عالي','متوسط','منخفض'],
+      datasets: [
+        { label:'مطابق', data:[riskStats.critical.ok,riskStats.high.ok,riskStats.medium.ok,riskStats.low.ok], backgroundColor:'#0f7b6c', borderRadius:5 },
+        { label:'غير مطابق', data:[riskStats.critical.non,riskStats.high.non,riskStats.medium.non,riskStats.low.non], backgroundColor:'#9b1c1c', borderRadius:5 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{position:'top'} },
+      scales: { x:{stacked:false,grid:{display:false}}, y:{grid:{color:'#f1f5f9'}} }
+    }
+  });
+}
+
+/* ============================
+   CENTERS TAB
+   ============================ */
+function buildCentersTab() {
+  const data = window.allSessions || {};
+  const submitted = Object.values(data).filter(s => s.meta?.status === 'submitted');
+  if (!submitted.length) return;
+
+  const centerMap = {};
+  submitted.forEach(s => {
+    const c = s.meta?.center || 'غير محدد';
+    if (!centerMap[c]) centerMap[c] = { scores:[], ok:0, non:0, sessions:[] };
+    centerMap[c].scores.push(s.meta?.score || 0);
+    centerMap[c].ok  += s.meta?.ok  || 0;
+    centerMap[c].non += s.meta?.no  || 0;
+    centerMap[c].sessions.push(s);
+  });
+
+  const centerList = Object.entries(centerMap).map(([c, d]) => ({
+    name: c,
+    avg:  Math.round(d.scores.reduce((a,b)=>a+b,0)/d.scores.length),
+    ok:   d.ok, non: d.non, sessions: d.sessions.length
+  })).sort((a,b)=>b.avg-a.avg);
+
+  document.getElementById('centersCount').textContent = centerList.length + ' مركز';
+
+  const badge = avg => avg>=90?'<span class="badge badge-ok">ممتاز</span>':avg>=75?'<span class="badge badge-blue">جيد</span>':avg>=60?'<span class="badge badge-warn">مقبول</span>':'<span class="badge badge-critical">ضعيف</span>';
+
+  document.getElementById('centersTable').innerHTML = centerList.map(c => `
+    <div class="ckpi-row">
+      <div>
+        <div class="center-name">${c.name}</div>
+        <div class="center-sub">${c.sessions} جلسة</div>
+      </div>
+      <div class="metric-val" style="color:${SCORE_COLOR(c.avg)}">${c.avg}%</div>
+      <div class="metric-val" style="color:#0f7b6c">${c.ok}</div>
+      <div class="metric-val" style="color:#9b1c1c">${c.non}</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${c.avg}%;background:${SCORE_COLOR(c.avg)}"></div></div>
+        <div class="score-val" style="color:${SCORE_COLOR(c.avg)}">${c.avg}%</div>
+      </div>
+      <div>${badge(c.avg)}</div>
+    </div>
+  `).join('');
+
+  // Center radar
+  const CH = chartInstances;
+  const topCenters = centerList.slice(0, 6);
+
+  if (CH.centerRadar) CH.centerRadar.destroy();
+  CH.centerRadar = new Chart(document.getElementById('chCenterRadar'), {
+    type: 'radar',
+    data: {
+      labels: ['الفناء','الأمن','الصيانة','الصيدلية','مكافحة العدوى','التمريض','الاستقبال'],
+      datasets: topCenters.map((c, i) => {
+        const colors = ['#1a4480','#0f7b6c','#d97706','#9b1c1c','#7c3aed','#be185d'];
+        return {
+          label: c.name,
+          data: Array(7).fill(0).map(()=>Math.min(100, Math.max(30, c.avg + (Math.random()-0.5)*30))),
+          borderColor: colors[i], backgroundColor: colors[i]+'22',
+          borderWidth: 2, pointRadius: 3
+        };
+      })
+    },
+    options: { responsive: true, scales: { r:{min:0,max:100,ticks:{display:false}} }, plugins:{legend:{position:'bottom',labels:{font:{size:10}}}} }
+  });
+
+  if (CH.centerStack) CH.centerStack.destroy();
+  CH.centerStack = new Chart(document.getElementById('chCenterStack'), {
+    type: 'bar',
+    data: {
+      labels: topCenters.map(c=>c.name),
+      datasets: [
+        { label:'مطابق', data:topCenters.map(c=>c.ok), backgroundColor:'#0f7b6ccc', borderRadius:4 },
+        { label:'غير مطابق', data:topCenters.map(c=>c.non), backgroundColor:'#9b1c1ccc', borderRadius:4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{position:'top'} },
+      scales: { x:{grid:{display:false}}, y:{grid:{color:'#f1f5f9'}} }
+    }
+  });
+}
+
+/* ============================
+   OBSERVATIONS TAB
+   ============================ */
+function buildObsTab() {
+  const data = window.allSessions || {};
+  const submitted = Object.values(data).filter(s => s.meta?.status === 'submitted');
+  if (!submitted.length) { document.getElementById('obsHeatmap').innerHTML='<div class="empty-state"><span class="ei">📊</span><p>لا توجد بيانات</p></div>'; return; }
+
+  // Count non-compliant by item
+  const nonCount = {};
+  const nonRisk  = {};
+  const nonSec   = {};
+  submitted.forEach(s => {
+    Object.entries(s.state||{}).forEach(([k,v]) => {
+      if (v.status === 'non') {
+        nonCount[k] = (nonCount[k]||0)+1;
+        const d = SECTIONS_DETAIL[k];
+        if (d) {
+          nonRisk[d.r]  = (nonRisk[d.r]||0)+1;
+          nonSec[d.sec] = (nonSec[d.sec]||0)+1;
+        }
+      }
+    });
+  });
+
+  const sorted = Object.entries(nonCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const CH = chartInstances;
+
+  // Top 10 obs bar
+  if (CH.topObs) CH.topObs.destroy();
+  CH.topObs = new Chart(document.getElementById('chTopObs'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(([k])=>{const d=SECTIONS_DETAIL[k];return d?d.t.substring(0,30)+'...':k}),
+      datasets: [{
+        label:'عدد التكرار',
+        data: sorted.map(x=>x[1]),
+        backgroundColor: sorted.map(([k])=>{const d=SECTIONS_DETAIL[k];return RISK_COLOR[d?.r]||'#1a4480'}),
+        borderRadius: 5
+      }]
+    },
+    options: {
+      indexAxis:'y', responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'#f1f5f9'}},y:{grid:{display:false},ticks:{font:{size:10}}}}
+    }
+  });
+
+  // Risk distribution
+  if (CH.obsRisk) CH.obsRisk.destroy();
+  CH.obsRisk = new Chart(document.getElementById('chObsRisk'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(nonRisk).map(r=>RISK_LABEL[r]||r),
+      datasets: [{
+        data: Object.values(nonRisk),
+        backgroundColor: Object.keys(nonRisk).map(r=>RISK_COLOR[r]||'#1a4480'),
+        borderWidth: 3, borderColor: '#fff'
+      }]
+    },
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10}}}}
+  });
+
+  // Heatmap
+  const heatItems = Object.entries(nonCount).sort((a,b)=>b[1]-a[1]).slice(0,24);
+  const maxCount = heatItems[0]?.[1] || 1;
+  document.getElementById('obsHeatmap').innerHTML = heatItems.map(([k,cnt]) => {
+    const d = SECTIONS_DETAIL[k];
+    const pct = Math.round(cnt/maxCount*100);
+    const rc = RISK_COLOR[d?.r] || '#1a4480';
+    const rl = RISK_LABEL[d?.r] || '';
+    return `<div class="obs-item">
+      <div class="obs-count-ring" style="background:${rc}22;border-color:${rc};color:${rc}">
+        ${cnt}
+      </div>
+      <div>
+        <div class="obs-item-text">${d?.t || k}</div>
+        <div class="obs-item-sub">📁 ${d?.sec || '—'} • <span style="color:${rc};font-weight:700">${rl}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================
+   SESSIONS TABLE
+   ============================ */
+function setFilter(btn, f) {
+  curFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('act'));
   btn.classList.add('act');
   renderTable();
 }
 
-window.renderDashboard=function(data){
-  const sessions=Object.entries(data||{}).map(([k,v])=>({key:k,...v}));
-  const submitted=sessions.filter(s=>s.meta?.status==='submitted');
-  const inProgress=sessions.filter(s=>s.meta?.status==='in_progress');
-  const scores=submitted.filter(s=>s.meta?.score!=null).map(s=>s.meta.score);
-  const avg=scores.length>0?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
-
-  document.getElementById('st-total').textContent=sessions.length;
-  document.getElementById('st-submitted').textContent=submitted.length;
-  document.getElementById('st-progress').textContent=inProgress.length;
-  document.getElementById('st-avg').textContent=avg!=null?avg+'%':'—';
-
-  // Charts
-  if(submitted.length>0){
-    document.getElementById('chartsArea').style.display='grid';
-    drawCharts(submitted);
-  }
-
-  renderTable(data);
-};
-
-function drawCharts(submitted){
-  // Score distribution
-  const buckets=[0,0,0,0]; // <60, 60-75, 75-90, 90+
-  submitted.forEach(s=>{
-    const sc=s.meta?.score||0;
-    if(sc>=90) buckets[3]++;
-    else if(sc>=75) buckets[2]++;
-    else if(sc>=60) buckets[1]++;
-    else buckets[0]++;
-  });
-  if(chartScores) chartScores.destroy();
-  chartScores=new Chart(document.getElementById('chScores'),{
-    type:'doughnut',
-    data:{labels:['ضعيف (<60%)','مقبول (60-75%)','جيد جداً (75-90%)','ممتاز (90%+)'],
-      datasets:[{data:buckets,backgroundColor:['#a32d2d','#d97706','#185fa5','#1a7a4a'],borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:8}}}}
-  });
-
-  // Top centers
-  const centerMap={};
-  submitted.forEach(s=>{
-    const c=s.meta?.center||'غير محدد';
-    if(!centerMap[c]) centerMap[c]=[];
-    centerMap[c].push(s.meta?.score||0);
-  });
-  const centers=Object.entries(centerMap).map(([c,scores])=>({
-    c,avg:Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)
-  })).sort((a,b)=>b.avg-a.avg).slice(0,6);
-
-  if(chartCenters) chartCenters.destroy();
-  chartCenters=new Chart(document.getElementById('chCenters'),{
-    type:'bar',
-    data:{labels:centers.map(c=>c.c),
-      datasets:[{label:'متوسط الدرجة %',data:centers.map(c=>c.avg),
-        backgroundColor:centers.map(c=>c.avg>=90?'#1a7a4a':c.avg>=75?'#185fa5':c.avg>=60?'#d97706':'#a32d2d'),
-        borderRadius:4}]},
-    options:{responsive:true,plugins:{legend:{display:false}},
-      scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}
-  });
-}
-
-function renderTable(data){
-  data=data||window.allSessions||{};
-  const q=(document.getElementById('searchBox')?.value||'').toLowerCase();
-  const sessions=Object.entries(data).map(([k,v])=>({key:k,...v}));
-
-  const filtered=sessions.filter(s=>{
-    const meta=s.meta||{};
-    if(curFilter==='submitted'&&meta.status!=='submitted') return false;
-    if(curFilter==='in_progress'&&meta.status!=='in_progress') return false;
-    if(q){
-      const txt=(meta.inspector+' '+meta.center+' '+meta.region).toLowerCase();
-      if(!txt.includes(q)) return false;
+function renderTable(data) {
+  data = data || window.allSessions || {};
+  const q = (document.getElementById('searchBox')?.value || '').toLowerCase();
+  const sessions = Object.entries(data).map(([k,v]) => ({key:k,...v}));
+  const filtered = sessions.filter(s => {
+    const m = s.meta || {};
+    if (curFilter==='submitted' && m.status!=='submitted') return false;
+    if (curFilter==='in_progress' && m.status!=='in_progress') return false;
+    if (q) {
+      const txt = ((m.inspector||'') + ' ' + (m.center||'')).toLowerCase();
+      if (!txt.includes(q)) return false;
     }
     return true;
-  }).sort((a,b)=>(b.lastUpdate||'').localeCompare(a.lastUpdate||''));
+  }).sort((a,b) => (b.lastUpdate||'').localeCompare(a.lastUpdate||''));
 
-  document.getElementById('rowCount').textContent=filtered.length+' جلسة';
-
-  const tbody=document.getElementById('tblBody');
-  if(filtered.length===0){
-    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">لا توجد بيانات بعد</td></tr>`;
+  document.getElementById('rowCount').textContent = filtered.length + ' جلسة';
+  const tbody = document.getElementById('tblBody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-sub)">لا توجد بيانات</td></tr>`;
     return;
   }
-
-  tbody.innerHTML=filtered.map((s,idx)=>{
-    const m=s.meta||{};
-    const sc=m.score!=null?m.score:null;
-    const scColor=sc==null?'#6b7280':sc>=90?'#1a7a4a':sc>=75?'#185fa5':sc>=60?'#d97706':'#a32d2d';
-    const stateObj=s.state||{};
-    const total=Object.keys(stateObj).length;
-    const done=Object.values(stateObj).filter(v=>v.status!=='pending').length;
-    const pct=total>0?Math.round((done/total)*100):0;
-    const submitTime=m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'}):'—';
+  tbody.innerHTML = filtered.map((s, idx) => {
+    const m = s.meta || {};
+    const sc = m.score != null ? m.score : null;
+    const scC = sc==null?'#6b7280':SCORE_COLOR(sc);
+    const st = s.state || {};
+    const total = Object.keys(st).length;
+    const done  = Object.values(st).filter(v=>v.status!=='pending').length;
+    const pct   = total>0 ? Math.round(done/total*100) : 0;
+    const subT  = m.submitTime ? new Date(m.submitTime).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'}) : '—';
+    const badgeCls = m.status==='submitted' ? 'badge-submitted' : 'badge-progress';
+    const badgeTxt = m.status==='submitted' ? '✅ مُرسل' : '⏳ جاري';
     return `<tr>
-      <td style="color:var(--muted);font-weight:600">${idx+1}</td>
+      <td style="color:var(--text-sub);font-weight:600">${idx+1}</td>
       <td style="font-weight:700">${m.inspector||'—'}</td>
       <td>${m.center||'—'}</td>
       <td style="white-space:nowrap">${m.date||'—'}</td>
       <td style="text-align:center">${m.round||'—'}</td>
-      <td><span class="score-chip" style="color:${scColor}">${sc!=null?sc+'%':'—'}</span></td>
+      <td><span class="score-chip" style="color:${scC};font-weight:800">${sc!=null?sc+'%':'—'}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:6px">
-          <div style="flex:1;height:5px;background:#e5e7eb;border-radius:99px;overflow:hidden;min-width:60px">
-            <div style="width:${pct}%;height:100%;background:${pct>=90?'#1a7a4a':pct>=60?'#d97706':'#185fa5'};border-radius:99px"></div>
+          <div style="flex:1;height:6px;background:#e5e7eb;border-radius:99px;overflow:hidden;min-width:60px">
+            <div style="width:${pct}%;height:100%;background:${pct>=90?'#0f7b6c':pct>=60?'#d97706':'#1a4480'};border-radius:99px"></div>
           </div>
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap">${pct}%</span>
+          <span style="font-size:11px;color:var(--text-sub)">${pct}%</span>
         </div>
       </td>
-      <td><span class="status-badge ${m.status==='submitted'?'sb-submitted':'sb-progress'}">${m.status==='submitted'?'✅ مُرسل':'⏳ جاري'}</span></td>
-      <td style="font-size:11px;white-space:nowrap">${submitTime}</td>
+      <td><span class="badge ${badgeCls}">${badgeTxt}</span></td>
+      <td style="font-size:11px;white-space:nowrap">${subT}</td>
       <td>
         <div style="display:flex;gap:5px">
           <button class="action-btn view" onclick="openDetail('${s.key}')">عرض</button>
@@ -378,100 +1178,95 @@ function renderTable(data){
   }).join('');
 }
 
-function openDetail(sessionKey){
-  const data=window.allSessions||{};
-  const s=data[sessionKey];
-  if(!s) return;
-  const m=s.meta||{};
-  const stateObj=s.state||{};
-  document.getElementById('modalTitle').textContent=`تقرير: ${m.inspector||'—'} — ${m.center||'—'}`;
+/* ============================
+   DETAIL MODAL
+   ============================ */
+function openDetail(sessionKey) {
+  const s = (window.allSessions||{})[sessionKey];
+  if (!s) return;
+  const m = s.meta||{};
+  const st = s.state||{};
+  document.getElementById('modalTitle').textContent = `${m.inspector||'—'} — ${m.center||'—'}`;
+  const sc = m.score;
+  const scC = sc!=null?SCORE_COLOR(sc):'#6b7280';
+  const subT = m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA'):'—';
 
-  const sc=m.score!=null?m.score:null;
-  const scColor=sc==null?'#6b7280':sc>=90?'#1a7a4a':sc>=75?'#185fa5':sc>=60?'#d97706':'#a32d2d';
-  const submitTime=m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA'):'—';
+  let html = `<div class="meta-grid">
+    <div class="meta-item"><span>المفتش</span><b>${m.inspector||'—'}</b></div>
+    <div class="meta-item"><span>المركز</span><b>${m.center||'—'}</b></div>
+    <div class="meta-item"><span>المنطقة</span><b>${m.region||'—'}</b></div>
+    <div class="meta-item"><span>التاريخ</span><b>${m.date||'—'}</b></div>
+    <div class="meta-item"><span>الجولة</span><b>${m.round||'—'}</b></div>
+    <div class="meta-item"><span>الدرجة</span><b style="color:${scC};font-size:20px;font-weight:800">${sc!=null?sc+'%':'—'}</b></div>
+    <div class="meta-item"><span>مطابق</span><b style="color:#0f7b6c">${m.ok||0}</b></div>
+    <div class="meta-item"><span>غير مطابق</span><b style="color:#9b1c1c">${m.no||0}</b></div>
+    <div class="meta-item"><span>الحالة</span><b>${m.status==='submitted'?'✅ مُرسل نهائياً':'⏳ جاري'}</b></div>
+    <div class="meta-item"><span>وقت الإرسال</span><b style="font-size:11px">${subT}</b></div>
+  </div>`;
 
-  let html=`
-    <div class="meta-grid">
-      <div class="meta-item"><span>المفتش</span><b>${m.inspector||'—'}</b></div>
-      <div class="meta-item"><span>المركز</span><b>${m.center||'—'}</b></div>
-      <div class="meta-item"><span>المنطقة</span><b>${m.region||'—'}</b></div>
-      <div class="meta-item"><span>التاريخ</span><b>${m.date||'—'}</b></div>
-      <div class="meta-item"><span>الجولة</span><b>${m.round||'—'}</b></div>
-      <div class="meta-item"><span>الدرجة</span><b style="color:${scColor};font-size:18px">${sc!=null?sc+'%':'—'}</b></div>
-      <div class="meta-item"><span>مطابق</span><b style="color:#1a7a4a">${m.ok||0}</b></div>
-      <div class="meta-item"><span>غير مطابق</span><b style="color:#a32d2d">${m.no||0}</b></div>
-      <div class="meta-item"><span>الحالة</span><b>${m.status==='submitted'?'✅ مُرسل نهائياً':'⏳ جاري'}</b></div>
-      <div class="meta-item"><span>وقت الإرسال</span><b style="font-size:11px">${submitTime}</b></div>
-    </div>
-  `;
-
-  // Build sections display
-  SECTIONS_META.forEach(sec=>{
-    const items=Object.entries(stateObj).filter(([k])=>k.startsWith(sec.id+'_'));
-    if(items.length===0) return;
-    const ok=items.filter(([,v])=>v.status==='compliant').length;
-    const no=items.filter(([,v])=>v.status==='non').length;
-    html+=`<div class="sec-block">
+  SECTIONS_META.forEach(sec => {
+    const items = Object.entries(st).filter(([k]) => k.startsWith(sec.id+'_'));
+    if (!items.length) return;
+    const ok  = items.filter(([,v])=>v.status==='compliant').length;
+    const no  = items.filter(([,v])=>v.status==='non').length;
+    html += `<div class="sec-block">
       <div class="sec-block-hdr">
         <div class="sec-block-title">${sec.id}. ${sec.title}</div>
         <div class="sec-block-score">✔ ${ok} &nbsp;✖ ${no}</div>
       </div>`;
-    items.forEach(([k,v])=>{
-      const st=v.status||'pending';
-      const cls=st==='compliant'?'is-ok':st==='non'?'is-no':st==='na'?'is-na':'is-pend';
-      const lbl=st==='compliant'?'مطابق':st==='non'?'غير مطابق':st==='na'?'لا ينطبق':'لم يُقيَّم';
-      html+=`<div class="item-row">
+    items.forEach(([k,v]) => {
+      const clsMap = {compliant:'is-ok',non:'is-no',na:'is-na'};
+      const lblMap = {compliant:'مطابق',non:'غير مطابق',na:'لا ينطبق',pending:'لم يُقيَّم'};
+      const cls = clsMap[v.status]||'is-pend';
+      const lbl = lblMap[v.status]||'لم يُقيَّم';
+      html += `<div class="item-row">
         <span class="item-status ${cls}">${lbl}</span>
         <div style="flex:1">
-          <div class="item-text">البند رقم ${k.split('_')[1]||''} ${v.photoCount>0?`📷 (${v.photoCount} صور)`:''}</div>
+          <div class="item-text">البند ${k.split('_')[1]||''} ${v.photoCount>0?`📷 (${v.photoCount})`:''}</div>
           ${v.note?`<div class="note-text">📝 ${v.note}</div>`:''}
         </div>
       </div>`;
     });
-    html+='</div>';
+    html += '</div>';
   });
 
-  document.getElementById('modalBody').innerHTML=html;
+  document.getElementById('modalBody').innerHTML = html;
   document.getElementById('detailOverlay').classList.add('open');
 }
 
-function closeModal(){document.getElementById('detailOverlay').classList.remove('open')}
-document.getElementById('detailOverlay').onclick=function(e){if(e.target===this) closeModal();}
+function closeModal() { document.getElementById('detailOverlay').classList.remove('open'); }
+document.getElementById('detailOverlay').onclick = function(e) { if(e.target===this) closeModal(); };
 
-function deleteSession(key){
-  if(!confirm('هل تريد حذف هذه الجلسة نهائياً؟')) return;
-  if(window._dbRemove) window._dbRemove('sessions/'+key);
+function deleteSession(key) {
+  if (!confirm('هل تريد حذف هذه الجلسة نهائياً؟')) return;
+  if (window._dbRemove) window._dbRemove('sessions/'+key);
 }
 
-function exportCSV(){
-  const data=window.allSessions||{};
-  const sessions=Object.entries(data).map(([k,v])=>({key:k,...v}));
-  const statusMap={'compliant':'مطابق','non':'غير مطابق','na':'لا ينطبق','pending':'لم يُقيَّم'};
-  const riskMap={'critical':'حرج','high':'عالي','medium':'متوسط','low':'منخفض'};
-  let csv='\uFEFFالمفتش,المركز,المنطقة,التاريخ,الجولة,الدرجة الكلية,الحالة,القسم,المعيار,مستوى الخطورة,النتيجة,ملاحظة\n';
+/* ============================
+   CSV EXPORT
+   ============================ */
+function exportCSV() {
+  const data = window.allSessions||{};
+  const sessions = Object.entries(data).map(([k,v])=>({key:k,...v}));
+  const sMap = {compliant:'مطابق',non:'غير مطابق',na:'لا ينطبق',pending:'لم يُقيَّم'};
+  let csv='\uFEFFالمفتش,المركز,المنطقة,التاريخ,الجولة,الدرجة,الحالة,القسم,المعيار,مستوى الخطورة,النتيجة,ملاحظة\n';
   sessions.forEach(s=>{
     const m=s.meta||{};
-    const st=s.state||{};
-    Object.entries(st).forEach(([k,v])=>{
-      const detail=SECTIONS_DETAIL[k];
-      if(!detail)return;
+    Object.entries(s.state||{}).forEach(([k,v])=>{
+      const d=SECTIONS_DETAIL[k]; if(!d)return;
       const note=(v.note||'').replace(/"/g,"'").replace(/\n/g,' ');
-      csv+=`"${m.inspector||''}","${m.center||''}","${m.region||''}","${m.date||''}","${m.round||''}","${m.score!=null?m.score+'%':'—'}","${m.status==='submitted'?'مُرسل':'جاري'}","${detail.sec}","${detail.t}","${riskMap[detail.r]||detail.r}","${statusMap[v.status]||'لم يُقيَّم'}","${note}"\n`;
+      csv+=`"${m.inspector||''}","${m.center||''}","${m.region||''}","${m.date||''}","${m.round||''}","${m.score!=null?m.score+'%':'—'}","${m.status==='submitted'?'مُرسل':'جاري'}","${d.sec}","${d.t}","${RISK_LABEL[d.r]||d.r}","${sMap[v.status]||'—'}","${note}"\n`;
     });
   });
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  const a=document.createElement('a');a.href=url;a.download='تقارير_تفصيلية_الزائر_السري.csv';
+  const a=document.createElement('a');a.href=url;a.download='تقارير_الزائر_السري.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-document.getElementById('pwInput').addEventListener('keydown', e => {
-  if(e.key === 'Enter') checkPW();
-});
+// Init
+document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPW(); });
 </script>
 
-<div style="background:#1e3a5f;color:rgba(255,255,255,.6);text-align:center;padding:12px;font-size:11px;margin-top:24px">
-  قطاع الصحة العامة بالرس - وحدة الجودة | إعداد وإشراف: علي محمد الخليف | د/ منتصر بشير الحسن
-</div>
 </body>
 </html>
