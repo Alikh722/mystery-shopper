@@ -93,9 +93,7 @@ body {
 }
 .login-panel h2 { font-size: 20px; font-weight: 700; color: var(--gov-navy); margin-bottom: 4px; }
 .login-panel p { font-size: 12px; color: var(--text-sub); margin-bottom: 28px; line-height: 1.6; }
-.login-field {
-  position: relative; margin-bottom: 14px;
-}
+.login-field { position: relative; margin-bottom: 14px; }
 .login-field input {
   width: 100%; padding: 13px 16px; border: 2px solid var(--border);
   border-radius: 10px; font-size: 14px; font-family: inherit;
@@ -169,9 +167,7 @@ body {
 .section-gap { margin-bottom: 24px; }
 
 /* ===== SECTION HEADING ===== */
-.sec-heading {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
-}
+.sec-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .sec-heading-bar {
   width: 4px; height: 22px; border-radius: 2px;
   background: linear-gradient(180deg, var(--gov-blue), var(--gov-teal));
@@ -207,16 +203,8 @@ body {
 .kpi-card.c2 .kpi-icon { background: #dcfce7; }
 .kpi-card.c3 .kpi-icon { background: #fef3c7; }
 .kpi-card.c4 .kpi-icon { background: #e8eff7; }
-.kpi-val {
-  font-size: 34px; font-weight: 700; line-height: 1;
-  color: var(--gov-navy); margin-bottom: 4px;
-}
+.kpi-val { font-size: 34px; font-weight: 700; line-height: 1; color: var(--gov-navy); margin-bottom: 4px; }
 .kpi-lbl { font-size: 12px; color: var(--text-sub); font-weight: 500; }
-.kpi-change {
-  position: absolute; top: 16px; left: 16px;
-  font-size: 11px; font-weight: 700; padding: 2px 8px;
-  border-radius: 99px;
-}
 
 /* ===== CHARTS GRID ===== */
 .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
@@ -259,7 +247,7 @@ body {
 .score-bar-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
 .score-val { font-size: 12px; font-weight: 700; width: 34px; text-align: left; }
 
-/* ===== STATUS BADGES ===== */
+/* ===== BADGES ===== */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
@@ -272,7 +260,7 @@ body {
 .badge-submitted { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
 .badge-progress { background: #fef9ec; color: #92400e; border: 1px solid #fcd34d; }
 
-/* ===== OBSERVATION ANALYSIS ===== */
+/* ===== OBSERVATIONS ===== */
 .obs-heatmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
 .obs-item {
   background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border);
@@ -328,9 +316,11 @@ tr:last-child td { border-bottom: none; }
 }
 .action-btn:hover { background: var(--bg-page); }
 .action-btn.view { color: var(--gov-blue); border-color: var(--gov-blue); }
+.action-btn.center-dash { color: var(--gov-teal); border-color: var(--gov-teal); background: #f0faf9; }
+.action-btn.center-dash:hover { background: #dcfce7; }
 .action-btn.del { color: var(--danger); border-color: #f09595; }
 
-/* ===== MODAL ===== */
+/* ===== OLD DETAIL MODAL ===== */
 .overlay { display: none; position: fixed; inset: 0; background: rgba(13,33,55,.6); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
 .overlay.open { display: flex; }
 .modal {
@@ -365,23 +355,271 @@ tr:last-child td { border-bottom: none; }
 .item-text { flex: 1; line-height: 1.5; color: #374151; }
 .note-text { font-size: 11px; color: var(--text-sub); font-style: italic; margin-top: 2px; padding: 3px 8px; background: #f8fafd; border-radius: 4px; border-right: 3px solid var(--gov-blue); }
 
-/* ===== PROGRESS RING ===== */
-.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.ring-val { font-size: 13px; font-weight: 700; color: var(--gov-navy); }
-.ring-lbl { font-size: 10px; color: var(--text-sub); }
+/* ===== CENTER DASHBOARD MODAL ===== */
+.center-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(7,20,40,.85); z-index: 600;
+  align-items: flex-start; justify-content: center;
+  padding: 0; overflow: hidden;
+}
+.center-overlay.open { display: flex; }
+.center-modal {
+  background: #f0f4f8; width: 100%; max-width: 1100px; height: 100vh;
+  overflow-y: auto; display: flex; flex-direction: column;
+  box-shadow: 0 0 80px rgba(0,0,0,.5);
+  animation: slideInCenter .3s cubic-bezier(.16,1,.3,1);
+}
+@keyframes slideInCenter {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ---- Center Dash Header ---- */
+.cd-header {
+  background: linear-gradient(135deg, #0d2137 0%, #1a4480 50%, #0f4060 100%);
+  padding: 28px 32px 24px; color: #fff; position: relative; overflow: hidden;
+  flex-shrink: 0;
+}
+.cd-header::before {
+  content: ''; position: absolute; top: -40px; left: -40px;
+  width: 220px; height: 220px; border-radius: 50%;
+  background: rgba(255,255,255,.04); pointer-events: none;
+}
+.cd-header::after {
+  content: ''; position: absolute; bottom: -60px; right: 60px;
+  width: 180px; height: 180px; border-radius: 50%;
+  background: rgba(15,123,108,.18); pointer-events: none;
+}
+.cd-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.cd-header-info {}
+.cd-header-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+  padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 600;
+  margin-bottom: 10px;
+}
+.cd-header h1 { font-size: 26px; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
+.cd-header-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+.cd-header-meta-item { display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: .8; }
+.cd-close-btn {
+  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+  color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 700; transition: background .15s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.cd-close-btn:hover { background: rgba(255,255,255,.28); }
+.cd-print-btn {
+  background: rgba(201,162,39,.25); border: 1px solid rgba(201,162,39,.4);
+  color: #fde68a; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 700; transition: background .15s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.cd-print-btn:hover { background: rgba(201,162,39,.4); }
+.cd-header-actions { display: flex; gap: 8px; align-items: flex-start; }
+
+/* ---- Score Ring ---- */
+.cd-score-area { display: flex; align-items: center; gap: 20px; }
+.cd-score-ring-wrap { position: relative; flex-shrink: 0; }
+.cd-score-ring { transform: rotate(-90deg); }
+.cd-score-ring-val {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.cd-score-num { font-size: 30px; font-weight: 800; line-height: 1; }
+.cd-score-pct { font-size: 13px; opacity: .7; margin-top: 2px; }
+.cd-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; flex: 1; }
+.cd-kpi {
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+  border-radius: 10px; padding: 12px 14px;
+}
+.cd-kpi-val { font-size: 24px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.cd-kpi-lbl { font-size: 11px; opacity: .75; }
+
+/* ---- Body ---- */
+.cd-body { padding: 24px 32px 40px; flex: 1; }
+
+/* ---- Section Tabs ---- */
+.cd-sec-tabs {
+  display: flex; gap: 6px; overflow-x: auto; margin-bottom: 20px;
+  padding-bottom: 4px; scrollbar-width: none;
+}
+.cd-sec-tabs::-webkit-scrollbar { display: none; }
+.cd-sec-tab {
+  padding: 7px 16px; border-radius: 8px; border: 1.5px solid var(--border);
+  background: #fff; cursor: pointer; font-size: 12px; font-weight: 600;
+  font-family: inherit; white-space: nowrap; transition: all .12s; color: var(--text-sub);
+}
+.cd-sec-tab:hover { border-color: var(--gov-blue); color: var(--gov-blue); }
+.cd-sec-tab.active { background: var(--gov-blue); color: #fff; border-color: var(--gov-blue); }
+.cd-sec-tab .tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; font-size: 10px;
+  background: rgba(255,255,255,.25); margin-right: 4px; font-weight: 700;
+}
+.cd-sec-tab:not(.active) .tab-badge { background: #fce8e8; color: #9b1c1c; }
+
+/* ---- Section content ---- */
+.cd-sec-content { display: none; }
+.cd-sec-content.active { display: block; }
+
+/* ---- Charts row in center dash ---- */
+.cd-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.cd-chart-card {
+  background: #fff; border-radius: 12px; border: 1px solid var(--border);
+  padding: 18px; box-shadow: var(--shadow);
+}
+.cd-chart-title { font-size: 13px; font-weight: 700; color: var(--gov-navy); margin-bottom: 14px; }
+
+/* ---- Items table ---- */
+.items-section-card {
+  background: #fff; border-radius: 12px; border: 1px solid var(--border);
+  overflow: hidden; box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.items-section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px; background: linear-gradient(90deg, var(--gov-navy), #1a4480);
+  color: #fff;
+}
+.items-section-hdr-title { font-size: 14px; font-weight: 700; }
+.items-section-hdr-stats { display: flex; gap: 12px; font-size: 12px; opacity: .85; }
+.items-section-hdr-stat { display: flex; align-items: center; gap: 5px; }
+
+.cd-item-row {
+  display: grid; grid-template-columns: 36px 1fr 90px 100px auto;
+  gap: 10px; padding: 11px 18px; border-bottom: 1px solid #f1f5f9;
+  align-items: center; transition: background .1s;
+}
+.cd-item-row:last-child { border-bottom: none; }
+.cd-item-row:hover { background: #fafcff; }
+.cd-item-num {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--bg-page); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--text-sub);
+}
+.cd-item-text { font-size: 12.5px; color: #1e293b; line-height: 1.5; font-weight: 500; }
+.cd-item-note {
+  font-size: 11px; color: var(--text-sub); margin-top: 4px;
+  padding: 3px 8px; background: #f8fafd; border-radius: 4px;
+  border-right: 3px solid var(--gov-blue); font-style: italic;
+}
+.cd-item-risk { text-align: center; }
+.cd-item-status { text-align: center; }
+.cd-item-photos { font-size: 11px; color: var(--text-sub); white-space: nowrap; }
+.risk-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700;
+}
+.risk-critical { background: #fce8e8; color: #9b1c1c; border: 1px solid #fca5a5; }
+.risk-high     { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.risk-medium   { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+.risk-low      { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+.status-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 10px; border-radius: 99px; font-size: 10px; font-weight: 700;
+  white-space: nowrap;
+}
+.sp-ok   { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.sp-no   { background: #fce8e8; color: #9b1c1c; border: 1px solid #f0b4b4; }
+.sp-na   { background: #f1f5f9; color: #4b5563; border: 1px solid #9ca3af; }
+.sp-pend { background: #fef9ec; color: #92400e; border: 1px solid #fcd34d; }
+
+/* ---- Non-compliance highlight card ---- */
+.nc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 10px; margin-bottom: 20px; }
+.nc-card {
+  background: #fff; border-radius: 10px; border: 1px solid #f0b4b4;
+  border-right: 4px solid #9b1c1c; padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(155,28,28,.08);
+}
+.nc-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.nc-card-title { font-size: 12.5px; font-weight: 600; color: #1e293b; line-height: 1.5; flex: 1; }
+.nc-card-sec { font-size: 11px; color: var(--text-sub); margin-top: 3px; }
+.nc-card-note {
+  font-size: 11px; color: #92400e; background: #fffbeb;
+  border-radius: 4px; padding: 4px 8px; margin-top: 6px;
+  border-right: 3px solid #fbbf24;
+}
+
+/* ---- Overview charts ---- */
+.cd-overview { margin-bottom: 20px; }
+.cd-ov-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+.cd-ov-card {
+  background: #fff; border-radius: 10px; border: 1px solid var(--border);
+  padding: 16px; box-shadow: var(--shadow); text-align: center;
+}
+.cd-ov-icon { font-size: 26px; margin-bottom: 6px; }
+.cd-ov-val { font-size: 28px; font-weight: 800; color: var(--gov-navy); }
+.cd-ov-lbl { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+
+/* ---- Section score summary ---- */
+.sec-score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; margin-bottom: 20px; }
+.ssg-card {
+  background: #fff; border-radius: 10px; border: 1px solid var(--border);
+  padding: 14px; box-shadow: var(--shadow); cursor: pointer; transition: all .15s;
+}
+.ssg-card:hover { border-color: var(--gov-blue); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.ssg-title { font-size: 12px; font-weight: 700; color: var(--gov-navy); margin-bottom: 8px; line-height: 1.4; }
+.ssg-bar-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.ssg-bar-bg { flex: 1; height: 7px; background: #e5e7eb; border-radius: 99px; overflow: hidden; }
+.ssg-bar-fill { height: 100%; border-radius: 99px; }
+.ssg-pct { font-size: 13px; font-weight: 800; }
+.ssg-counts { display: flex; gap: 8px; font-size: 10px; color: var(--text-sub); }
+.ssg-ok { color: #0f7b6c; font-weight: 700; }
+.ssg-no { color: #9b1c1c; font-weight: 700; }
+
+/* ---- Session history ---- */
+.session-history { margin-bottom: 20px; }
+.sh-card {
+  background: #fff; border-radius: 10px; border: 1px solid var(--border);
+  padding: 14px 18px; margin-bottom: 8px; box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.sh-round {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--gov-navy), var(--gov-blue));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; flex-shrink: 0;
+}
+.sh-info { flex: 1; min-width: 120px; }
+.sh-info-title { font-size: 13px; font-weight: 700; color: var(--gov-navy); }
+.sh-info-sub { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+.sh-score-area { display: flex; align-items: center; gap: 12px; }
+.sh-score { font-size: 20px; font-weight: 800; }
+.sh-stats { display: flex; gap: 10px; font-size: 11px; }
+.sh-stat-ok { color: #0f7b6c; font-weight: 700; }
+.sh-stat-no { color: #9b1c1c; font-weight: 700; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gov-mid); border-radius: 99px; }
+
+/* ===== INSIGHT CARDS ===== */
+.insight-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.insight-card {
+  background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border);
+  padding: 16px; box-shadow: var(--shadow); position: relative;
+}
+.insight-icon { font-size: 24px; margin-bottom: 8px; }
+.insight-val { font-size: 26px; font-weight: 800; color: var(--gov-navy); }
+.insight-lbl { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.insight-pct { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .charts-row { grid-template-columns: 1fr; }
   .charts-row-3 { grid-template-columns: 1fr; }
-  .ckpi-head, .ckpi-row {
-    grid-template-columns: 2fr 1fr 1fr;
-  }
-  .ckpi-head > *:nth-child(4),
-  .ckpi-head > *:nth-child(5),
-  .ckpi-row > *:nth-child(4),
-  .ckpi-row > *:nth-child(5) { display: none; }
+  .ckpi-head, .ckpi-row { grid-template-columns: 2fr 1fr 1fr; }
+  .ckpi-head > *:nth-child(4), .ckpi-head > *:nth-child(5),
+  .ckpi-row > *:nth-child(4), .ckpi-row > *:nth-child(5) { display: none; }
+  .cd-header { padding: 20px; }
+  .cd-body { padding: 16px; }
+  .cd-kpi-row { grid-template-columns: repeat(2,1fr); }
+  .cd-charts-row { grid-template-columns: 1fr; }
+  .cd-item-row { grid-template-columns: 30px 1fr 80px; }
+  .cd-item-row > *:nth-child(4), .cd-item-row > *:nth-child(5) { display: none; }
+  .cd-ov-grid { grid-template-columns: repeat(2,1fr); }
 }
 @media (max-width: 600px) {
   .page-wrap { padding: 14px 14px 40px; }
@@ -395,47 +633,22 @@ tr:last-child td { border-bottom: none; }
   table { font-size: 12px; }
   th, td { padding: 8px 10px; }
   .ckpi-head, .ckpi-row { grid-template-columns: 2fr 1fr; }
-  .ckpi-head > *:nth-child(3),
-  .ckpi-head > *:nth-child(4),
-  .ckpi-head > *:nth-child(5),
-  .ckpi-row > *:nth-child(3),
-  .ckpi-row > *:nth-child(4),
-  .ckpi-row > *:nth-child(5) { display: none; }
+  .cd-header h1 { font-size: 18px; }
 }
 @media print {
-  .topbar, .tab-nav, .login-overlay { display: none !important; }
+  .topbar, .tab-nav, .login-overlay, .cd-header-actions { display: none !important; }
   body { background: #fff; }
+  .center-modal { height: auto; overflow: visible; }
 }
 
-/* ===== EMPTY STATE ===== */
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-sub); }
 .empty-state .ei { font-size: 48px; margin-bottom: 12px; display: block; }
-
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--gov-mid); border-radius: 99px; }
-
-/* ===== DIVIDER ===== */
-.divider { height: 1px; background: var(--border); margin: 8px 0 20px; }
-
-/* ===== INSIGHT CARD ===== */
-.insight-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
-.insight-card {
-  background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border);
-  padding: 16px; box-shadow: var(--shadow); position: relative;
-}
-.insight-icon { font-size: 24px; margin-bottom: 8px; }
-.insight-val { font-size: 26px; font-weight: 800; color: var(--gov-navy); }
-.insight-lbl { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
-.insight-pct { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
-
-/* ===== WATERMARK ===== */
 .footer-bar {
   background: var(--gov-navy); color: rgba(255,255,255,.5);
   text-align: center; padding: 14px; font-size: 11px; margin-top: 20px;
   letter-spacing: .3px;
 }
+.divider { height: 1px; background: var(--border); margin: 8px 0 20px; }
 </style>
 </head>
 <body>
@@ -447,7 +660,7 @@ tr:last-child td { border-bottom: none; }
     <h2>لوحة تحكم الأدمن</h2>
     <p>قطاع الصحة العامة بالرس<br>وحدة الجودة — الزائر السري</p>
     <div class="login-field">
-      <input type="password" id="pwInput" placeholder="أدخل كلمة المرور" onkeydown="if(event.key==='Enter')checkPW()">
+      <input type="password" id="pwInput" placeholder="أدخل كلمة المرور">
     </div>
     <div class="login-err" id="loginErr">⚠ كلمة المرور غير صحيحة</div>
     <button class="login-btn" onclick="checkPW()">دخول ←</button>
@@ -486,64 +699,25 @@ tr:last-child td { border-bottom: none; }
 <!-- ===== DASHBOARD TAB ===== -->
 <div class="tab-panel active" id="panel-dashboard">
   <div class="page-wrap">
-
-    <!-- KPIs -->
     <div class="kpi-grid" id="kpiGrid">
-      <div class="kpi-card c1">
-        <div class="kpi-icon">📋</div>
-        <div class="kpi-val" id="k-total">—</div>
-        <div class="kpi-lbl">إجمالي الجلسات</div>
-      </div>
-      <div class="kpi-card c2">
-        <div class="kpi-icon">✅</div>
-        <div class="kpi-val" id="k-submitted">—</div>
-        <div class="kpi-lbl">تقارير مُرسلة نهائياً</div>
-      </div>
-      <div class="kpi-card c3">
-        <div class="kpi-icon">⏳</div>
-        <div class="kpi-val" id="k-progress">—</div>
-        <div class="kpi-lbl">قيد التنفيذ</div>
-      </div>
-      <div class="kpi-card c4">
-        <div class="kpi-icon">🎯</div>
-        <div class="kpi-val" id="k-avg">—</div>
-        <div class="kpi-lbl">متوسط الدرجة الكلي</div>
-      </div>
+      <div class="kpi-card c1"><div class="kpi-icon">📋</div><div class="kpi-val" id="k-total">—</div><div class="kpi-lbl">إجمالي الجلسات</div></div>
+      <div class="kpi-card c2"><div class="kpi-icon">✅</div><div class="kpi-val" id="k-submitted">—</div><div class="kpi-lbl">تقارير مُرسلة نهائياً</div></div>
+      <div class="kpi-card c3"><div class="kpi-icon">⏳</div><div class="kpi-val" id="k-progress">—</div><div class="kpi-lbl">قيد التنفيذ</div></div>
+      <div class="kpi-card c4"><div class="kpi-icon">🎯</div><div class="kpi-val" id="k-avg">—</div><div class="kpi-lbl">متوسط الدرجة الكلي</div></div>
     </div>
-
-    <!-- Insight Row -->
     <div class="insight-row" id="insightRow"></div>
-
-    <!-- Charts Row 1 -->
     <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">توزيع درجات الامتثال <span class="chart-subtitle">(%)</span></div>
-        <canvas id="chScores" height="200"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">أداء المراكز مقارنةً <span class="chart-subtitle">متوسط الدرجة</span></div>
-        <canvas id="chCenters" height="200"></canvas>
-      </div>
+      <div class="chart-card"><div class="chart-title">توزيع درجات الامتثال <span class="chart-subtitle">(%)</span></div><canvas id="chScores" height="200"></canvas></div>
+      <div class="chart-card"><div class="chart-title">أداء المراكز مقارنةً <span class="chart-subtitle">متوسط الدرجة</span></div><canvas id="chCenters" height="200"></canvas></div>
     </div>
-
-    <!-- Charts Row 2 -->
     <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">توزيع الملاحظات حسب القسم <span class="chart-subtitle">عدد البنود غير المطابقة</span></div>
-        <canvas id="chSections" height="200"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">تطور الإرسال عبر الزمن <span class="chart-subtitle">التقارير المُرسلة</span></div>
-        <canvas id="chTimeline" height="200"></canvas>
-      </div>
+      <div class="chart-card"><div class="chart-title">توزيع الملاحظات حسب القسم <span class="chart-subtitle">عدد البنود غير المطابقة</span></div><canvas id="chSections" height="200"></canvas></div>
+      <div class="chart-card"><div class="chart-title">تطور الإرسال عبر الزمن <span class="chart-subtitle">التقارير المُرسلة</span></div><canvas id="chTimeline" height="200"></canvas></div>
     </div>
-
-    <!-- Compliance by Risk Level -->
     <div class="chart-card section-gap">
       <div class="chart-title">مستوى الامتثال حسب مستوى الخطورة <span class="chart-subtitle">عبر جميع المراكز</span></div>
       <canvas id="chRisk" height="100"></canvas>
     </div>
-
   </div>
 </div>
 
@@ -555,7 +729,6 @@ tr:last-child td { border-bottom: none; }
       <h3>مؤشرات أداء المراكز الصحية</h3>
       <span id="centersCount"></span>
     </div>
-
     <div class="center-kpi-table">
       <div class="ckpi-head">
         <div>المركز الصحي</div>
@@ -567,16 +740,9 @@ tr:last-child td { border-bottom: none; }
       </div>
       <div id="centersTable"></div>
     </div>
-
     <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">مقارنة الامتثال بين المراكز</div>
-        <canvas id="chCenterRadar" height="250"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">نسبة المطابق / غير المطابق لكل مركز</div>
-        <canvas id="chCenterStack" height="250"></canvas>
-      </div>
+      <div class="chart-card"><div class="chart-title">مقارنة الامتثال بين المراكز</div><canvas id="chCenterRadar" height="250"></canvas></div>
+      <div class="chart-card"><div class="chart-title">نسبة المطابق / غير المطابق لكل مركز</div><canvas id="chCenterStack" height="250"></canvas></div>
     </div>
   </div>
 </div>
@@ -589,18 +755,10 @@ tr:last-child td { border-bottom: none; }
       <h3>الملاحظات الأكثر تكراراً</h3>
       <span>البنود غير المطابقة عبر جميع المراكز</span>
     </div>
-
     <div class="charts-row section-gap">
-      <div class="chart-card">
-        <div class="chart-title">أعلى 10 بنود تكراراً (غير مطابق)</div>
-        <canvas id="chTopObs" height="280"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">توزيع الخطورة للملاحظات</div>
-        <canvas id="chObsRisk" height="280"></canvas>
-      </div>
+      <div class="chart-card"><div class="chart-title">أعلى 10 بنود تكراراً (غير مطابق)</div><canvas id="chTopObs" height="280"></canvas></div>
+      <div class="chart-card"><div class="chart-title">توزيع الخطورة للملاحظات</div><canvas id="chObsRisk" height="280"></canvas></div>
     </div>
-
     <div class="sec-heading section-gap">
       <div class="sec-heading-bar"></div>
       <h3>قائمة الملاحظات المتكررة</h3>
@@ -627,16 +785,9 @@ tr:last-child td { border-bottom: none; }
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>المفتش</th>
-              <th>المركز</th>
-              <th>التاريخ</th>
-              <th>الجولة</th>
-              <th>الدرجة</th>
-              <th>التقدم</th>
-              <th>الحالة</th>
-              <th>وقت الإرسال</th>
-              <th>إجراءات</th>
+              <th>#</th><th>المفتش</th><th>المركز</th><th>التاريخ</th>
+              <th>الجولة</th><th>الدرجة</th><th>التقدم</th>
+              <th>الحالة</th><th>وقت الإرسال</th><th>إجراءات</th>
             </tr>
           </thead>
           <tbody id="tblBody"></tbody>
@@ -646,7 +797,7 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
-<!-- ===== DETAIL MODAL ===== -->
+<!-- ===== OLD DETAIL MODAL ===== -->
 <div class="overlay" id="detailOverlay">
   <div class="modal">
     <div class="modal-hdr">
@@ -657,12 +808,18 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
+<!-- ===== CENTER DASHBOARD MODAL ===== -->
+<div class="center-overlay" id="centerDashOverlay">
+  <div class="center-modal" id="centerDashModal">
+    <!-- dynamically built -->
+  </div>
+</div>
+
 <!-- ===== FOOTER ===== -->
 <div class="footer-bar">
   قطاع الصحة العامة بالرس — وحدة الجودة | إعداد وإشراف: علي محمد الخليف | د/ منتصر بشير الحسن
 </div>
 
-<!-- ===== SCRIPTS ===== -->
 <script>
 /* ============================
    CONSTANTS
@@ -682,12 +839,14 @@ const SECTIONS_META = [
 ];
 
 const SCORE_COLOR = s => s >= 90 ? '#0f7b6c' : s >= 75 ? '#1a4480' : s >= 60 ? '#d97706' : '#9b1c1c';
-const RISK_WEIGHT = {critical:4, high:3, medium:2, low:1};
 const RISK_LABEL  = {critical:'حرج', high:'عالي', medium:'متوسط', low:'منخفض'};
 const RISK_COLOR  = {critical:'#9b1c1c', high:'#d97706', medium:'#eab308', low:'#1a4480'};
+const STATUS_LABEL = {compliant:'✅ مطابق', non:'❌ غير مطابق', na:'⬜ لا ينطبق', pending:'⏳ لم يُقيَّم'};
+const STATUS_CLS   = {compliant:'sp-ok', non:'sp-no', na:'sp-na', pending:'sp-pend'};
 
 let curFilter = 'all';
 let chartInstances = {};
+let cdCharts = {};
 
 /* ============================
    LOGIN
@@ -740,32 +899,23 @@ window.renderDashboard = function(data) {
    ============================ */
 function buildInsightRow(submitted) {
   if (!submitted.length) return;
-
-  // Count non-compliant across all
   let totalNon = 0, totalOk = 0, totalNA = 0;
   const centerMap = {};
   submitted.forEach(s => {
     const m = s.meta || {};
-    const st = s.state || {};
     totalOk  += (m.ok  || 0);
     totalNon += (m.no  || 0);
-    Object.values(st).forEach(v => { if (v.status === 'na') totalNA++; });
-
+    Object.values(s.state || {}).forEach(v => { if (v.status === 'na') totalNA++; });
     const c = m.center || 'غير محدد';
     if (!centerMap[c]) centerMap[c] = [];
     centerMap[c].push(m.score || 0);
   });
-
-  const allScores = submitted.map(s => s.meta?.score || 0);
-  const bestScore = Math.max(...allScores);
-  const worstScore = Math.min(...allScores);
   const compRate = totalOk + totalNon > 0 ? Math.round(totalOk / (totalOk + totalNon) * 100) : 0;
-
   const centerAvgs = Object.entries(centerMap).map(([c, sc]) => ({
     c, avg: Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)
   }));
-  const bestCenter  = centerAvgs.sort((a,b)=>b.avg-a.avg)[0];
-  const worstCenter = centerAvgs.sort((a,b)=>a.avg-b.avg)[0];
+  const bestCenter  = [...centerAvgs].sort((a,b)=>b.avg-a.avg)[0];
+  const worstCenter = [...centerAvgs].sort((a,b)=>a.avg-b.avg)[0];
 
   document.getElementById('insightRow').innerHTML = `
     <div class="insight-card">
@@ -797,8 +947,6 @@ function buildInsightRow(submitted) {
    ============================ */
 function buildDashboardCharts(submitted, allSessions) {
   const CH = chartInstances;
-
-  // Score distribution
   const buckets = [0, 0, 0, 0];
   submitted.forEach(s => {
     const sc = s.meta?.score || 0;
@@ -810,134 +958,73 @@ function buildDashboardCharts(submitted, allSessions) {
   if (CH.scores) CH.scores.destroy();
   CH.scores = new Chart(document.getElementById('chScores'), {
     type: 'doughnut',
-    data: {
-      labels: ['ضعيف (<60%)', 'مقبول (60-75%)', 'جيد (75-90%)', 'ممتاز (90%+)'],
-      datasets: [{
-        data: buckets,
-        backgroundColor: ['#9b1c1c','#d97706','#1a4480','#0f7b6c'],
-        borderWidth: 3, borderColor: '#fff'
-      }]
-    },
+    data: { labels: ['ضعيف (<60%)', 'مقبول (60-75%)', 'جيد (75-90%)', 'ممتاز (90%+)'],
+      datasets: [{ data: buckets, backgroundColor: ['#9b1c1c','#d97706','#1a4480','#0f7b6c'], borderWidth: 3, borderColor: '#fff' }] },
     options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font:{size:11}, padding:10 } } } }
   });
 
-  // Centers bar
   const centerMap = {};
   submitted.forEach(s => {
     const c = s.meta?.center || 'غير محدد';
     if (!centerMap[c]) centerMap[c] = [];
     centerMap[c].push(s.meta?.score || 0);
   });
-  const centers = Object.entries(centerMap).map(([c, sc]) => ({
-    c, avg: Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)
-  })).sort((a,b)=>b.avg-a.avg).slice(0,8);
-
+  const centers = Object.entries(centerMap).map(([c, sc]) => ({ c, avg: Math.round(sc.reduce((a,b)=>a+b,0)/sc.length) })).sort((a,b)=>b.avg-a.avg).slice(0,8);
   if (CH.centers) CH.centers.destroy();
   CH.centers = new Chart(document.getElementById('chCenters'), {
     type: 'bar',
-    data: {
-      labels: centers.map(x=>x.c),
-      datasets: [{
-        label: 'الدرجة %',
-        data: centers.map(x=>x.avg),
-        backgroundColor: centers.map(x=>SCORE_COLOR(x.avg)+'cc'),
-        borderColor: centers.map(x=>SCORE_COLOR(x.avg)),
-        borderWidth: 2, borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend:{display:false} },
-      scales: { y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} }
-    }
+    data: { labels: centers.map(x=>x.c), datasets: [{ label: 'الدرجة %', data: centers.map(x=>x.avg), backgroundColor: centers.map(x=>SCORE_COLOR(x.avg)+'cc'), borderColor: centers.map(x=>SCORE_COLOR(x.avg)), borderWidth: 2, borderRadius: 6 }] },
+    options: { responsive: true, plugins: { legend:{display:false} }, scales: { y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
   });
 
-  // Section non-compliance chart
   const sectionNon = {};
   SECTIONS_META.forEach(s => { sectionNon[s.title] = 0; });
   submitted.forEach(s => {
     Object.entries(s.state || {}).forEach(([k, v]) => {
       if (v.status === 'non') {
-        const detail = SECTIONS_DETAIL[k];
-        if (detail) {
-          const secMeta = SECTIONS_META.find(sm => k.startsWith(sm.id + '_'));
-          if (secMeta) sectionNon[secMeta.title] = (sectionNon[secMeta.title]||0) + 1;
-        }
+        const secMeta = SECTIONS_META.find(sm => k.startsWith(sm.id + '_'));
+        if (secMeta) sectionNon[secMeta.title] = (sectionNon[secMeta.title]||0) + 1;
       }
     });
   });
   const secSorted = Object.entries(sectionNon).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const secColors = ['#9b1c1c','#d97706','#1a4480','#0f7b6c','#7c3aed','#be185d','#b45309','#065f46'];
-
   if (CH.sections) CH.sections.destroy();
   CH.sections = new Chart(document.getElementById('chSections'), {
     type: 'bar',
-    data: {
-      labels: secSorted.map(x=>x[0].replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','')),
-      datasets: [{ label:'عدد الملاحظات', data: secSorted.map(x=>x[1]),
-        backgroundColor: secColors, borderRadius: 5 }]
-    },
-    options: {
-      indexAxis: 'y', responsive: true,
-      plugins: { legend:{display:false} },
-      scales: { x:{grid:{color:'#f1f5f9'}}, y:{grid:{display:false}} }
-    }
+    data: { labels: secSorted.map(x=>x[0].replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','')), datasets: [{ label:'عدد الملاحظات', data: secSorted.map(x=>x[1]), backgroundColor: secColors, borderRadius: 5 }] },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend:{display:false} }, scales: { x:{grid:{color:'#f1f5f9'}}, y:{grid:{display:false}} } }
   });
 
-  // Timeline
   const byDate = {};
   submitted.forEach(s => {
     const d = s.meta?.date || s.meta?.submitTime?.split('T')[0] || 'غير محدد';
     byDate[d] = (byDate[d]||0)+1;
   });
   const dates = Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]));
-
   if (CH.timeline) CH.timeline.destroy();
   CH.timeline = new Chart(document.getElementById('chTimeline'), {
     type: 'line',
-    data: {
-      labels: dates.map(x=>x[0]),
-      datasets: [{
-        label: 'التقارير المُرسلة', data: dates.map(x=>x[1]),
-        borderColor: '#1a4480', backgroundColor: 'rgba(26,68,128,.1)',
-        borderWidth: 2.5, fill: true, tension: .4,
-        pointBackgroundColor: '#1a4480', pointRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend:{display:false} },
-      scales: { y:{ticks:{stepSize:1},grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} }
-    }
+    data: { labels: dates.map(x=>x[0]), datasets: [{ label: 'التقارير المُرسلة', data: dates.map(x=>x[1]), borderColor: '#1a4480', backgroundColor: 'rgba(26,68,128,.1)', borderWidth: 2.5, fill: true, tension: .4, pointBackgroundColor: '#1a4480', pointRadius: 4 }] },
+    options: { responsive: true, plugins: { legend:{display:false} }, scales: { y:{ticks:{stepSize:1},grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
   });
 
-  // Risk-level compliance bar
   const riskStats = {critical:{ok:0,non:0}, high:{ok:0,non:0}, medium:{ok:0,non:0}, low:{ok:0,non:0}};
   submitted.forEach(s => {
     Object.entries(s.state||{}).forEach(([k,v]) => {
-      const d = SECTIONS_DETAIL[k];
-      if (!d) return;
-      const r = d.r;
-      if (v.status==='compliant') riskStats[r].ok++;
-      else if (v.status==='non') riskStats[r].non++;
+      const d = SECTIONS_DETAIL[k]; if (!d) return;
+      if (v.status==='compliant') riskStats[d.r].ok++;
+      else if (v.status==='non') riskStats[d.r].non++;
     });
   });
-
   if (CH.risk) CH.risk.destroy();
   CH.risk = new Chart(document.getElementById('chRisk'), {
     type: 'bar',
-    data: {
-      labels: ['حرج','عالي','متوسط','منخفض'],
-      datasets: [
-        { label:'مطابق', data:[riskStats.critical.ok,riskStats.high.ok,riskStats.medium.ok,riskStats.low.ok], backgroundColor:'#0f7b6c', borderRadius:5 },
-        { label:'غير مطابق', data:[riskStats.critical.non,riskStats.high.non,riskStats.medium.non,riskStats.low.non], backgroundColor:'#9b1c1c', borderRadius:5 }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend:{position:'top'} },
-      scales: { x:{stacked:false,grid:{display:false}}, y:{grid:{color:'#f1f5f9'}} }
-    }
+    data: { labels: ['حرج','عالي','متوسط','منخفض'], datasets: [
+      { label:'مطابق', data:[riskStats.critical.ok,riskStats.high.ok,riskStats.medium.ok,riskStats.low.ok], backgroundColor:'#0f7b6c', borderRadius:5 },
+      { label:'غير مطابق', data:[riskStats.critical.non,riskStats.high.non,riskStats.medium.non,riskStats.low.non], backgroundColor:'#9b1c1c', borderRadius:5 }
+    ]},
+    options: { responsive: true, plugins: { legend:{position:'top'} }, scales: { x:{stacked:false,grid:{display:false}}, y:{grid:{color:'#f1f5f9'}} } }
   });
 }
 
@@ -986,10 +1073,8 @@ function buildCentersTab() {
     </div>
   `).join('');
 
-  // Center radar
   const CH = chartInstances;
   const topCenters = centerList.slice(0, 6);
-
   if (CH.centerRadar) CH.centerRadar.destroy();
   CH.centerRadar = new Chart(document.getElementById('chCenterRadar'), {
     type: 'radar',
@@ -997,32 +1082,19 @@ function buildCentersTab() {
       labels: ['الفناء','الأمن','الصيانة','الصيدلية','مكافحة العدوى','التمريض','الاستقبال'],
       datasets: topCenters.map((c, i) => {
         const colors = ['#1a4480','#0f7b6c','#d97706','#9b1c1c','#7c3aed','#be185d'];
-        return {
-          label: c.name,
-          data: Array(7).fill(0).map(()=>Math.min(100, Math.max(30, c.avg + (Math.random()-0.5)*30))),
-          borderColor: colors[i], backgroundColor: colors[i]+'22',
-          borderWidth: 2, pointRadius: 3
-        };
+        return { label: c.name, data: Array(7).fill(0).map(()=>Math.min(100, Math.max(30, c.avg + (Math.random()-0.5)*30))), borderColor: colors[i], backgroundColor: colors[i]+'22', borderWidth: 2, pointRadius: 3 };
       })
     },
     options: { responsive: true, scales: { r:{min:0,max:100,ticks:{display:false}} }, plugins:{legend:{position:'bottom',labels:{font:{size:10}}}} }
   });
-
   if (CH.centerStack) CH.centerStack.destroy();
   CH.centerStack = new Chart(document.getElementById('chCenterStack'), {
     type: 'bar',
-    data: {
-      labels: topCenters.map(c=>c.name),
-      datasets: [
-        { label:'مطابق', data:topCenters.map(c=>c.ok), backgroundColor:'#0f7b6ccc', borderRadius:4 },
-        { label:'غير مطابق', data:topCenters.map(c=>c.non), backgroundColor:'#9b1c1ccc', borderRadius:4 }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend:{position:'top'} },
-      scales: { x:{grid:{display:false}}, y:{grid:{color:'#f1f5f9'}} }
-    }
+    data: { labels: topCenters.map(c=>c.name), datasets: [
+      { label:'مطابق', data:topCenters.map(c=>c.ok), backgroundColor:'#0f7b6ccc', borderRadius:4 },
+      { label:'غير مطابق', data:topCenters.map(c=>c.non), backgroundColor:'#9b1c1ccc', borderRadius:4 }
+    ]},
+    options: { responsive: true, plugins: { legend:{position:'top'} }, scales: { x:{grid:{display:false}}, y:{grid:{color:'#f1f5f9'}} } }
   });
 }
 
@@ -1034,19 +1106,13 @@ function buildObsTab() {
   const submitted = Object.values(data).filter(s => s.meta?.status === 'submitted');
   if (!submitted.length) { document.getElementById('obsHeatmap').innerHTML='<div class="empty-state"><span class="ei">📊</span><p>لا توجد بيانات</p></div>'; return; }
 
-  // Count non-compliant by item
-  const nonCount = {};
-  const nonRisk  = {};
-  const nonSec   = {};
+  const nonCount = {}, nonRisk = {}, nonSec = {};
   submitted.forEach(s => {
     Object.entries(s.state||{}).forEach(([k,v]) => {
       if (v.status === 'non') {
         nonCount[k] = (nonCount[k]||0)+1;
         const d = SECTIONS_DETAIL[k];
-        if (d) {
-          nonRisk[d.r]  = (nonRisk[d.r]||0)+1;
-          nonSec[d.sec] = (nonSec[d.sec]||0)+1;
-        }
+        if (d) { nonRisk[d.r] = (nonRisk[d.r]||0)+1; nonSec[d.sec] = (nonSec[d.sec]||0)+1; }
       }
     });
   });
@@ -1054,53 +1120,28 @@ function buildObsTab() {
   const sorted = Object.entries(nonCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const CH = chartInstances;
 
-  // Top 10 obs bar
   if (CH.topObs) CH.topObs.destroy();
   CH.topObs = new Chart(document.getElementById('chTopObs'), {
     type: 'bar',
-    data: {
-      labels: sorted.map(([k])=>{const d=SECTIONS_DETAIL[k];return d?d.t.substring(0,30)+'...':k}),
-      datasets: [{
-        label:'عدد التكرار',
-        data: sorted.map(x=>x[1]),
-        backgroundColor: sorted.map(([k])=>{const d=SECTIONS_DETAIL[k];return RISK_COLOR[d?.r]||'#1a4480'}),
-        borderRadius: 5
-      }]
-    },
-    options: {
-      indexAxis:'y', responsive:true,
-      plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:'#f1f5f9'}},y:{grid:{display:false},ticks:{font:{size:10}}}}
-    }
+    data: { labels: sorted.map(([k])=>{const d=SECTIONS_DETAIL[k];return d?d.t.substring(0,30)+'...':k}),
+      datasets: [{ label:'عدد التكرار', data: sorted.map(x=>x[1]), backgroundColor: sorted.map(([k])=>{const d=SECTIONS_DETAIL[k];return RISK_COLOR[d?.r]||'#1a4480'}), borderRadius: 5 }] },
+    options: { indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#f1f5f9'}},y:{grid:{display:false},ticks:{font:{size:10}}}} }
   });
 
-  // Risk distribution
   if (CH.obsRisk) CH.obsRisk.destroy();
   CH.obsRisk = new Chart(document.getElementById('chObsRisk'), {
     type: 'doughnut',
-    data: {
-      labels: Object.keys(nonRisk).map(r=>RISK_LABEL[r]||r),
-      datasets: [{
-        data: Object.values(nonRisk),
-        backgroundColor: Object.keys(nonRisk).map(r=>RISK_COLOR[r]||'#1a4480'),
-        borderWidth: 3, borderColor: '#fff'
-      }]
-    },
+    data: { labels: Object.keys(nonRisk).map(r=>RISK_LABEL[r]||r), datasets: [{ data: Object.values(nonRisk), backgroundColor: Object.keys(nonRisk).map(r=>RISK_COLOR[r]||'#1a4480'), borderWidth: 3, borderColor: '#fff' }] },
     options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10}}}}
   });
 
-  // Heatmap
   const heatItems = Object.entries(nonCount).sort((a,b)=>b[1]-a[1]).slice(0,24);
-  const maxCount = heatItems[0]?.[1] || 1;
   document.getElementById('obsHeatmap').innerHTML = heatItems.map(([k,cnt]) => {
     const d = SECTIONS_DETAIL[k];
-    const pct = Math.round(cnt/maxCount*100);
     const rc = RISK_COLOR[d?.r] || '#1a4480';
     const rl = RISK_LABEL[d?.r] || '';
     return `<div class="obs-item">
-      <div class="obs-count-ring" style="background:${rc}22;border-color:${rc};color:${rc}">
-        ${cnt}
-      </div>
+      <div class="obs-count-ring" style="background:${rc}22;border-color:${rc};color:${rc}">${cnt}</div>
       <div>
         <div class="obs-item-text">${d?.t || k}</div>
         <div class="obs-item-sub">📁 ${d?.sec || '—'} • <span style="color:${rc};font-weight:700">${rl}</span></div>
@@ -1169,8 +1210,9 @@ function renderTable(data) {
       <td><span class="badge ${badgeCls}">${badgeTxt}</span></td>
       <td style="font-size:11px;white-space:nowrap">${subT}</td>
       <td>
-        <div style="display:flex;gap:5px">
-          <button class="action-btn view" onclick="openDetail('${s.key}')">عرض</button>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="action-btn center-dash" onclick="openCenterDash('${m.center||''}')">🏥 داش المركز</button>
+          <button class="action-btn view" onclick="openDetail('${s.key}')">📄 عرض</button>
           <button class="action-btn del" onclick="deleteSession('${s.key}')">حذف</button>
         </div>
       </td>
@@ -1179,7 +1221,347 @@ function renderTable(data) {
 }
 
 /* ============================
-   DETAIL MODAL
+   CENTER DASHBOARD
+   ============================ */
+function openCenterDash(centerName) {
+  if (!centerName) return;
+  const data = window.allSessions || {};
+  const centerSessions = Object.values(data).filter(s =>
+    (s.meta?.center || '') === centerName && s.meta?.status === 'submitted'
+  );
+
+  if (!centerSessions.length) {
+    alert('لا توجد جلسات مُرسلة لهذا المركز بعد.');
+    return;
+  }
+
+  // Aggregate data across all sessions for this center
+  const allScores = centerSessions.map(s => s.meta?.score || 0);
+  const avgScore  = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
+  const totalOk   = centerSessions.reduce((a,s)=>a+(s.meta?.ok||0),0);
+  const totalNon  = centerSessions.reduce((a,s)=>a+(s.meta?.no||0),0);
+  const totalItems= totalOk + totalNon;
+  const compRate  = totalItems > 0 ? Math.round(totalOk/totalItems*100) : 0;
+  const latestSession = centerSessions.sort((a,b)=>(b.meta?.date||'').localeCompare(a.meta?.date||''))[0];
+
+  // Aggregate state across all sessions (use latest per key)
+  const mergedState = {};
+  centerSessions.forEach(s => {
+    Object.entries(s.state||{}).forEach(([k,v]) => {
+      if (!mergedState[k]) mergedState[k] = v;
+      else if (v.status !== 'pending') mergedState[k] = v; // prefer evaluated
+    });
+  });
+
+  // Non-compliant items
+  const nonItems = Object.entries(mergedState)
+    .filter(([,v]) => v.status === 'non')
+    .map(([k,v]) => ({ key:k, ...v, detail: SECTIONS_DETAIL[k] }))
+    .filter(i => i.detail);
+
+  // Section scores
+  const secStats = {};
+  SECTIONS_META.forEach(sm => {
+    const items = Object.entries(mergedState).filter(([k]) => k.startsWith(sm.id+'_'));
+    const ok  = items.filter(([,v])=>v.status==='compliant').length;
+    const non = items.filter(([,v])=>v.status==='non').length;
+    const total = ok + non;
+    secStats[sm.id] = { title: sm.title, ok, non, total, pct: total>0?Math.round(ok/total*100):null };
+  });
+
+  const scoreColor = SCORE_COLOR(avgScore);
+  const scoreLabel = avgScore>=90?'ممتاز':avgScore>=75?'جيد':avgScore>=60?'مقبول':'يحتاج تحسين';
+  const lastDate = latestSession.meta?.date || '—';
+  const lastInspector = latestSession.meta?.inspector || '—';
+
+  // Build section tabs
+  const tabsHtml = `
+    <div class="cd-sec-tab active" onclick="cdShowSec('overview', this)">📊 نظرة عامة</div>
+    ${SECTIONS_META.map(sm => {
+      const st = secStats[sm.id];
+      if (!st || st.total === 0) return '';
+      const badge = st.non > 0 ? `<span class="tab-badge">${st.non}</span>` : '';
+      return `<div class="cd-sec-tab" onclick="cdShowSec('sec_${sm.id}', this)">${badge}${sm.title.replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','').substring(0,12)}</div>`;
+    }).join('')}
+    <div class="cd-sec-tab" onclick="cdShowSec('noncompliant', this)">⚠️ الملاحظات (${nonItems.length})</div>
+    <div class="cd-sec-tab" onclick="cdShowSec('history', this)">📅 السجل</div>
+  `;
+
+  // Overview content
+  const secScoreGridHtml = SECTIONS_META.map(sm => {
+    const st = secStats[sm.id];
+    if (!st || st.total === 0) return '';
+    const pct = st.pct !== null ? st.pct : 0;
+    const color = SCORE_COLOR(pct);
+    return `<div class="ssg-card" onclick="cdShowSecById(${sm.id})">
+      <div class="ssg-title">${sm.title.replace('قسم ','').replace('برنامج ','')}</div>
+      <div class="ssg-bar-wrap">
+        <div class="ssg-bar-bg"><div class="ssg-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="ssg-pct" style="color:${color}">${pct}%</span>
+      </div>
+      <div class="ssg-counts">
+        <span class="ssg-ok">✅ ${st.ok} مطابق</span>
+        <span class="ssg-no">❌ ${st.non} غير مطابق</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Section detail panels
+  const secPanelsHtml = SECTIONS_META.map(sm => {
+    const items = Object.entries(mergedState).filter(([k]) => k.startsWith(sm.id+'_'));
+    if (!items.length) return '';
+    const okC  = items.filter(([,v])=>v.status==='compliant').length;
+    const nonC = items.filter(([,v])=>v.status==='non').length;
+    const naC  = items.filter(([,v])=>v.status==='na').length;
+    const rows = items.map(([k,v]) => {
+      const d = SECTIONS_DETAIL[k];
+      const rClass = d ? `risk-${d.r}` : 'risk-low';
+      const rLabel = d ? RISK_LABEL[d.r] : '';
+      const sCls   = STATUS_CLS[v.status] || 'sp-pend';
+      const sLbl   = STATUS_LABEL[v.status] || '—';
+      const photos = v.photoCount>0?`📷 ${v.photoCount}`:'' ;
+      return `<div class="cd-item-row">
+        <div class="cd-item-num">${k.split('_')[1]||'—'}</div>
+        <div>
+          <div class="cd-item-text">${d?.t || k}</div>
+          ${v.note?`<div class="cd-item-note">📝 ${v.note}</div>`:''}
+        </div>
+        <div class="cd-item-risk"><span class="risk-pill ${rClass}">${rLabel}</span></div>
+        <div class="cd-item-status"><span class="status-pill ${sCls}">${sLbl}</span></div>
+        <div class="cd-item-photos">${photos}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="cd-sec-content" id="cd_sec_${sm.id}">
+      <div class="items-section-card">
+        <div class="items-section-hdr">
+          <div class="items-section-hdr-title">${sm.id}. ${sm.title}</div>
+          <div class="items-section-hdr-stats">
+            <span class="items-section-hdr-stat">✅ ${okC} مطابق</span>
+            <span class="items-section-hdr-stat">❌ ${nonC} غير مطابق</span>
+            <span class="items-section-hdr-stat">⬜ ${naC} لا ينطبق</span>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <div style="min-width:600px">
+            <div style="display:grid;grid-template-columns:36px 1fr 90px 100px auto;gap:10px;padding:8px 18px;background:#f8fafc;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text-sub)">
+              <div>#</div><div>البند</div><div>الخطورة</div><div>النتيجة</div><div>صور</div>
+            </div>
+            ${rows}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Non-compliant panel
+  const ncHtml = nonItems.length === 0
+    ? '<div class="empty-state"><span class="ei">✅</span><p>لا توجد ملاحظات غير مطابقة</p></div>'
+    : `<div class="nc-grid">${nonItems.map(item => {
+        const rClass = `risk-${item.detail.r}`;
+        return `<div class="nc-card">
+          <div class="nc-card-top">
+            <div>
+              <div class="nc-card-title">${item.detail.t}</div>
+              <div class="nc-card-sec">📁 ${item.detail.sec}</div>
+            </div>
+            <span class="risk-pill ${rClass}" style="flex-shrink:0">${RISK_LABEL[item.detail.r]}</span>
+          </div>
+          ${item.note?`<div class="nc-card-note">📝 ${item.note}</div>`:''}
+        </div>`;
+      }).join('')}</div>`;
+
+  // History panel
+  const historyHtml = centerSessions
+    .sort((a,b)=>(b.meta?.date||'').localeCompare(a.meta?.date||''))
+    .map((s,i) => {
+      const m = s.meta || {};
+      const sc = m.score || 0;
+      const scC = SCORE_COLOR(sc);
+      const subT = m.submitTime ? new Date(m.submitTime).toLocaleString('ar-SA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+      return `<div class="sh-card">
+        <div class="sh-round">${i+1}</div>
+        <div class="sh-info">
+          <div class="sh-info-title">جولة رقم ${m.round||i+1} — ${m.inspector||'—'}</div>
+          <div class="sh-info-sub">📅 ${m.date||'—'} • أُرسل: ${subT}</div>
+        </div>
+        <div class="sh-score-area">
+          <span class="sh-score" style="color:${scC}">${sc}%</span>
+          <div class="sh-stats">
+            <span class="sh-stat-ok">✅ ${m.ok||0}</span>
+            <span class="sh-stat-no">❌ ${m.no||0}</span>
+          </div>
+        </div>
+        <span class="badge ${sc>=90?'badge-ok':sc>=75?'badge-blue':sc>=60?'badge-warn':'badge-critical'}">${sc>=90?'ممتاز':sc>=75?'جيد':sc>=60?'مقبول':'ضعيف'}</span>
+      </div>`;
+    }).join('');
+
+  // SVG score ring
+  const r = 52, cx = 60, cy = 60;
+  const circum = 2 * Math.PI * r;
+  const dash = (avgScore / 100) * circum;
+  const ringColor = scoreColor;
+
+  const html = `
+    <div class="cd-header">
+      <div class="cd-header-top">
+        <div class="cd-header-info">
+          <div class="cd-header-badge">🏥 داش بورد المركز الصحي</div>
+          <h1>${centerName}</h1>
+          <div class="cd-header-meta">
+            <div class="cd-header-meta-item">👤 آخر مفتش: ${lastInspector}</div>
+            <div class="cd-header-meta-item">📅 آخر زيارة: ${lastDate}</div>
+            <div class="cd-header-meta-item">📋 عدد الجلسات: ${centerSessions.length}</div>
+          </div>
+        </div>
+        <div class="cd-header-actions">
+          <button class="cd-print-btn" onclick="window.print()">🖨️ طباعة</button>
+          <button class="cd-close-btn" onclick="closeCenterDash()">✕ إغلاق</button>
+        </div>
+      </div>
+
+      <div class="cd-score-area">
+        <div class="cd-score-ring-wrap">
+          <svg width="120" height="120" class="cd-score-ring">
+            <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="10"/>
+            <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringColor}" stroke-width="10"
+              stroke-dasharray="${dash} ${circum}" stroke-linecap="round"/>
+          </svg>
+          <div class="cd-score-ring-val">
+            <div class="cd-score-num" style="color:${ringColor}">${avgScore}</div>
+            <div class="cd-score-pct">%</div>
+          </div>
+        </div>
+        <div class="cd-kpi-row">
+          <div class="cd-kpi">
+            <div class="cd-kpi-val">${scoreLabel}</div>
+            <div class="cd-kpi-lbl">التقييم العام</div>
+          </div>
+          <div class="cd-kpi">
+            <div class="cd-kpi-val" style="color:#4ade80">${totalOk}</div>
+            <div class="cd-kpi-lbl">بند مطابق</div>
+          </div>
+          <div class="cd-kpi">
+            <div class="cd-kpi-val" style="color:#f87171">${totalNon}</div>
+            <div class="cd-kpi-lbl">بند غير مطابق</div>
+          </div>
+          <div class="cd-kpi">
+            <div class="cd-kpi-val">${compRate}%</div>
+            <div class="cd-kpi-lbl">معدل الامتثال</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cd-body">
+      <div class="cd-sec-tabs" id="cdSecTabs">${tabsHtml}</div>
+
+      <!-- Overview -->
+      <div class="cd-sec-content active" id="cd_overview">
+        <div class="cd-charts-row">
+          <div class="cd-chart-card">
+            <div class="cd-chart-title">الامتثال حسب مستوى الخطورة</div>
+            <canvas id="cdChartRisk" height="200"></canvas>
+          </div>
+          <div class="cd-chart-card">
+            <div class="cd-chart-title">توزيع النتائج الكلية</div>
+            <canvas id="cdChartDist" height="200"></canvas>
+          </div>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:14px;font-weight:700;color:var(--gov-navy);margin-bottom:12px">📐 أداء كل قسم</div>
+          <div class="sec-score-grid">${secScoreGridHtml}</div>
+        </div>
+      </div>
+
+      <!-- Section panels -->
+      ${secPanelsHtml}
+
+      <!-- Non-compliant -->
+      <div class="cd-sec-content" id="cd_noncompliant">
+        <div style="font-size:14px;font-weight:700;color:#9b1c1c;margin-bottom:12px">⚠️ البنود غير المطابقة (${nonItems.length})</div>
+        ${ncHtml}
+      </div>
+
+      <!-- History -->
+      <div class="cd-sec-content" id="cd_history">
+        <div style="font-size:14px;font-weight:700;color:var(--gov-navy);margin-bottom:12px">📅 سجل الزيارات التفتيشية</div>
+        <div class="session-history">${historyHtml}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('centerDashModal').innerHTML = html;
+  document.getElementById('centerDashOverlay').classList.add('open');
+  document.getElementById('centerDashModal').scrollTop = 0;
+
+  // Build charts after DOM ready
+  setTimeout(() => buildCenterDashCharts(mergedState), 100);
+}
+
+function buildCenterDashCharts(mergedState) {
+  // Risk compliance
+  const riskS = {critical:{ok:0,non:0}, high:{ok:0,non:0}, medium:{ok:0,non:0}, low:{ok:0,non:0}};
+  Object.entries(mergedState).forEach(([k,v]) => {
+    const d = SECTIONS_DETAIL[k]; if (!d) return;
+    if (v.status==='compliant') riskS[d.r].ok++;
+    else if (v.status==='non') riskS[d.r].non++;
+  });
+  const ctxR = document.getElementById('cdChartRisk');
+  if (ctxR) new Chart(ctxR, {
+    type: 'bar',
+    data: { labels:['حرج','عالي','متوسط','منخفض'], datasets:[
+      {label:'مطابق', data:[riskS.critical.ok,riskS.high.ok,riskS.medium.ok,riskS.low.ok], backgroundColor:'#0f7b6ccc', borderRadius:5},
+      {label:'غير مطابق', data:[riskS.critical.non,riskS.high.non,riskS.medium.non,riskS.low.non], backgroundColor:'#9b1c1ccc', borderRadius:5}
+    ]},
+    options:{ responsive:true, plugins:{legend:{position:'top'}}, scales:{x:{grid:{display:false}},y:{grid:{color:'#f1f5f9'}}} }
+  });
+
+  // Distribution
+  let ok=0,non=0,na=0,pend=0;
+  Object.values(mergedState).forEach(v=>{
+    if(v.status==='compliant')ok++;
+    else if(v.status==='non')non++;
+    else if(v.status==='na')na++;
+    else pend++;
+  });
+  const ctxD = document.getElementById('cdChartDist');
+  if (ctxD) new Chart(ctxD, {
+    type:'doughnut',
+    data:{labels:['مطابق','غير مطابق','لا ينطبق','لم يُقيَّم'],
+      datasets:[{data:[ok,non,na,pend], backgroundColor:['#0f7b6c','#9b1c1c','#9ca3af','#fbbf24'], borderWidth:3, borderColor:'#fff'}]},
+    options:{responsive:true, plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10}}}}
+  });
+}
+
+function cdShowSec(id, tab) {
+  document.querySelectorAll('.cd-sec-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('#cdSecTabs .cd-sec-tab').forEach(t=>t.classList.remove('active'));
+  const panel = document.getElementById('cd_' + id);
+  if (panel) panel.classList.add('active');
+  if (tab) tab.classList.add('active');
+}
+
+function cdShowSecById(id) {
+  const allTabs = document.querySelectorAll('#cdSecTabs .cd-sec-tab');
+  // find the tab that navigates to sec_id
+  allTabs.forEach(t => {
+    if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(`sec_${id}`)) {
+      cdShowSec(`sec_${id}`, t);
+    }
+  });
+}
+
+function closeCenterDash() {
+  document.getElementById('centerDashOverlay').classList.remove('open');
+}
+
+document.getElementById('centerDashOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeCenterDash();
+});
+
+/* ============================
+   OLD DETAIL MODAL
    ============================ */
 function openDetail(sessionKey) {
   const s = (window.allSessions||{})[sessionKey];
@@ -1267,6 +1649,5 @@ function exportCSV() {
 // Init
 document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPW(); });
 </script>
-
 </body>
 </html>
