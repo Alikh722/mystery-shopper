@@ -636,9 +636,34 @@ tr:last-child td { border-bottom: none; }
   .cd-header h1 { font-size: 18px; }
 }
 @media print {
-  .topbar, .tab-nav, .login-overlay, .cd-header-actions { display: none !important; }
-  body { background: #fff; }
-  .center-modal { height: auto; overflow: visible; }
+  .topbar, .tab-nav, .login-overlay, .cd-header-actions,
+  .cd-print-btn, .tbtn, button { display: none !important; }
+
+  body { background: #fff !important; overflow: visible !important; }
+
+  .center-modal {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    animation: none !important;
+  }
+
+  .cd-sec-content, .cd-tab-panel, [style*="display:none"] {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .items-section-card { page-break-inside: avoid; margin-bottom: 16px; }
+
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-sub); }
@@ -1492,8 +1517,10 @@ function openCenterDash(centerName) {
       const rClass = d ? `risk-${d.r}` : 'risk-low';
       const rLabel = d ? RISK_LABEL[d.r] : '';
       const sCls   = STATUS_CLS[v.status] || 'sp-pend';
-      const sLbl   = STATUS_LABEL[v.status] || '—';
-      const photos = v.photoCount>0?`📷 ${v.photoCount}`:'' ;
+            const sLbl   = STATUS_LABEL[v.status] || '⏳ لم يُقيَّم';
+            const photos = (v.photos && v.photos.length>0)
+        ? v.photos.map(src=>`<img src="${src}" style="width:58px;height:58px;object-fit:cover;border-radius:6px;cursor:pointer;border:1.5px solid #dde3f0;margin:2px;" onclick="showPhotoFullscreen('${src}')" title="انقر لعرض الصورة">`).join('')
+        : (v.photoCount>0?`📷 ${v.photoCount}`:'');
       return `<div class="cd-item-row">
         <div class="cd-item-num">${k.split('_')[1]||'—'}</div>
         <div>
@@ -1770,16 +1797,26 @@ function openDetail(sessionKey) {
         <div class="sec-block-title">${sec.id}. ${sec.title}</div>
         <div class="sec-block-score">✔ ${ok} &nbsp;✖ ${no}</div>
       </div>`;
-    items.forEach(([k,v]) => {
-      const clsMap = {compliant:'is-ok',non:'is-no',na:'is-na'};
-      const lblMap = {compliant:'مطابق',non:'غير مطابق',na:'لا ينطبق',pending:'لم يُقيَّم'};
-      const cls = clsMap[v.status]||'is-pend';
-      const lbl = lblMap[v.status]||'لم يُقيَّم';
+        items.forEach(([k,v]) => {
+      const d        = SECTIONS_DETAIL[k];
+      const itemText = d ? d.t : `البند ${k.split('_')[1]||''}`;
+      const clsMap   = {compliant:'is-ok', non:'is-no', na:'is-na'};
+      const lblMap   = {compliant:'✅ مطابق', non:'❌ غير مطابق', na:'⬜ لا ينطبق', pending:'⏳ لم يُقيَّم'};
+      const cls      = clsMap[v.status] || 'is-pend';
+      const lbl      = lblMap[v.status] || '⏳ لم يُقيَّم';
+      const rClass   = d ? `risk-${d.r}` : 'risk-low';
+      const rLabel   = d ? (RISK_LABEL[d.r]||'') : '';
+      const photosHtml = (v.photos && v.photos.length>0)
+        ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
+            ${v.photos.map(src=>`<img src="${src}" style="width:70px;height:70px;object-fit:cover;border-radius:7px;cursor:pointer;border:1.5px solid #dde3f0;" onclick="showPhotoFullscreen('${src}')">`).join('')}
+           </div>`
+        : (v.photoCount>0 ? `<span style="font-size:11px;color:#888">📷 ${v.photoCount} صور</span>` : '');
       html += `<div class="item-row">
         <span class="item-status ${cls}">${lbl}</span>
         <div style="flex:1">
-          <div class="item-text">البند ${k.split('_')[1]||''} ${v.photoCount>0?`📷 (${v.photoCount})`:''}</div>
+          <div class="item-text">${itemText} <span class="risk-pill ${rClass}" style="font-size:10px;margin-right:6px">${rLabel}</span></div>
           ${v.note?`<div class="note-text">📝 ${v.note}</div>`:''}
+          ${photosHtml}
         </div>
       </div>`;
     });
@@ -1788,6 +1825,15 @@ function openDetail(sessionKey) {
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('detailOverlay').classList.add('open');
+}function showPhotoFullscreen(src){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+  ov.onclick=()=>ov.remove();
+  const img=document.createElement('img');
+  img.src=src;
+  img.style.cssText='max-width:92vw;max-height:92vh;border-radius:12px;box-shadow:0 4px 40px #000;';
+  ov.appendChild(img);
+  document.body.appendChild(ov);
 }
 
 function closeModal() { document.getElementById('detailOverlay').classList.remove('open'); }
