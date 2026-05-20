@@ -8,6 +8,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getStorage, ref as sRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // ============================================================
 // 🔥 إعدادات Firebase 
@@ -25,6 +26,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const storage = getStorage(app);
+window._firebaseStorage = storage;
+window._firebaseSRef    = sRef;
+window._firebaseUpload  = uploadString;
+window._firebaseGetURL  = getDownloadURL;
 window._firebaseDB = db;
 window._firebaseRef = ref;
 window._firebaseSet = set;
@@ -552,28 +558,42 @@ function autoSave(){
 autoSaveTimer=setTimeout(()=>{saveToFirebase();saveToIDB();},1500);
 }
 
-function saveToFirebase(){
+async function saveToFirebase(){
   if(!window._firebaseReady||!sessionKey){return;}
   setSyncStatus('saving');
   try{
-    const db=window._firebaseDB;
-    const refFn=window._firebaseRef;
-    const setFn=window._firebaseSet;
+    const db      = window._firebaseDB;
+    const storage = window._firebaseStorage;
+    const refFn   = window._firebaseRef;
+    const setFn   = window._firebaseSet;
     const isSubmitted = sessionMeta.status==='submitted';
-    const lightState={};
-    Object.keys(state).forEach(k=>{
+    const lightState  = {};
+
+    for(const k of Object.keys(state)){
+      const photoURLs = [];
+      if(isSubmitted && state[k].photos.length > 0){
+        for(let pi=0; pi<state[k].photos.length; pi++){
+          const imgRef = window._firebaseSRef(storage,`photos/${sessionKey}/${k}_${pi}`);
+          await window._firebaseUpload(imgRef, state[k].photos[pi], 'data_url');
+          const url = await window._firebaseGetURL(imgRef);
+          photoURLs.push(url);
+        }
+      }
       lightState[k]={
-        status:state[k].status,
-        note:state[k].note,
+        status:    state[k].status,
+        note:      state[k].note,
         photoCount:state[k].photos.length,
-        photos: isSubmitted ? state[k].photos : []
+        photos:    photoURLs
       };
-    });
+    }
+
     const payload={meta:sessionMeta,state:lightState,lastUpdate:new Date().toISOString()};
-    setFn(refFn(db,'sessions/'+sessionKey),payload)
-      .then(()=>setSyncStatus('saved'))
-      .catch(()=>setSyncStatus('error'));
-  }catch(e){setSyncStatus('error');}
+    await setFn(refFn(db,'sessions/'+sessionKey),payload);
+    setSyncStatus('saved');
+  }catch(e){
+    console.error(e);
+    setSyncStatus('error');
+  }
 }
 
 // ============================================================
