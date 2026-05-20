@@ -480,7 +480,9 @@ const SECTIONS=[
 ];
 
 const RL={critical:"حرج",high:"عالي الخطورة",medium:"متوسط",low:"منخفض"};
-const RW={critical:4,high:3,medium:2,low:1};
+// السطر 483 — استبدل:
+// السطر 483 — استبدل:
+const RW={critical:10,high:5,medium:2,low:1};
 const TOTAL_ITEMS=SECTIONS.reduce((a,s)=>a+s.items.length,0);
 const IDB_NAME='inspector_backup',IDB_STORE='session',IDB_KEY='current';
 let idb=null;
@@ -557,10 +559,15 @@ function saveToFirebase(){
     const db=window._firebaseDB;
     const refFn=window._firebaseRef;
     const setFn=window._firebaseSet;
-    // Strip photo data to save space (save only count)
+    const isSubmitted = sessionMeta.status==='submitted';
     const lightState={};
     Object.keys(state).forEach(k=>{
-      lightState[k]={status:state[k].status,note:state[k].note,photoCount:state[k].photos.length};
+      lightState[k]={
+        status:state[k].status,
+        note:state[k].note,
+        photoCount:state[k].photos.length,
+        photos: isSubmitted ? state[k].photos : []
+      };
     });
     const payload={meta:sessionMeta,state:lightState,lastUpdate:new Date().toISOString()};
     setFn(refFn(db,'sessions/'+sessionKey),payload)
