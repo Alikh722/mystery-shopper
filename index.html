@@ -655,7 +655,7 @@ function renderAll(){
           <textarea class="note-ta" placeholder="أضف ملاحظتك هنا..." oninput="state['${k}'].note=this.value;autoSave()"></textarea>
           <div class="photo-section">
             <div class="photo-lbl">📷 إضافة صور</div>
-            <label class="file-btn">+ إضافة صورة<input type="file" accept="image/*" capture="environment" multiple style="display:none" onchange="addPhoto('${k}',this)"></label>
+            <label class="file-btn">+ إضافة صورة<input type="file" accept="image/*" multiple style="display:none" onchange="addPhoto('${k}',this)"></label>
             <div class="photo-previews" id="photos_${k}"></div>
           </div>
         </div>
