@@ -636,12 +636,11 @@ tr:last-child td { border-bottom: none; }
   .cd-header h1 { font-size: 18px; }
 }
 @media print {
-  .topbar, .tab-nav, .login-overlay, .cd-header-actions,
-  .cd-print-btn, .tbtn, button { display: none !important; }
-
-  body { background: #fff !important; overflow: visible !important; }
-
-  .center-modal {
+  body > * { display: none !important; }
+  .overlay.open,
+  .center-overlay.open { display: block !important; }
+  .overlay.open .modal,
+  .center-overlay.open .center-modal {
     position: static !important;
     height: auto !important;
     max-height: none !important;
@@ -650,20 +649,22 @@ tr:last-child td { border-bottom: none; }
     max-width: 100% !important;
     box-shadow: none !important;
     animation: none !important;
+    display: block !important;
   }
-
-  .cd-sec-content, .cd-tab-panel, [style*="display:none"] {
+  .cd-sec-content, .tab-panel {
     display: block !important;
     overflow: visible !important;
     height: auto !important;
     max-height: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
   }
-
+  .modal-hdr button, .cd-header-actions,
+  .cd-sec-tabs, .mclose { display: none !important; }
   .items-section-card { page-break-inside: avoid; margin-bottom: 16px; }
-
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .footer-bar { display: block !important; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-sub); }
@@ -1770,6 +1771,13 @@ function openDetail(sessionKey) {
   const m = s.meta||{};
   const st = s.state||{};
   document.getElementById('modalTitle').textContent = `${m.inspector||'—'} — ${m.center||'—'}`;
+document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
+  <h2 id="modalTitle">${m.inspector||'—'} — ${m.center||'—'}</h2>
+  <div style="display:flex;gap:8px">
+    <button class="mclose" style="background:rgba(255,255,255,.15);padding:4px 12px" onclick="window.print()">🖨️ طباعة</button>
+    <button class="mclose" onclick="closeModal()">✕</button>
+  </div>
+`;
   const sc = m.score;
   const scC = sc!=null?SCORE_COLOR(sc):'#6b7280';
   const subT = m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA'):'—';
