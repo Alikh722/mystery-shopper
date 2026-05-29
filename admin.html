@@ -1443,12 +1443,20 @@ function renderTable(data) {
     const subT  = m.submitTime ? new Date(m.submitTime).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'}) : '—';
     const badgeCls = m.status==='submitted' ? 'badge-submitted' : 'badge-progress';
     const badgeTxt = m.status==='submitted' ? '✅ مُرسل' : '⏳ جاري';
+
+    // ✅ تنظيف البيانات القادمة من Firebase قبل إدراجها في HTML
+    const safeInspector = safeHTML(m.inspector || '—');
+    const safeCenter    = safeHTML(m.center    || '—');
+    const safeDate      = safeHTML(m.date      || '—');
+    const safeRound     = safeHTML(String(m.round || '—'));
+    const safeKey       = safeHTML(s.key       || '');
+
     return `<tr>
       <td style="color:var(--text-sub);font-weight:600">${idx+1}</td>
-      <td style="font-weight:700">${m.inspector||'—'}</td>
-      <td>${m.center||'—'}</td>
-      <td style="white-space:nowrap">${m.date||'—'}</td>
-      <td style="text-align:center">${m.round||'—'}</td>
+      <td style="font-weight:700">${safeInspector}</td>
+      <td>${safeCenter}</td>
+      <td style="white-space:nowrap">${safeDate}</td>
+      <td style="text-align:center">${safeRound}</td>
       <td><span class="score-chip" style="color:${scC};font-weight:800">${sc!=null?sc+'%':'—'}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:6px">
@@ -1462,9 +1470,9 @@ function renderTable(data) {
       <td style="font-size:11px;white-space:nowrap">${subT}</td>
       <td>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
-          <button class="action-btn center-dash" onclick="openCenterDash('${m.center||''}')">🏥 داش المركز</button>
-          <button class="action-btn view" onclick="openDetail('${s.key}')">📄 عرض</button>
-          <button class="action-btn del" onclick="deleteSession('${s.key}')">حذف</button>
+          <button class="action-btn center-dash" onclick="openCenterDash('${safeCenter}')">🏥 داش المركز</button>
+          <button class="action-btn view" onclick="openDetail('${safeKey}')">📄 عرض</button>
+          <button class="action-btn del" onclick="deleteSession('${safeKey}')">حذف</button>
         </div>
       </td>
     </tr>`;
