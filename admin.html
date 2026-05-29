@@ -27,7 +27,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
-
+  
 // 🛡️ دالة تعقيم البيانات — تقضي على ثغرة XSS
 function sanitizeData(obj) {
   if (typeof obj === 'string') {
@@ -36,14 +36,13 @@ function sanitizeData(obj) {
     })[m]);
   }
   if (typeof obj === 'object' && obj !== null) {
-    // ✅ نسخة جديدة بدلاً من تعديل الأصل
     const clean = Array.isArray(obj) ? [] : {};
     for (let key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         clean[key] = sanitizeData(obj[key]);
       }
     }
-    return clean; // ← يُعيد نسخة نظيفة
+    return clean;
   }
   return obj;
 }
@@ -56,7 +55,6 @@ function safeHTML(str) {
       ALLOWED_ATTR: []
     });
   }
-  // Fallback إذا لم تُحمَّل DOMPurify
   return String(str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -64,7 +62,22 @@ function safeHTML(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
-  
+
+// ✅ دالة تحميل البيانات من Firebase
+window.refreshData = function() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) btn.textContent = '⏳ جاري...';
+  get(ref(db, 'sessions')).then(snapshot => {
+    let data = snapshot.val() || {};
+    window.allSessions = data;
+    window.renderDashboard(data);
+    if (btn) btn.innerHTML = '🔄 تحديث البيانات';
+  }).catch(err => {
+    if (btn) btn.innerHTML = '🔄 تحديث البيانات';
+    console.error('Firebase error:', err);
+  });
+};
+
 // مراقبة تسجيل الدخول
 onAuthStateChanged(auth, (user) => {
   if (user && user.email === "admin@ras-health.gov.sa") {
