@@ -9,7 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+// جلبنا دالة get بدلاً من onValue لحماية الباقة
+import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -26,15 +27,40 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+// 🛡️ دالة تعقيم البيانات (تقضي على ثغرة XSS تماماً)
+function sanitizeData(obj) {
+  if (typeof obj === 'string') {
+    return obj.replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m]));
+  }
+  if (typeof obj === 'object' && obj !== null) {
+    for (let key in obj) {
+      obj[key] = sanitizeData(obj[key]); // تنظيف متداخل لجميع البيانات
+    }
+  }
+  return obj;
+}
+
+// 🔄 دالة جلب البيانات لمرة واحدة عند الطلب
+window.refreshData = function() {
+  const btn = document.getElementById('refreshBtn');
+  if(btn) btn.textContent = "⏳ جاري التحديث...";
+  
+  get(ref(db, 'sessions')).then((snapshot) => {
+    let data = snapshot.val() || {};
+    data = sanitizeData(data); // غسيل وتنظيف البيانات فور وصولها وقبل عرضها
+    window.allSessions = data;
+    window.renderDashboard(data);
+    if(btn) btn.innerHTML = "🔄 تحديث البيانات";
+  }).catch(err => {
+    if(btn) btn.innerHTML = "⚠ خطأ بالاتصال";
+  });
+};
+
+// مراقبة تسجيل الدخول
 onAuthStateChanged(auth, (user) => {
   if (user && user.email === "admin@ras-health.gov.sa") {
     document.getElementById('loginScreen').style.display = 'none';
-    const sessionsRef = ref(db, 'sessions');
-    onValue(sessionsRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      window.allSessions = data;
-      window.renderDashboard(data);
-    });
+    window.refreshData(); // جلب البيانات تلقائياً عند الدخول
   } else {
     document.getElementById('loginScreen').style.display = 'flex';
   }
@@ -47,10 +73,10 @@ window.checkPW = function() {
   const pw = document.getElementById('pwInput').value;
   
   signInWithEmailAndPassword(auth, email, pw)
-    .then((userCredential) => {
+    .then(() => {
       document.getElementById('loginErr').style.display = 'none';
     })
-    .catch((error) => {
+    .catch(() => {
       document.getElementById('loginErr').style.display = 'block';
       document.getElementById('loginErr').textContent = "كلمة المرور غير صحيحة.";
     });
@@ -734,11 +760,11 @@ tr:last-child td { border-bottom: none; }
     </div>
   </div>
   <div class="topbar-actions">
-    <div class="topbar-live"><div class="live-pulse"></div> مباشر</div>
-    <button class="tbtn" onclick="showTab('dashboard')">📊 الداش بورد</button>
-    <button class="tbtn" onclick="showTab('sessions')">📋 الجلسات</button>
-    <button class="tbtn" onclick="window.print()">🖨️ طباعة</button>
-  </div>
+  <button class="tbtn" id="refreshBtn" onclick="refreshData()" style="background:var(--gov-teal);border-color:var(--gov-teal)">🔄 تحديث البيانات</button>
+  <button class="tbtn" onclick="showTab('dashboard')">📊 الداش بورد</button>
+  <button class="tbtn" onclick="showTab('sessions')">📋 الجلسات</button>
+  <button class="tbtn" onclick="window.print()">🖨️ طباعة</button>
+</div>
 </header>
 
 <!-- ===== TAB NAV ===== -->
