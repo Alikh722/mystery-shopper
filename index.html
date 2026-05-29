@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>قائمة التحقق - قطاع الصحة العامة بالرس</title>
-  <!-- أضف هذا السطر قبل script Chart.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getStorage, ref as sRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+// ============================================================
+// 🔥 إعدادات Firebase 
+// ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyDgwu6EfFZ10d_tT6X49kp6krpd6VtIP-k",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
@@ -22,16 +22,11 @@ const firebaseConfig = {
   messagingSenderId: "1017475756161",
   appId: "1:1017475756161:web:7fb3c1b10a06093379dd80"
 };
+// ============================================================
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const storage = getStorage(app);
-const auth = getAuth(app);
-
-signInAnonymously(auth).catch((error) => {
-  console.error("فشل تسجيل الدخول الميداني:", error);
-});
-
 window._firebaseStorage = storage;
 window._firebaseSRef    = sRef;
 window._firebaseUpload  = uploadString;
@@ -788,43 +783,13 @@ function applyFilter(){
   });
 }
 
-// دالة إضافة الصور مع ضغطها تلقائياً لتوفير المساحة وتسريع الرفع
-function addPhoto(k, input) {
-  Array.from(input.files).forEach(f => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        // إنشاء لوحة وهمية لضغط الصورة
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 900;  // أقصى عرض
-        const MAX_HEIGHT = 900; // أقصى طول
-        let width = img.width;
-        let height = img.height;
-
-        // حساب الأبعاد الجديدة مع الحفاظ على نسبة الطول والعرض
-        if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        } else {
-          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // ضغط الصورة بصيغة JPEG بجودة 60% (ممتازة للتقارير وحجمها صغير جداً)
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-        state[k].photos.push(compressedBase64);
-        renderPhotos(k);
-        autoSave();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(f);
+function addPhoto(k,input){
+  Array.from(input.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{state[k].photos.push(e.target.result);renderPhotos(k);autoSave();};
+    r.readAsDataURL(f);
   });
-  input.value = '';
+  input.value='';
 }
 function renderPhotos(k){
   const c=document.getElementById('photos_'+k);
