@@ -9,10 +9,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getStorage, ref as sRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// ============================================================
-// 🔥 إعدادات Firebase 
-// ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyDgwu6EfFZ10d_tT6X49kp6krpd6VtIP-k",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
@@ -22,11 +20,16 @@ const firebaseConfig = {
   messagingSenderId: "1017475756161",
   appId: "1:1017475756161:web:7fb3c1b10a06093379dd80"
 };
-// ============================================================
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
+
+signInAnonymously(auth).catch((error) => {
+  console.error("فشل تسجيل الدخول الميداني:", error);
+});
+
 window._firebaseStorage = storage;
 window._firebaseSRef    = sRef;
 window._firebaseUpload  = uploadString;
