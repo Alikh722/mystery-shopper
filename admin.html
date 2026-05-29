@@ -1494,7 +1494,6 @@ function openCenterDash(centerName) {
     return;
   }
 
-  // Aggregate data across all sessions for this center
   const allScores = centerSessions.map(s => s.meta?.score || 0);
   const avgScore  = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
   const totalOk   = centerSessions.reduce((a,s)=>a+(s.meta?.ok||0),0);
@@ -1503,22 +1502,19 @@ function openCenterDash(centerName) {
   const compRate  = totalItems > 0 ? Math.round(totalOk/totalItems*100) : 0;
   const latestSession = centerSessions.sort((a,b)=>(b.meta?.date||'').localeCompare(a.meta?.date||''))[0];
 
-  // Aggregate state across all sessions (use latest per key)
   const mergedState = {};
   centerSessions.forEach(s => {
     Object.entries(s.state||{}).forEach(([k,v]) => {
       if (!mergedState[k]) mergedState[k] = v;
-      else if (v.status !== 'pending') mergedState[k] = v; // prefer evaluated
+      else if (v.status !== 'pending') mergedState[k] = v;
     });
   });
 
-  // Non-compliant items
   const nonItems = Object.entries(mergedState)
     .filter(([,v]) => v.status === 'non')
     .map(([k,v]) => ({ key:k, ...v, detail: SECTIONS_DETAIL[k] }))
     .filter(i => i.detail);
 
-  // Section scores
   const secStats = {};
   SECTIONS_META.forEach(sm => {
     const items = Object.entries(mergedState).filter(([k]) => k.startsWith(sm.id+'_'));
@@ -1530,30 +1526,31 @@ function openCenterDash(centerName) {
 
   const scoreColor = SCORE_COLOR(avgScore);
   const scoreLabel = avgScore>=90?'ممتاز':avgScore>=75?'جيد':avgScore>=60?'مقبول':'يحتاج تحسين';
-  const lastDate = latestSession.meta?.date || '—';
-  const lastInspector = latestSession.meta?.inspector || '—';
 
-  // Build section tabs
+  // ✅ تنظيف البيانات القادمة من Firebase
+  const safeCenterName = safeHTML(centerName);
+  const lastDate       = safeHTML(latestSession.meta?.date || '—');
+  const lastInspector  = safeHTML(latestSession.meta?.inspector || '—');
+
   const tabsHtml = `
     <div class="cd-sec-tab active" onclick="cdShowSec('overview', this)">📊 نظرة عامة</div>
     ${SECTIONS_META.map(sm => {
       const st = secStats[sm.id];
       if (!st || st.total === 0) return '';
       const badge = st.non > 0 ? `<span class="tab-badge">${st.non}</span>` : '';
-      return `<div class="cd-sec-tab" onclick="cdShowSec('sec_${sm.id}', this)">${badge}${sm.title.replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','').substring(0,12)}</div>`;
+      return `<div class="cd-sec-tab" onclick="cdShowSec('sec_${sm.id}', this)">${badge}${safeHTML(sm.title.replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','').substring(0,12))}</div>`;
     }).join('')}
     <div class="cd-sec-tab" onclick="cdShowSec('noncompliant', this)">⚠️ الملاحظات (${nonItems.length})</div>
     <div class="cd-sec-tab" onclick="cdShowSec('history', this)">📅 السجل</div>
   `;
 
-  // Overview content
   const secScoreGridHtml = SECTIONS_META.map(sm => {
     const st = secStats[sm.id];
     if (!st || st.total === 0) return '';
     const pct = st.pct !== null ? st.pct : 0;
     const color = SCORE_COLOR(pct);
     return `<div class="ssg-card" onclick="cdShowSecById(${sm.id})">
-      <div class="ssg-title">${sm.title.replace('قسم ','').replace('برنامج ','')}</div>
+      <div class="ssg-title">${safeHTML(sm.title.replace('قسم ','').replace('برنامج ',''))}</div>
       <div class="ssg-bar-wrap">
         <div class="ssg-bar-bg"><div class="ssg-bar-fill" style="width:${pct}%;background:${color}"></div></div>
         <span class="ssg-pct" style="color:${color}">${pct}%</span>
@@ -1565,7 +1562,6 @@ function openCenterDash(centerName) {
     </div>`;
   }).join('');
 
-  // Section detail panels
   const secPanelsHtml = SECTIONS_META.map(sm => {
     const items = Object.entries(mergedState).filter(([k]) => k.startsWith(sm.id+'_'));
     if (!items.length) return '';
@@ -1577,15 +1573,32 @@ function openCenterDash(centerName) {
       const rClass = d ? `risk-${d.r}` : 'risk-low';
       const rLabel = d ? RISK_LABEL[d.r] : '';
       const sCls   = STATUS_CLS[v.status] || 'sp-pend';
-            const sLbl   = STATUS_LABEL[v.status] || '⏳ لم يُقيَّم';
-            const photos = (v.photos && v.photos.length>0)
-        ? v.photos.map(src=>`<img src="${src}" style="width:58px;height:58px;object-fit:cover;border-radius:6px;cursor:pointer;border:1.5px solid #dde3f0;margin:2px;" onclick="showPhotoFullscreen('${src}')" title="انقر لعرض الصورة">`).join('')
-        : (v.photoCount>0?`📷 ${v.photoCount}`:'');
+      const sLbl   = STATUS_LABEL[v.status] || '⏳ لم يُقيَّم';
+
+      // ✅ تنظيف النص والملاحظة
+      const safeItemText = safeHTML(d?.t || k);
+      const safeNote     = safeHTML(v.note || '');
+
+      // ✅ بناء الصور عبر DOM بدلاً من innerHTML
+      let photos = '';
+      if (v.photos && v.photos.length > 0) {
+        v.photos.forEach(src => {
+          const img = document.createElement('img');
+          img.src = src;
+          img.style.cssText = 'width:58px;height:58px;object-fit:cover;border-radius:6px;cursor:pointer;border:1.5px solid #dde3f0;margin:2px;';
+          img.title = 'انقر لعرض الصورة';
+          img.onclick = () => showPhotoFullscreen(src);
+          photos += img.outerHTML;
+        });
+      } else if (v.photoCount > 0) {
+        photos = `📷 ${v.photoCount}`;
+      }
+
       return `<div class="cd-item-row">
-        <div class="cd-item-num">${k.split('_')[1]||'—'}</div>
+        <div class="cd-item-num">${safeHTML(k.split('_')[1]||'—')}</div>
         <div>
-          <div class="cd-item-text">${d?.t || k}</div>
-          ${v.note?`<div class="cd-item-note">📝 ${v.note}</div>`:''}
+          <div class="cd-item-text">${safeItemText}</div>
+          ${safeNote ? `<div class="cd-item-note">📝 ${safeNote}</div>` : ''}
         </div>
         <div class="cd-item-risk"><span class="risk-pill ${rClass}">${rLabel}</span></div>
         <div class="cd-item-status"><span class="status-pill ${sCls}">${sLbl}</span></div>
@@ -1596,7 +1609,7 @@ function openCenterDash(centerName) {
     return `<div class="cd-sec-content" id="cd_sec_${sm.id}">
       <div class="items-section-card">
         <div class="items-section-hdr">
-          <div class="items-section-hdr-title">${sm.id}. ${sm.title}</div>
+          <div class="items-section-hdr-title">${safeHTML(sm.id + '. ' + sm.title)}</div>
           <div class="items-section-hdr-stats">
             <span class="items-section-hdr-stat">✅ ${okC} مطابق</span>
             <span class="items-section-hdr-stat">❌ ${nonC} غير مطابق</span>
@@ -1615,24 +1628,26 @@ function openCenterDash(centerName) {
     </div>`;
   }).join('');
 
-  // Non-compliant panel
   const ncHtml = nonItems.length === 0
     ? '<div class="empty-state"><span class="ei">✅</span><p>لا توجد ملاحظات غير مطابقة</p></div>'
     : `<div class="nc-grid">${nonItems.map(item => {
         const rClass = `risk-${item.detail.r}`;
+        // ✅ تنظيف بيانات البنود غير المطابقة
+        const safeTitle = safeHTML(item.detail.t);
+        const safeSec   = safeHTML(item.detail.sec);
+        const safeNote  = safeHTML(item.note || '');
         return `<div class="nc-card">
           <div class="nc-card-top">
             <div>
-              <div class="nc-card-title">${item.detail.t}</div>
-              <div class="nc-card-sec">📁 ${item.detail.sec}</div>
+              <div class="nc-card-title">${safeTitle}</div>
+              <div class="nc-card-sec">📁 ${safeSec}</div>
             </div>
             <span class="risk-pill ${rClass}" style="flex-shrink:0">${RISK_LABEL[item.detail.r]}</span>
           </div>
-          ${item.note?`<div class="nc-card-note">📝 ${item.note}</div>`:''}
+          ${safeNote ? `<div class="nc-card-note">📝 ${safeNote}</div>` : ''}
         </div>`;
       }).join('')}</div>`;
 
-  // History panel
   const historyHtml = centerSessions
     .sort((a,b)=>(b.meta?.date||'').localeCompare(a.meta?.date||''))
     .map((s,i) => {
@@ -1640,11 +1655,16 @@ function openCenterDash(centerName) {
       const sc = m.score || 0;
       const scC = SCORE_COLOR(sc);
       const subT = m.submitTime ? new Date(m.submitTime).toLocaleString('ar-SA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+      // ✅ تنظيف بيانات السجل التاريخي
+      const safeInsp = safeHTML(m.inspector || '—');
+      const safeD    = safeHTML(m.date || '—');
+      const safeRnd  = safeHTML(String(m.round || i+1));
+      const safeSubT = safeHTML(subT);
       return `<div class="sh-card">
         <div class="sh-round">${i+1}</div>
         <div class="sh-info">
-          <div class="sh-info-title">جولة رقم ${m.round||i+1} — ${m.inspector||'—'}</div>
-          <div class="sh-info-sub">📅 ${m.date||'—'} • أُرسل: ${subT}</div>
+          <div class="sh-info-title">جولة رقم ${safeRnd} — ${safeInsp}</div>
+          <div class="sh-info-sub">📅 ${safeD} • أُرسل: ${safeSubT}</div>
         </div>
         <div class="sh-score-area">
           <span class="sh-score" style="color:${scC}">${sc}%</span>
@@ -1657,7 +1677,6 @@ function openCenterDash(centerName) {
       </div>`;
     }).join('');
 
-  // SVG score ring
   const r = 52, cx = 60, cy = 60;
   const circum = 2 * Math.PI * r;
   const dash = (avgScore / 100) * circum;
@@ -1668,7 +1687,7 @@ function openCenterDash(centerName) {
       <div class="cd-header-top">
         <div class="cd-header-info">
           <div class="cd-header-badge">🏥 داش بورد المركز الصحي</div>
-          <h1>${centerName}</h1>
+          <h1>${safeCenterName}</h1>
           <div class="cd-header-meta">
             <div class="cd-header-meta-item">👤 آخر مفتش: ${lastInspector}</div>
             <div class="cd-header-meta-item">📅 آخر زيارة: ${lastDate}</div>
@@ -1680,7 +1699,6 @@ function openCenterDash(centerName) {
           <button class="cd-close-btn" onclick="closeCenterDash()">✕ إغلاق</button>
         </div>
       </div>
-
       <div class="cd-score-area">
         <div class="cd-score-ring-wrap">
           <svg width="120" height="120" class="cd-score-ring">
@@ -1761,7 +1779,6 @@ function openCenterDash(centerName) {
 }
 
 function buildCenterDashCharts(mergedState) {
-  // Risk compliance
   const riskS = {critical:{ok:0,non:0}, high:{ok:0,non:0}, medium:{ok:0,non:0}, low:{ok:0,non:0}};
   Object.entries(mergedState).forEach(([k,v]) => {
     const d = SECTIONS_DETAIL[k]; if (!d) return;
@@ -1771,14 +1788,13 @@ function buildCenterDashCharts(mergedState) {
   const ctxR = document.getElementById('cdChartRisk');
   if (ctxR) new Chart(ctxR, {
     type: 'bar',
-    data: { labels:['حرج','عالي','متوسط','منخفض'], datasets:[
-      {label:'مطابق', data:[riskS.critical.ok,riskS.high.ok,riskS.medium.ok,riskS.low.ok], backgroundColor:'#0f7b6ccc', borderRadius:5},
-      {label:'غير مطابق', data:[riskS.critical.non,riskS.high.non,riskS.medium.non,riskS.low.non], backgroundColor:'#9b1c1ccc', borderRadius:5}
+     { labels:['حرج','عالي','متوسط','منخفض'], datasets:[
+      {label:'مطابق', [riskS.critical.ok,riskS.high.ok,riskS.medium.ok,riskS.low.ok], backgroundColor:'#0f7b6ccc', borderRadius:5},
+      {label:'غير مطابق', [riskS.critical.non,riskS.high.non,riskS.medium.non,riskS.low.non], backgroundColor:'#9b1c1ccc', borderRadius:5}
     ]},
     options:{ responsive:true, plugins:{legend:{position:'top'}}, scales:{x:{grid:{display:false}},y:{grid:{color:'#f1f5f9'}}} }
   });
 
-  // Distribution
   let ok=0,non=0,na=0,pend=0;
   Object.values(mergedState).forEach(v=>{
     if(v.status==='compliant')ok++;
@@ -1789,8 +1805,8 @@ function buildCenterDashCharts(mergedState) {
   const ctxD = document.getElementById('cdChartDist');
   if (ctxD) new Chart(ctxD, {
     type:'doughnut',
-    data:{labels:['مطابق','غير مطابق','لا ينطبق','لم يُقيَّم'],
-      datasets:[{data:[ok,non,na,pend], backgroundColor:['#0f7b6c','#9b1c1c','#9ca3af','#fbbf24'], borderWidth:3, borderColor:'#fff'}]},
+    {labels:['مطابق','غير مطابق','لا ينطبق','لم يُقيَّم'],
+      datasets:[{[ok,non,na,pend], backgroundColor:['#0f7b6c','#9b1c1c','#9ca3af','#fbbf24'], borderWidth:3, borderColor:'#fff'}]},
     options:{responsive:true, plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10}}}}
   });
 }
@@ -1805,7 +1821,6 @@ function cdShowSec(id, tab) {
 
 function cdShowSecById(id) {
   const allTabs = document.querySelectorAll('#cdSecTabs .cd-sec-tab');
-  // find the tab that navigates to sec_id
   allTabs.forEach(t => {
     if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(`sec_${id}`)) {
       cdShowSec(`sec_${id}`, t);
@@ -1868,7 +1883,6 @@ function openDetail(sessionKey) {
     if (!items.length) return;
     const ok = items.filter(([,v])=>v.status==='compliant').length;
     const no = items.filter(([,v])=>v.status==='non').length;
-    // ✅ عنوان القسم ثابت من SECTIONS_META (لا يأتي من المستخدم)
     html += `<div class="sec-block">
       <div class="sec-block-hdr">
         <div class="sec-block-title">${safeHTML(sec.id+'. '+sec.title)}</div>
@@ -1884,20 +1898,16 @@ function openDetail(sessionKey) {
       const lbl      = lblMap[v.status] || '⏳ لم يُقيَّم';
       const rClass   = d ? `risk-${d.r}` : 'risk-low';
       const rLabel   = d ? (RISK_LABEL[d.r]||'') : '';
-
-      // ✅ تنظيف الملاحظة القادمة من المفتش
       const safeNote = safeHTML(v.note || '');
 
-      // ✅ URLs الصور لا تُدرج في innerHTML مباشرةً
       let photosHtml = '';
       if (v.photos && v.photos.length > 0) {
         photosHtml = `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">`;
         v.photos.forEach(src => {
           const img = document.createElement('img');
-          img.src = src; // ✅ src عبر DOM مباشرةً لا عبر innerHTML
+          img.src = src;
           img.style.cssText = 'width:70px;height:70px;object-fit:cover;border-radius:7px;cursor:pointer;border:1.5px solid #dde3f0;';
           img.onclick = () => showPhotoFullscreen(src);
-          // نحوّله لـ outerHTML بعد البناء الآمن
           photosHtml += img.outerHTML;
         });
         photosHtml += `</div>`;
@@ -1926,7 +1936,7 @@ function showPhotoFullscreen(src) {
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
   ov.onclick = () => ov.remove();
   const img = document.createElement('img');
-  img.src = src; // ✅ آمن — src عبر DOM
+  img.src = src;
   img.style.cssText = 'max-width:92vw;max-height:92vh;border-radius:12px;box-shadow:0 4px 40px #000;';
   ov.appendChild(img);
   document.body.appendChild(ov);
