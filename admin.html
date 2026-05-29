@@ -1829,42 +1829,53 @@ function openDetail(sessionKey) {
   if (!s) return;
   const m = s.meta||{};
   const st = s.state||{};
+
+  // ✅ تنظيف بيانات المفتش والمركز
+  const safeInspector = safeHTML(m.inspector || '—');
+  const safeCenter    = safeHTML(m.center    || '—');
+  const safeRegion    = safeHTML(m.region    || '—');
+  const safeDate      = safeHTML(m.date      || '—');
+  const safeRound     = safeHTML(String(m.round || '—'));
+
   document.getElementById('modalTitle').textContent = `${m.inspector||'—'} — ${m.center||'—'}`;
-document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
-  <h2 id="modalTitle">${m.inspector||'—'} — ${m.center||'—'}</h2>
-  <div style="display:flex;gap:8px">
-    <button class="mclose" style="background:rgba(255,255,255,.15);padding:4px 12px" onclick="window.print()">🖨️ طباعة</button>
-    <button class="mclose" onclick="closeModal()">✕</button>
-  </div>
-`;
+  document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
+    <h2 id="modalTitle">${safeInspector} — ${safeCenter}</h2>
+    <div style="display:flex;gap:8px">
+      <button class="mclose" style="background:rgba(255,255,255,.15);padding:4px 12px" onclick="window.print()">🖨️ طباعة</button>
+      <button class="mclose" onclick="closeModal()">✕</button>
+    </div>
+  `;
+
   const sc = m.score;
   const scC = sc!=null?SCORE_COLOR(sc):'#6b7280';
   const subT = m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA'):'—';
 
   let html = `<div class="meta-grid">
-    <div class="meta-item"><span>المشرف</span><b>${m.inspector||'—'}</b></div>
-    <div class="meta-item"><span>المركز</span><b>${m.center||'—'}</b></div>
-    <div class="meta-item"><span>المنطقة</span><b>${m.region||'—'}</b></div>
-    <div class="meta-item"><span>التاريخ</span><b>${m.date||'—'}</b></div>
-    <div class="meta-item"><span>الجولة</span><b>${m.round||'—'}</b></div>
+    <div class="meta-item"><span>المشرف</span><b>${safeInspector}</b></div>
+    <div class="meta-item"><span>المركز</span><b>${safeCenter}</b></div>
+    <div class="meta-item"><span>المنطقة</span><b>${safeRegion}</b></div>
+    <div class="meta-item"><span>التاريخ</span><b>${safeDate}</b></div>
+    <div class="meta-item"><span>الجولة</span><b>${safeRound}</b></div>
     <div class="meta-item"><span>الدرجة</span><b style="color:${scC};font-size:20px;font-weight:800">${sc!=null?sc+'%':'—'}</b></div>
     <div class="meta-item"><span>مطابق</span><b style="color:#0f7b6c">${m.ok||0}</b></div>
     <div class="meta-item"><span>غير مطابق</span><b style="color:#9b1c1c">${m.no||0}</b></div>
     <div class="meta-item"><span>الحالة</span><b>${m.status==='submitted'?'✅ مُرسل نهائياً':'⏳ جاري'}</b></div>
-    <div class="meta-item"><span>وقت الإرسال</span><b style="font-size:11px">${subT}</b></div>
+    <div class="meta-item"><span>وقت الإرسال</span><b style="font-size:11px">${safeHTML(subT)}</b></div>
   </div>`;
 
   SECTIONS_META.forEach(sec => {
     const items = Object.entries(st).filter(([k]) => k.startsWith(sec.id+'_'));
     if (!items.length) return;
-    const ok  = items.filter(([,v])=>v.status==='compliant').length;
-    const no  = items.filter(([,v])=>v.status==='non').length;
+    const ok = items.filter(([,v])=>v.status==='compliant').length;
+    const no = items.filter(([,v])=>v.status==='non').length;
+    // ✅ عنوان القسم ثابت من SECTIONS_META (لا يأتي من المستخدم)
     html += `<div class="sec-block">
       <div class="sec-block-hdr">
-        <div class="sec-block-title">${sec.id}. ${sec.title}</div>
+        <div class="sec-block-title">${safeHTML(sec.id+'. '+sec.title)}</div>
         <div class="sec-block-score">✔ ${ok} &nbsp;✖ ${no}</div>
       </div>`;
-        items.forEach(([k,v]) => {
+
+    items.forEach(([k,v]) => {
       const d        = SECTIONS_DETAIL[k];
       const itemText = d ? d.t : `البند ${k.split('_')[1]||''}`;
       const clsMap   = {compliant:'is-ok', non:'is-no', na:'is-na'};
@@ -1873,16 +1884,32 @@ document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
       const lbl      = lblMap[v.status] || '⏳ لم يُقيَّم';
       const rClass   = d ? `risk-${d.r}` : 'risk-low';
       const rLabel   = d ? (RISK_LABEL[d.r]||'') : '';
-      const photosHtml = (v.photos && v.photos.length>0)
-        ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
-            ${v.photos.map(src=>`<img src="${src}" style="width:70px;height:70px;object-fit:cover;border-radius:7px;cursor:pointer;border:1.5px solid #dde3f0;" onclick="showPhotoFullscreen('${src}')">`).join('')}
-           </div>`
-        : (v.photoCount>0 ? `<span style="font-size:11px;color:#888">📷 ${v.photoCount} صور</span>` : '');
+
+      // ✅ تنظيف الملاحظة القادمة من المفتش
+      const safeNote = safeHTML(v.note || '');
+
+      // ✅ URLs الصور لا تُدرج في innerHTML مباشرةً
+      let photosHtml = '';
+      if (v.photos && v.photos.length > 0) {
+        photosHtml = `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">`;
+        v.photos.forEach(src => {
+          const img = document.createElement('img');
+          img.src = src; // ✅ src عبر DOM مباشرةً لا عبر innerHTML
+          img.style.cssText = 'width:70px;height:70px;object-fit:cover;border-radius:7px;cursor:pointer;border:1.5px solid #dde3f0;';
+          img.onclick = () => showPhotoFullscreen(src);
+          // نحوّله لـ outerHTML بعد البناء الآمن
+          photosHtml += img.outerHTML;
+        });
+        photosHtml += `</div>`;
+      } else if (v.photoCount > 0) {
+        photosHtml = `<span style="font-size:11px;color:#888">📷 ${v.photoCount} صور</span>`;
+      }
+
       html += `<div class="item-row">
         <span class="item-status ${cls}">${lbl}</span>
         <div style="flex:1">
-          <div class="item-text">${itemText} <span class="risk-pill ${rClass}" style="font-size:10px;margin-right:6px">${rLabel}</span></div>
-          ${v.note?`<div class="note-text">📝 ${v.note}</div>`:''}
+          <div class="item-text">${safeHTML(itemText)} <span class="risk-pill ${rClass}" style="font-size:10px;margin-right:6px">${rLabel}</span></div>
+          ${safeNote ? `<div class="note-text">📝 ${safeNote}</div>` : ''}
           ${photosHtml}
         </div>
       </div>`;
@@ -1892,13 +1919,15 @@ document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('detailOverlay').classList.add('open');
-}function showPhotoFullscreen(src){
-  const ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
-  ov.onclick=()=>ov.remove();
-  const img=document.createElement('img');
-  img.src=src;
-  img.style.cssText='max-width:92vw;max-height:92vh;border-radius:12px;box-shadow:0 4px 40px #000;';
+}
+
+function showPhotoFullscreen(src) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+  ov.onclick = () => ov.remove();
+  const img = document.createElement('img');
+  img.src = src; // ✅ آمن — src عبر DOM
+  img.style.cssText = 'max-width:92vw;max-height:92vh;border-radius:12px;box-shadow:0 4px 40px #000;';
   ov.appendChild(img);
   document.body.appendChild(ov);
 }
