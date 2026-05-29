@@ -69,6 +69,7 @@ window.refreshData = function() {
   if (btn) btn.textContent = '⏳ جاري...';
   get(ref(db, 'sessions')).then(snapshot => {
     let data = snapshot.val() || {};
+    console.log('sessions ', snapshot.val());
     window.allSessions = data;
     window.renderDashboard(data);
     if (btn) btn.innerHTML = '🔄 تحديث البيانات';
