@@ -28,35 +28,43 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// 🛡️ دالة تعقيم البيانات (تقضي على ثغرة XSS تماماً)
+// 🛡️ دالة تعقيم البيانات — تقضي على ثغرة XSS
 function sanitizeData(obj) {
   if (typeof obj === 'string') {
-    return obj.replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m]));
+    return obj.replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[m]);
   }
   if (typeof obj === 'object' && obj !== null) {
+    // ✅ نسخة جديدة بدلاً من تعديل الأصل
+    const clean = Array.isArray(obj) ? [] : {};
     for (let key in obj) {
-      obj[key] = sanitizeData(obj[key]); // تنظيف متداخل لجميع البيانات
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        clean[key] = sanitizeData(obj[key]);
+      }
     }
+    return clean; // ← يُعيد نسخة نظيفة
   }
   return obj;
 }
 
-// 🔄 دالة جلب البيانات لمرة واحدة عند الطلب
-window.refreshData = function() {
-  const btn = document.getElementById('refreshBtn');
-  if(btn) btn.textContent = "⏳ جاري التحديث...";
+// ✅ دالة safeHTML للاستخدام داخل innerHTML
+function safeHTML(str) {
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(String(str ?? ''), {
+      ALLOWED_TAGS: [],
+      ALLOWED_ATTR: []
+    });
+  }
+  // Fallback إذا لم تُحمَّل DOMPurify
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
   
-  get(ref(db, 'sessions')).then((snapshot) => {
-    let data = snapshot.val() || {};
-    data = sanitizeData(data); // غسيل وتنظيف البيانات فور وصولها وقبل عرضها
-    window.allSessions = data;
-    window.renderDashboard(data);
-    if(btn) btn.innerHTML = "🔄 تحديث البيانات";
-  }).catch(err => {
-    if(btn) btn.innerHTML = "⚠ خطأ بالاتصال";
-  });
-};
-
 // مراقبة تسجيل الدخول
 onAuthStateChanged(auth, (user) => {
   if (user && user.email === "admin@ras-health.gov.sa") {
