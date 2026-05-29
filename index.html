@@ -194,7 +194,7 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a
     <h2>📋 الزائر السري — بدء جلسة جديدة</h2>
     <p>قطاع الصحة العامة بمحافظة الرس</p>
     <div class="setup-field">
-      <label>اسم المفتش *</label>
+      <label>اسم المشرف *</label>
       <input id="setupInspector" placeholder="أدخل اسمك الكامل..." required>
     </div>
     <div class="setup-field">
@@ -517,7 +517,7 @@ function initState(){
 function startSession(){
   const inspector=document.getElementById('setupInspector').value.trim();
   const center=document.getElementById('setupCenter').value.trim();
-  if(!inspector||!center){alert('الرجاء إدخال اسم المفتش واسم المركز');return;}
+  if(!inspector||!center){alert('الرجاء إدخال اسم المشرف واسم المركز');return;}
   sessionMeta={
     inspector,
     center,
