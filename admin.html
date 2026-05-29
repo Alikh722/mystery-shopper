@@ -1133,10 +1133,14 @@ let cdCharts = {};
 function showTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'centers') buildCentersTab();
-  if (name === 'observations') buildObsTab();
+  const panel = document.getElementById('panel-' + name);
+  const tab   = document.getElementById('tab-' + name);
+  if (panel) panel.classList.add('active');
+  if (tab)   tab.classList.add('active');
+  try {
+    if (name === 'centers')      buildCentersTab();
+    if (name === 'observations') buildObsTab();
+  } catch(e) { console.error('showTab error:', e); }
 }
 
 /* ============================
@@ -1154,8 +1158,9 @@ window.renderDashboard = function(data) {
   document.getElementById('k-progress').textContent  = inProg.length || '—';
   document.getElementById('k-avg').textContent       = avg != null ? avg + '%' : '—';
 
-  buildInsightRow(submitted);
-  buildDashboardCharts(submitted, sessions);
+    const display = submitted.length ? submitted : sessions;
+  buildInsightRow(display);
+  buildDashboardCharts(display, sessions);
   renderTable(data);
 };
 
