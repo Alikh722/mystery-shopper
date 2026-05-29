@@ -48,7 +48,7 @@ function sanitizeData(obj) {
 }
 
 // ✅ دالة safeHTML للاستخدام داخل innerHTML
-function safeHTML(str) {
+window.safeHTML = function(str) {
   if (typeof DOMPurify !== 'undefined') {
     return DOMPurify.sanitize(String(str ?? ''), {
       ALLOWED_TAGS: [],
@@ -61,7 +61,8 @@ function safeHTML(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
+};
+function safeHTML(str) { return window.safeHTML(str); }
 
 // ✅ دالة تحميل البيانات من Firebase
 window.refreshData = function() {
