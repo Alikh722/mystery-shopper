@@ -1819,7 +1819,7 @@ function buildCenterDashCharts(mergedState) {
   const ctxD = document.getElementById('cdChartDist');
   if (ctxD) new Chart(ctxD, {
     type:'doughnut',
-    {labels:['مطابق','غير مطابق','لا ينطبق','لم يُقيَّم'],
+     {labels:['مطابق','غير مطابق','لا ينطبق','لم يُقيَّم'],
       datasets:[{[ok,non,na,pend], backgroundColor:['#0f7b6c','#9b1c1c','#9ca3af','#fbbf24'], borderWidth:3, borderColor:'#fff'}]},
     options:{responsive:true, plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10}}}}
   });
