@@ -62,7 +62,21 @@ window.safeHTML = function(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 };
-function safeHTML(str) { return window.safeHTML(str); }
+  
+window.safeHTML = function(str) {
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(String(str ?? ''), {
+      ALLOWED_TAGS: [],
+      ALLOWED_ATTR: []
+    });
+  }
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
 
 // ✅ دالة تحميل البيانات من Firebase
 window.refreshData = function() {
