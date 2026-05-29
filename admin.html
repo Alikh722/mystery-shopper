@@ -10,6 +10,8 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDgwu6EfFZ10d_tT6X49kp6krpd6VtIP-k",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
@@ -19,15 +21,40 @@ const firebaseConfig = {
   messagingSenderId: "1017475756161",
   appId: "1:1017475756161:web:7fb3c1b10a06093379dd80"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const sessionsRef = ref(db, 'sessions');
-onValue(sessionsRef, (snapshot) => {
-  const data = snapshot.val() || {};
-  window.allSessions = data;
-  window.renderDashboard(data);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email === "admin@ras-health.gov.sa") {
+    document.getElementById('loginScreen').style.display = 'none';
+    const sessionsRef = ref(db, 'sessions');
+    onValue(sessionsRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      window.allSessions = data;
+      window.renderDashboard(data);
+    });
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
 });
+
 window._dbRemove = (path) => remove(ref(db, path));
+
+window.checkPW = function() {
+  const email = "admin@ras-health.gov.sa"; 
+  const pw = document.getElementById('pwInput').value;
+  
+  signInWithEmailAndPassword(auth, email, pw)
+    .then((userCredential) => {
+      document.getElementById('loginErr').style.display = 'none';
+    })
+    .catch((error) => {
+      document.getElementById('loginErr').style.display = 'block';
+      document.getElementById('loginErr').textContent = "كلمة المرور غير صحيحة.";
+    });
+};
 </script>
 <style>
 /* ===== RESET & BASE ===== */
@@ -850,7 +877,6 @@ tr:last-child td { border-bottom: none; }
 /* ============================
    CONSTANTS
    ============================ */
-const ADMIN_PASSWORD = "Ras2026Admin";
 
 const SECTIONS_DETAIL = {
   "1_0": {"t":"اللوحة الخارجية للمركز موجودة وبحالة جيدة","r":"low","sec":"الفناء الخارجي"},
@@ -1051,16 +1077,6 @@ let cdCharts = {};
 /* ============================
    LOGIN
    ============================ */
-function checkPW() {
-  const pw = document.getElementById('pwInput').value;
-  if (pw === ADMIN_PASSWORD) {
-    document.getElementById('loginScreen').style.display = 'none';
-  } else {
-    document.getElementById('loginErr').style.display = 'block';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
-  }
-}
 
 /* ============================
    TABS
