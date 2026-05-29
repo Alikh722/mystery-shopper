@@ -811,7 +811,7 @@ tr:last-child td { border-bottom: none; }
         <table>
           <thead>
             <tr>
-              <th>#</th><th>المفتش</th><th>المركز</th><th>التاريخ</th>
+              <th>#</th><th>المشرف</th><th>المركز</th><th>التاريخ</th>
               <th>الجولة</th><th>الدرجة</th><th>التقدم</th>
               <th>الحالة</th><th>وقت الإرسال</th><th>إجراءات</th>
             </tr>
@@ -1783,7 +1783,7 @@ document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
   const subT = m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA'):'—';
 
   let html = `<div class="meta-grid">
-    <div class="meta-item"><span>المفتش</span><b>${m.inspector||'—'}</b></div>
+    <div class="meta-item"><span>المشرف</span><b>${m.inspector||'—'}</b></div>
     <div class="meta-item"><span>المركز</span><b>${m.center||'—'}</b></div>
     <div class="meta-item"><span>المنطقة</span><b>${m.region||'—'}</b></div>
     <div class="meta-item"><span>التاريخ</span><b>${m.date||'—'}</b></div>
@@ -1859,7 +1859,7 @@ function exportCSV() {
   const data = window.allSessions||{};
   const sessions = Object.entries(data).map(([k,v])=>({key:k,...v}));
   const sMap = {compliant:'مطابق',non:'غير مطابق',na:'لا ينطبق',pending:'لم يُقيَّم'};
-  let csv='\uFEFFالمفتش,المركز,المنطقة,التاريخ,الجولة,الدرجة,الحالة,القسم,المعيار,مستوى الخطورة,النتيجة,ملاحظة\n';
+  let csv='\المشرف,المركز,المنطقة,التاريخ,الجولة,الدرجة,الحالة,القسم,المعيار,مستوى الخطورة,النتيجة,ملاحظة\n';
   sessions.forEach(s=>{
     const m=s.meta||{};
     Object.entries(s.state||{}).forEach(([k,v])=>{
