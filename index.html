@@ -39,6 +39,7 @@ window._firebaseRef = ref;
 window._firebaseSet = set;
 window._firebasePush = push;
 window._firebaseOnValue = onValue;
+window._firebaseAuthInstance = auth;
 window._firebaseReady = true;
 window.dispatchEvent(new Event('firebase-ready'));
 </script>
@@ -284,6 +285,14 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#eef1f6;color:#1a
 
 <script>
 // ============================================================
+// SECURITY & UTILITIES (إضافة هندسية للحماية)
+// ============================================================
+function escapeHtml(str){
+  if(str==null) return '—';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// ============================================================
 // DATA
 // ============================================================
 const SECTIONS=[
@@ -499,7 +508,7 @@ function openIDB(){return new Promise(resolve=>{const req=indexedDB.open(IDB_NAM
 function saveToIDB(){if(!idb||!sessionKey)return;try{const tx=idb.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).put({sessionKey,sessionMeta,state:JSON.parse(JSON.stringify(state)),savedAt:new Date().toISOString()},IDB_KEY);}catch(e){}}
 function loadFromIDB(){return new Promise(resolve=>{if(!idb){resolve(null);return;}try{const tx=idb.transaction(IDB_STORE,'readonly');const req=tx.objectStore(IDB_STORE).get(IDB_KEY);req.onsuccess=e=>resolve(e.target.result||null);req.onerror=()=>resolve(null);}catch(e){resolve(null);}});}
 function clearIDB(){if(!idb)return;try{const tx=idb.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).delete(IDB_KEY);}catch(e){}}
-openIDB().then(()=>{loadFromIDB().then(saved=>{if(!saved)return;const ago=Math.round((Date.now()-new Date(saved.savedAt))/60000);if(ago>1440){clearIDB();return;}if(confirm(`🔄 يوجد جلسة غير مكتملة للمفتش "${saved.sessionMeta?.inspector||''}"\nآخر حفظ: منذ ${ago} دقيقة\nهل تريد استعادتها؟`)){sessionKey=saved.sessionKey;sessionMeta=saved.sessionMeta;state=saved.state;document.getElementById('setupScreen').style.display='none';document.getElementById('sessionInfo').innerHTML=`<span>👤 ${sessionMeta.inspector}</span> &nbsp;|&nbsp; <span>🏥 ${sessionMeta.center}</span> &nbsp;|&nbsp; <span>📅 ${sessionMeta.date}</span> &nbsp;|&nbsp; <span>🔄 جولة ${sessionMeta.round}</span>`;renderAll();setSyncStatus('saving');autoSave();toast('✅ تم استعادة الجلسة بنجاح');}else{clearIDB();}});});
+openIDB().then(()=>{loadFromIDB().then(saved=>{if(!saved)return;const ago=Math.round((Date.now()-new Date(saved.savedAt))/60000);if(ago>1440){clearIDB();return;}if(confirm(`🔄 يوجد جلسة غير مكتملة للمفتش "${saved.sessionMeta?.inspector||''}"\nآخر حفظ: منذ ${ago} دقيقة\nهل تريد استعادتها؟`)){sessionKey=saved.sessionKey;sessionMeta=saved.sessionMeta;state=saved.state;document.getElementById('setupScreen').style.display='none';document.getElementById('sessionInfo').innerHTML=`<span>👤 ${escapeHtml(sessionMeta.inspector)}</span> &nbsp;|&nbsp; <span>🏥 ${escapeHtml(sessionMeta.center)}</span> &nbsp;|&nbsp; <span>📅 ${escapeHtml(sessionMeta.date)}</span> &nbsp;|&nbsp; <span>🔄 جولة ${escapeHtml(sessionMeta.round)}</span>`;renderAll();setSyncStatus('saving');autoSave();toast('✅ تم استعادة الجلسة بنجاح');}else{clearIDB();}});});
 let state={};
 let curFilter='all';
 let sessionMeta={};
@@ -565,38 +574,19 @@ async function saveToFirebase(){
   if(!window._firebaseReady||!sessionKey){return;}
   setSyncStatus('saving');
   try{
-    const db      = window._firebaseDB;
-    const storage = window._firebaseStorage;
-    const refFn   = window._firebaseRef;
-    const setFn   = window._firebaseSet;
-    const isSubmitted = sessionMeta.status==='submitted';
-    const lightState  = {};
-
+    const db=window._firebaseDB, refFn=window._firebaseRef, setFn=window._firebaseSet;
+    const lightState = {};
     for(const k of Object.keys(state)){
-      const photoURLs = [];
-      if(isSubmitted && state[k].photos.length > 0){
-        for(let pi=0; pi<state[k].photos.length; pi++){
-          const imgRef = window._firebaseSRef(storage,`photos/${sessionKey}/${k}_${pi}`);
-          await window._firebaseUpload(imgRef, state[k].photos[pi], 'data_url');
-          const url = await window._firebaseGetURL(imgRef);
-          photoURLs.push(url);
-        }
-      }
-      lightState[k]={
-        status:    state[k].status,
-        note:      state[k].note,
-        photoCount:state[k].photos.length,
-        photos:    photoURLs
-      };
+      const photoURLs = state[k].photos.filter(p => {
+        const url = typeof p==='string' ? p : p.url;
+        return url && !p.uploading;
+      }).map(p => typeof p==='string' ? p : p.url);
+      lightState[k]={ status:state[k].status, note:state[k].note, photoCount:state[k].photos.length, photos:photoURLs };
     }
-
     const payload={meta:sessionMeta,state:lightState,lastUpdate:new Date().toISOString()};
     await setFn(refFn(db,'sessions/'+sessionKey),payload);
     setSyncStatus('saved');
-  }catch(e){
-    console.error(e);
-    setSyncStatus('error');
-  }
+  }catch(e){ console.error(e); setSyncStatus('error'); }
 }
 
 // ============================================================
@@ -789,33 +779,43 @@ function applyFilter(){
 function addPhoto(k, input) {
   Array.from(input.files).forEach(f => {
     if (!f.type.startsWith('image/')) return;
-    
     const reader = new FileReader();
     reader.onload = e => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; 
-        const MAX_HEIGHT = 800;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        } else {
-          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
+        const MAX_WIDTH = 800, MAX_HEIGHT = 800;
+        let width = img.width, height = img.height;
+        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+        else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        
-        state[k].photos.push(compressedDataUrl);
-        renderPhotos(k);
-        autoSave();
+
+        const previewObj = { url: compressedDataUrl, uploading: true };
+        state[k].photos.push(previewObj); renderPhotos(k);
+
+        if(window._firebaseReady && window._firebaseStorage){
+          const photoIndex = state[k].photos.length - 1;
+          const storagePath = `photos/${sessionKey}/${k}_${Date.now()}`;
+          const imgRef = window._firebaseSRef(window._firebaseStorage, storagePath);
+          window._firebaseUpload(imgRef, compressedDataUrl, 'data_url')
+            .then(snapshot => window._firebaseGetURL(snapshot.ref))
+            .then(downloadURL => {
+              if(state[k] && state[k].photos[photoIndex]){
+                state[k].photos[photoIndex] = { url: downloadURL, uploading: false };
+                renderPhotos(k); autoSave();
+              }
+            }).catch(err => {
+              if(state[k] && state[k].photos[photoIndex]){
+                state[k].photos[photoIndex] = { url: compressedDataUrl, uploading: false };
+                renderPhotos(k); autoSave();
+              }
+            });
+        } else {
+          state[k].photos[state[k].photos.length - 1] = { url: compressedDataUrl, uploading: false };
+          renderPhotos(k); autoSave();
+        }
       };
       img.src = e.target.result;
     };
@@ -823,24 +823,31 @@ function addPhoto(k, input) {
   });
   input.value = '';
 }
-  
+
 function renderPhotos(k){
   const c=document.getElementById('photos_'+k);
   if(!c) return;
   c.innerHTML='';
-  state[k].photos.forEach((src,i)=>{
+  state[k].photos.forEach((photo,i)=>{
+    const src = typeof photo==='string' ? photo : photo.url;
+    const loading = typeof photo==='object' && photo.uploading;
     const wrap=document.createElement('div');
-    wrap.className='pthumb';
+    wrap.className='pthumb'; wrap.style.position='relative';
     const img=document.createElement('img');
-    img.src=src;
-    img.onclick=()=>{document.getElementById('lbImg').src=src;document.getElementById('lb').classList.add('open');};
+    img.src=src; img.style.opacity=loading?'0.5':'1';
+    img.onclick=()=>{ if(!loading){ document.getElementById('lbImg').src=src; document.getElementById('lb').classList.add('open'); }};
+    if(loading){
+      const spinner=document.createElement('div');
+      spinner.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;pointer-events:none';
+      spinner.textContent='⏳'; wrap.appendChild(spinner);
+    }
     const del=document.createElement('div');
-    del.className='pdel';del.textContent='✕';
+    del.className='pdel'; del.textContent='✕';
     del.onclick=()=>{state[k].photos.splice(i,1);renderPhotos(k);autoSave();};
-    wrap.appendChild(img);wrap.appendChild(del);
-    c.appendChild(wrap);
+    wrap.appendChild(img); wrap.appendChild(del); c.appendChild(wrap);
   });
 }
+
 function closeLB(){document.getElementById('lb').classList.remove('open')}
 document.getElementById('lb').onclick=closeLB;
 
