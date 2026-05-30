@@ -493,8 +493,26 @@ tr:last-child td { border-bottom: none; }
   .cd-header { padding: 20px; }
   .cd-body { padding: 16px; }
   .cd-kpi-row { grid-template-columns: repeat(2,1fr); }
-  .cd-item-row { grid-template-columns: 30px 1fr 80px; }
-  .cd-item-row > *:nth-child(4), .cd-item-row > *:nth-child(5) { display: none; }
+  .cd-charts-row { grid-template-columns: 1fr; }
+  .cd-ov-grid { grid-template-columns: repeat(2,1fr); }
+  
+  /* تعديل جذري لجدول الأقسام في الجوال لمنع اختفاء النتيجة والصور */
+  .mobile-hide-hdr { display: none !important; }
+  .cd-item-row { 
+    display: flex !important; 
+    flex-direction: column !important; 
+    align-items: flex-start !important; 
+    gap: 10px !important; 
+    padding: 16px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    margin-bottom: 12px !important;
+    background: #fff !important;
+  }
+  .cd-item-row > * { display: block !important; width: 100% !important; text-align: right !important; }
+  .cd-item-num { width: fit-content !important; padding: 4px 12px !important; margin-bottom: 4px !important; background: var(--gov-navy) !important; color: #fff !important;}
+  .cd-item-risk, .cd-item-status { text-align: right !important; }
+  .cd-item-photos { border-top: 1px dashed #cbd5e1 !important; padding-top: 10px !important; margin-top: 4px !important; display: flex !important; flex-wrap: wrap !important; gap: 6px !important; }
 }
 
 @media (max-width: 768px) {
@@ -1382,7 +1400,6 @@ function openCenterDash(centerName) {
     return;
   }
 
-  // Aggregate data across all sessions for this center
   const allScores = centerSessions.map(s => s.meta?.score || 0);
   const avgScore  = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
   const totalOk   = centerSessions.reduce((a,s)=>a+(s.meta?.ok||0),0);
@@ -1391,22 +1408,19 @@ function openCenterDash(centerName) {
   const compRate  = totalItems > 0 ? Math.round(totalOk/totalItems*100) : 0;
   const latestSession = centerSessions.sort((a,b)=>(b.meta?.date||'').localeCompare(a.meta?.date||''))[0];
 
-  // Aggregate state across all sessions (use latest per key)
   const mergedState = {};
   centerSessions.forEach(s => {
     Object.entries(s.state||{}).forEach(([k,v]) => {
       if (!mergedState[k]) mergedState[k] = v;
-      else if (v.status !== 'pending') mergedState[k] = v; // prefer evaluated
+      else if (v.status !== 'pending') mergedState[k] = v; 
     });
   });
 
-  // Non-compliant items
   const nonItems = Object.entries(mergedState)
     .filter(([,v]) => v.status === 'non')
     .map(([k,v]) => ({ key:k, ...v, detail: SECTIONS_DETAIL[k] }))
     .filter(i => i.detail);
 
-  // Section scores
   const secStats = {};
   SECTIONS_META.forEach(sm => {
     const items = Object.entries(mergedState).filter(([k]) => k.startsWith(sm.id+'_'));
@@ -1421,7 +1435,6 @@ function openCenterDash(centerName) {
   const lastDate = latestSession.meta?.date || '—';
   const lastInspector = latestSession.meta?.inspector || '—';
 
-  // Build section tabs
   const tabsHtml = `
     <div class="cd-sec-tab active" onclick="cdShowSec('overview', this)">📊 نظرة عامة</div>
     ${SECTIONS_META.map(sm => {
@@ -1434,7 +1447,6 @@ function openCenterDash(centerName) {
     <div class="cd-sec-tab" onclick="cdShowSec('history', this)">📅 السجل</div>
   `;
 
-  // Overview content
   const secScoreGridHtml = SECTIONS_META.map(sm => {
     const st = secStats[sm.id];
     if (!st || st.total === 0) return '';
@@ -1453,7 +1465,6 @@ function openCenterDash(centerName) {
     </div>`;
   }).join('');
 
-  // Section detail panels
   const secPanelsHtml = SECTIONS_META.map(sm => {
     const items = Object.entries(mergedState).filter(([k]) => k.startsWith(sm.id+'_'));
     if (!items.length) return '';
@@ -1465,10 +1476,10 @@ function openCenterDash(centerName) {
       const rClass = d ? `risk-${d.r}` : 'risk-low';
       const rLabel = d ? RISK_LABEL[d.r] : '';
       const sCls   = STATUS_CLS[v.status] || 'sp-pend';
-            const sLbl   = STATUS_LABEL[v.status] || '⏳ لم يُقيَّم';
-            const photos = (v.photos && v.photos.length>0)
+      const sLbl   = STATUS_LABEL[v.status] || '⏳ لم يُقيَّم';
+      const photos = (v.photos && v.photos.length>0)
         ? v.photos.map(src=>`<img src="${src}" style="width:58px;height:58px;object-fit:cover;border-radius:6px;cursor:pointer;border:1.5px solid #dde3f0;margin:2px;" onclick="showPhotoFullscreen('${src}')" title="انقر لعرض الصورة">`).join('')
-        : (v.photoCount>0?`📷 ${v.photoCount}`:'');
+        : (v.photoCount>0?`<span style="font-size:11px;color:var(--text-sub)">📷 ${v.photoCount} صور</span>`:'');
       return `<div class="cd-item-row">
         <div class="cd-item-num">${k.split('_')[1]||'—'}</div>
         <div>
@@ -1493,7 +1504,7 @@ function openCenterDash(centerName) {
         </div>
         <div style="overflow-x:auto">
           <div style="min-width:600px">
-            <div style="display:grid;grid-template-columns:36px 1fr 90px 100px auto;gap:10px;padding:8px 18px;background:#f8fafc;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text-sub)">
+            <div class="mobile-hide-hdr" style="display:grid;grid-template-columns:36px 1fr 90px 100px auto;gap:10px;padding:8px 18px;background:#f8fafc;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text-sub)">
               <div>#</div><div>البند</div><div>الخطورة</div><div>النتيجة</div><div>صور</div>
             </div>
             ${rows}
@@ -1503,11 +1514,17 @@ function openCenterDash(centerName) {
     </div>`;
   }).join('');
 
-  // Non-compliant panel
+  // إظهار الصور في بطاقات الملاحظات
   const ncHtml = nonItems.length === 0
     ? '<div class="empty-state"><span class="ei">✅</span><p>لا توجد ملاحظات غير مطابقة</p></div>'
     : `<div class="nc-grid">${nonItems.map(item => {
         const rClass = `risk-${item.detail.r}`;
+        const itemPhotosHtml = (item.photos && item.photos.length > 0)
+          ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;border-top:1px dashed #f0b4b4;padding-top:10px;">
+              ${item.photos.map(src=>`<img src="${src}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:1.5px solid #dde3f0;" onclick="showPhotoFullscreen('${src}')">`).join('')}
+             </div>`
+          : (item.photoCount > 0 ? `<div style="font-size:11px;color:#9b1c1c;margin-top:8px;">📷 يتوفر ${item.photoCount} صور مرفوعة</div>` : '');
+
         return `<div class="nc-card">
           <div class="nc-card-top">
             <div>
@@ -1517,10 +1534,10 @@ function openCenterDash(centerName) {
             <span class="risk-pill ${rClass}" style="flex-shrink:0">${RISK_LABEL[item.detail.r]}</span>
           </div>
           ${item.note?`<div class="nc-card-note">📝 ${item.note}</div>`:''}
+          ${itemPhotosHtml}
         </div>`;
       }).join('')}</div>`;
 
-  // History panel
   const historyHtml = centerSessions
     .sort((a,b)=>(b.meta?.date||'').localeCompare(a.meta?.date||''))
     .map((s,i) => {
@@ -1545,7 +1562,6 @@ function openCenterDash(centerName) {
       </div>`;
     }).join('');
 
-  // SVG score ring
   const r = 52, cx = 60, cy = 60;
   const circum = 2 * Math.PI * r;
   const dash = (avgScore / 100) * circum;
@@ -1605,7 +1621,6 @@ function openCenterDash(centerName) {
     <div class="cd-body">
       <div class="cd-sec-tabs" id="cdSecTabs">${tabsHtml}</div>
 
-      <!-- Overview -->
       <div class="cd-sec-content active" id="cd_overview">
         <div class="cd-charts-row">
           <div class="cd-chart-card">
@@ -1623,16 +1638,13 @@ function openCenterDash(centerName) {
         </div>
       </div>
 
-      <!-- Section panels -->
       ${secPanelsHtml}
 
-      <!-- Non-compliant -->
       <div class="cd-sec-content" id="cd_noncompliant">
         <div style="font-size:14px;font-weight:700;color:#9b1c1c;margin-bottom:12px">⚠️ البنود غير المطابقة (${nonItems.length})</div>
         ${ncHtml}
       </div>
 
-      <!-- History -->
       <div class="cd-sec-content" id="cd_history">
         <div style="font-size:14px;font-weight:700;color:var(--gov-navy);margin-bottom:12px">📅 سجل الزيارات التفتيشية</div>
         <div class="session-history">${historyHtml}</div>
@@ -1644,7 +1656,6 @@ function openCenterDash(centerName) {
   document.getElementById('centerDashOverlay').classList.add('open');
   document.getElementById('centerDashModal').scrollTop = 0;
 
-  // Build charts after DOM ready
   setTimeout(() => buildCenterDashCharts(mergedState), 100);
 }
 
