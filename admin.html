@@ -26,41 +26,42 @@ const app  = initializeApp(firebaseConfig);
 const db   = getDatabase(app);
 const auth = getAuth(app);
 
+// ربط الدوال بالنافذة لتصبح متاحة للأزرار
+window._signIn = (email, pw) => signInWithEmailAndPassword(auth, email, pw);
+window._authSignOut = () => signOut(auth);
+window._dbRemove = (path) => remove(ref(db, path));
+
+// دالة تسجيل الدخول المربوطة بالزر
+window.checkPW = async function() { 
+  const ADMIN_EMAIL = 'admin@ras-health.gov.sa';
+  const pw  = document.getElementById('pwInput').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginErr');
+
+  if (!pw) { err.textContent = '⚠ أدخل كلمة المرور'; err.style.display = 'block'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري التحقق...'; }
+
+  try {
+    await window._signIn(ADMIN_EMAIL, pw);
+  } catch(e) {
+    err.textContent = '❌ كلمة المرور غير صحيحة';
+    err.style.display = 'block';
+    if (btn) { btn.disabled = false; btn.textContent = 'دخول ←'; }
+  }
+};
+
 onAuthStateChanged(auth, (user) => {
   const loginScreen = document.getElementById('loginScreen');
-  const loginErr = document.getElementById('loginErr');
-  
-  if (user) {
-    if (user.email === 'admin@ras-health.gov.sa') {
-      // حالة النجاح: الأدمن مسجل دخوله
-      loginScreen.style.display = 'none';
-      window._currentUser = user;
-      const sessionsRef = ref(db, 'sessions');
-      onValue(sessionsRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        window.allSessions = data;
-        window.renderDashboard(data);
-      });
-    } else {
-      // حالة الفشل: حساب آخر غير مخول
-      signOut(auth);
-      if (loginErr) { 
-        loginErr.textContent = '⛔ هذا الحساب غير مخوّل'; 
-        loginErr.style.display = 'block'; 
-      }
-      loginScreen.style.display = 'flex';
-    }
+  if (user && user.email === 'admin@ras-health.gov.sa') {
+    loginScreen.style.display = 'none';
+    onValue(ref(db, 'sessions'), (snapshot) => {
+      window.allSessions = snapshot.val() || {};
+      window.renderDashboard(window.allSessions);
+    });
   } else {
-    // حالة عدم تسجيل الدخول: نظهر شاشة الدخول فقط
     loginScreen.style.display = 'flex';
-    if (loginErr) loginErr.style.display = 'none';
   }
 });
-
-window._dbRemove  = (path) => remove(ref(db, path));
-window._authSignOut = () => signOut(auth);
-window._firebaseAuth = auth;
-window._signIn = (email, pw) => signInWithEmailAndPassword(auth, email, pw);
 </script>
 <style>
 /* ===== RESET & BASE ===== */
