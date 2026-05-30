@@ -27,21 +27,33 @@ const db   = getDatabase(app);
 const auth = getAuth(app);
 
 onAuthStateChanged(auth, (user) => {
-  if (user && user.email === 'admin@ras-health.gov.sa') {
-    document.getElementById('loginScreen').style.display = 'none';
-    window._currentUser = user;
-    const sessionsRef = ref(db, 'sessions');
-    onValue(sessionsRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      window.allSessions = data;
-      window.renderDashboard(data);
-    });
-  } else if (user && user.email !== 'admin@ras-health.gov.sa') {
-    signOut(auth);
-    const el = document.getElementById('loginErr');
-    if (el) { el.textContent = '⛔ هذا الحساب غير مخوّل'; el.style.display = 'block'; }
+  const loginScreen = document.getElementById('loginScreen');
+  const loginErr = document.getElementById('loginErr');
+  
+  if (user) {
+    if (user.email === 'admin@ras-health.gov.sa') {
+      // حالة النجاح: الأدمن مسجل دخوله
+      loginScreen.style.display = 'none';
+      window._currentUser = user;
+      const sessionsRef = ref(db, 'sessions');
+      onValue(sessionsRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        window.allSessions = data;
+        window.renderDashboard(data);
+      });
+    } else {
+      // حالة الفشل: حساب آخر غير مخول
+      signOut(auth);
+      if (loginErr) { 
+        loginErr.textContent = '⛔ هذا الحساب غير مخوّل'; 
+        loginErr.style.display = 'block'; 
+      }
+      loginScreen.style.display = 'flex';
+    }
   } else {
-    document.getElementById('loginScreen').style.display = 'flex';
+    // حالة عدم تسجيل الدخول: نظهر شاشة الدخول فقط
+    loginScreen.style.display = 'flex';
+    if (loginErr) loginErr.style.display = 'none';
   }
 });
 
