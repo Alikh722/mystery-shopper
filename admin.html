@@ -712,7 +712,7 @@ tr:last-child td { border-bottom: none; }
        onkeydown="if(event.key==='Enter') checkPW()">
     </div>
     <div class="login-err" id="loginErr">⚠ كلمة المرور غير صحيحة</div>
-    <button class="login-btn" onclick="checkPW()">دخول ←</button>
+    <button class="login-btn" id="loginBtn" onclick="checkPW()">دخول ←</button>
     <div class="login-footer">
       قطاع الصحة العامة بالرس | وحدة الجودة<br>
       إعداد وإشراف: علي محمد الخليف | د/ منتصر بشير الحسن
@@ -734,6 +734,11 @@ tr:last-child td { border-bottom: none; }
     <button class="tbtn" onclick="showTab('dashboard')">📊 الداش بورد</button>
     <button class="tbtn" onclick="showTab('sessions')">📋 الجلسات</button>
     <button class="tbtn" onclick="window.print()">🖨️ طباعة</button>
+    <button class="tbtn" 
+        onclick="if(confirm('تسجيل الخروج؟')) window._authSignOut()"
+        style="background:rgba(220,50,50,.25);border-color:rgba(220,50,50,.5)">
+  🚪 خروج
+</button>
   </div>
 </header>
 
