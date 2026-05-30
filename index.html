@@ -530,6 +530,7 @@ function startSession(){
   const inspector=document.getElementById('setupInspector').value.trim();
   const center=document.getElementById('setupCenter').value.trim();
   if(!inspector||!center){alert('الرجاء إدخال اسم المشرف واسم المركز');return;}
+  
   sessionMeta={
     inspector,
     center,
@@ -537,21 +538,24 @@ function startSession(){
     round:document.getElementById('setupRound').value||'1',
     date:document.getElementById('setupDate').value||new Date().toISOString().split('T')[0],
     startTime:new Date().toISOString(),
-    status:'in_progress'
+    status:'in_progress',
+    uid: window._firebaseAuthInstance.currentUser.uid // هذا السطر يربط الجلسة بهوية المفتش الحالية
   };
+  
   sessionKey='session_'+Date.now()+'_'+inspector.replace(/\s+/g,'_');
   initState();
   renderAll();
   document.getElementById('setupScreen').style.display='none';
   document.getElementById('sessionInfo').innerHTML=`
-    <span>👤 ${inspector}</span> &nbsp;|&nbsp;
-    <span>🏥 ${center}</span> &nbsp;|&nbsp;
-    <span>📅 ${sessionMeta.date}</span> &nbsp;|&nbsp;
-    <span>🔄 جولة ${sessionMeta.round}</span>
+    <span>👤 ${escapeHtml(inspector)}</span> &nbsp;|&nbsp;
+    <span>🏥 ${escapeHtml(center)}</span> &nbsp;|&nbsp;
+    <span>📅 ${escapeHtml(sessionMeta.date)}</span> &nbsp;|&nbsp;
+    <span>🔄 جولة ${escapeHtml(sessionMeta.round)}</span>
   `;
   setSyncStatus('saving');
   autoSave();
 }
+ك
 
 // ============================================================
 // FIREBASE SYNC
