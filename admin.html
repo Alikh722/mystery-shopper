@@ -60,7 +60,14 @@ onAuthStateChanged(auth, (user) => {
     window._unsubSessions = onValue(ref(db, 'sessions'), (snapshot) => {
       if (!snapshot.exists()) return;
       window.allSessions = snapshot.val() || {};
-      if(window.renderDashboard) window.renderDashboard(window.allSessions);
+      const tryRender = () => {
+        if (window.renderDashboard) {
+          window.renderDashboard(window.allSessions);
+        } else {
+          setTimeout(tryRender, 100);
+        }
+      };
+      tryRender();
     });
   } else {
     if (window._unsubSessions) { window._unsubSessions(); window._unsubSessions = null; }
