@@ -56,16 +56,20 @@ onAuthStateChanged(auth, (user) => {
   const loginScreen = document.getElementById('loginScreen');
   if (user && user.email === 'admin@ras-health.gov.sa') {
     loginScreen.style.display = 'none';
-    onValue(ref(db, 'sessions'), (snapshot) => {
+    if (window._unsubSessions) window._unsubSessions();
+    window._unsubSessions = onValue(ref(db, 'sessions'), (snapshot) => {
+      if (!snapshot.exists()) return;
       window.allSessions = snapshot.val() || {};
       if(window.renderDashboard) window.renderDashboard(window.allSessions);
     });
   } else {
+    if (window._unsubSessions) { window._unsubSessions(); window._unsubSessions = null; }
     loginScreen.style.display = 'flex';
   }
 });
 </script>
 <style>
+
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
