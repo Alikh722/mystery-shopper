@@ -51,10 +51,6 @@ window.showTab = function(name) {
 };
 
 window.closeModal = () => document.getElementById('detailOverlay').classList.remove('open');
-window.openDetail = (key) => {
-  // هنا يجب أن تضع كود فتح التفاصيل الخاص بك (الذي كان موجوداً سابقاً)
-  document.getElementById('detailOverlay').classList.add('open');
-};
 
 onAuthStateChanged(auth, (user) => {
   const loginScreen = document.getElementById('loginScreen');
