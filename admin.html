@@ -1781,7 +1781,7 @@ document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
         <span class="item-status ${cls}">${lbl}</span>
         <div style="flex:1">
           <div class="item-text">${itemText} <span class="risk-pill ${rClass}" style="font-size:10px;margin-right:6px">${rLabel}</span></div>
-          ${v.note?`<div class="note-text">📝 ${v.note}</div>`:''}
+          ${v.note?`<div class="note-text">📝 ${escapeHtml(v.note)}</div>`:''}
           ${photosHtml}
         </div>
       </div>`;
@@ -1817,7 +1817,7 @@ function exportCSV() {
   const data = window.allSessions||{};
   const sessions = Object.entries(data).map(([k,v])=>({key:k,...v}));
   const sMap = {compliant:'مطابق',non:'غير مطابق',na:'لا ينطبق',pending:'لم يُقيَّم'};
-  let csv='\المشرف,المركز,المنطقة,التاريخ,الجولة,الدرجة,الحالة,القسم,المعيار,مستوى الخطورة,النتيجة,ملاحظة\n';
+    let csv='المشرف,المركز,المنطقة,التاريخ,الجولة,الدرجة,الحالة,القسم,المعيار,مستوى الخطورة,النتيجة,ملاحظة\n';
   sessions.forEach(s=>{
     const m=s.meta||{};
     Object.entries(s.state||{}).forEach(([k,v])=>{
