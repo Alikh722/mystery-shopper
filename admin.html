@@ -707,7 +707,9 @@ tr:last-child td { border-bottom: none; }
     <h2>لوحة تحكم الأدمن</h2>
     <p>قطاع الصحة العامة بالرس<br>وحدة الجودة — الزائر السري</p>
     <div class="login-field">
-      <input type="password" id="pwInput" placeholder="أدخل كلمة المرور">
+<input type="password" id="pwInput" 
+       placeholder="أدخل كلمة المرور"
+       onkeydown="if(event.key==='Enter') checkPW()">
     </div>
     <div class="login-err" id="loginErr">⚠ كلمة المرور غير صحيحة</div>
     <button class="login-btn" onclick="checkPW()">دخول ←</button>
@@ -871,7 +873,6 @@ tr:last-child td { border-bottom: none; }
 /* ============================
    CONSTANTS
    ============================ */
-const ADMIN_PASSWORD = "Ras2026Admin";
 
 const SECTIONS_DETAIL = {
   "1_0": {"t":"اللوحة الخارجية للمركز موجودة وبحالة جيدة","r":"low","sec":"الفناء الخارجي"},
@@ -1072,14 +1073,30 @@ let cdCharts = {};
 /* ============================
    LOGIN
    ============================ */
-function checkPW() {
-  const pw = document.getElementById('pwInput').value;
-  if (pw === ADMIN_PASSWORD) {
-    document.getElementById('loginScreen').style.display = 'none';
-  } else {
-    document.getElementById('loginErr').style.display = 'block';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
+async function checkPW() {
+  const ADMIN_EMAIL = 'admin@ras-health.gov.sa';
+  const pw  = document.getElementById('pwInput').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginErr');
+
+  if (!pw) {
+    err.textContent = '⚠ أدخل كلمة المرور';
+    err.style.display = 'block';
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري التحقق...'; }
+  err.style.display = 'none';
+
+  try {
+    await window._signIn(ADMIN_EMAIL, pw);
+  } catch(e) {
+    let msg = '⚠ كلمة المرور غير صحيحة';
+    if (e.code === 'auth/too-many-requests') msg = '⛔ محاولات كثيرة — انتظر قليلاً';
+    if (e.code === 'auth/network-request-failed') msg = '⚠ تحقق من الاتصال بالإنترنت';
+    err.textContent = msg;
+    err.style.display = 'block';
+    if (btn) { btn.disabled = false; btn.textContent = 'دخول ←'; }
   }
 }
 
