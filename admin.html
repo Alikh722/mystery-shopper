@@ -43,13 +43,6 @@ window.checkPW = async function() {
 };
 
 // الدوال العامة للواجهة (الطباعة، التبويبات، الإغلاق)
-window.showTab = function(name) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
-};
-
 window.closeModal = () => document.getElementById('detailOverlay').classList.remove('open');
 
 onAuthStateChanged(auth, (user) => {
