@@ -10,6 +10,8 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDgwu6EfFZ10d_tT6X49kp6krpd6VtIP-k",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
@@ -19,15 +21,34 @@ const firebaseConfig = {
   messagingSenderId: "1017475756161",
   appId: "1:1017475756161:web:7fb3c1b10a06093379dd80"
 };
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const sessionsRef = ref(db, 'sessions');
-onValue(sessionsRef, (snapshot) => {
-  const data = snapshot.val() || {};
-  window.allSessions = data;
-  window.renderDashboard(data);
+
+const app  = initializeApp(firebaseConfig);
+const db   = getDatabase(app);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email === 'admin@ras-health.gov.sa') {
+    document.getElementById('loginScreen').style.display = 'none';
+    window._currentUser = user;
+    const sessionsRef = ref(db, 'sessions');
+    onValue(sessionsRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      window.allSessions = data;
+      window.renderDashboard(data);
+    });
+  } else if (user && user.email !== 'admin@ras-health.gov.sa') {
+    signOut(auth);
+    const el = document.getElementById('loginErr');
+    if (el) { el.textContent = '⛔ هذا الحساب غير مخوّل'; el.style.display = 'block'; }
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
 });
-window._dbRemove = (path) => remove(ref(db, path));
+
+window._dbRemove  = (path) => remove(ref(db, path));
+window._authSignOut = () => signOut(auth);
+window._firebaseAuth = auth;
+window._signIn = (email, pw) => signInWithEmailAndPassword(auth, email, pw);
 </script>
 <style>
 /* ===== RESET & BASE ===== */
