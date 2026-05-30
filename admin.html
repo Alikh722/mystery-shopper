@@ -798,6 +798,19 @@ tr:last-child td { border-bottom: none; }
 
 <script>
 /* ============================
+   SECURITY
+   ============================ */
+function escapeHtml(str){
+  if(str==null) return '—';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+/* ============================
    CONSTANTS
    ============================ */
 
@@ -1082,7 +1095,7 @@ function buildInsightRow(submitted) {
   const bestCenter  = [...centerAvgs].sort((a,b)=>b.avg-a.avg)[0];
   const worstCenter = [...centerAvgs].sort((a,b)=>a.avg-b.avg)[0];
 
-  document.getElementById('insightRow').innerHTML = `
+    document.getElementById('insightRow').innerHTML = `
     <div class="insight-card">
       <div class="insight-icon">✅</div>
       <div class="insight-val">${compRate}%</div>
@@ -1091,12 +1104,12 @@ function buildInsightRow(submitted) {
     </div>
     <div class="insight-card">
       <div class="insight-icon">🏆</div>
-      <div class="insight-val" style="font-size:18px">${bestCenter?.c || '—'}</div>
+      <div class="insight-val" style="font-size:18px">${escapeHtml(bestCenter?.c)}</div>
       <div class="insight-lbl">أعلى مركز أداءً (${bestCenter?.avg || 0}%)</div>
     </div>
     <div class="insight-card">
       <div class="insight-icon">⚠️</div>
-      <div class="insight-val" style="font-size:18px">${worstCenter?.c || '—'}</div>
+      <div class="insight-val" style="font-size:18px">${escapeHtml(worstCenter?.c)}</div>
       <div class="insight-lbl">أدنى مركز أداءً (${worstCenter?.avg || 0}%)</div>
     </div>
     <div class="insight-card">
@@ -1105,7 +1118,6 @@ function buildInsightRow(submitted) {
       <div class="insight-lbl">إجمالي الملاحظات غير المطابقة</div>
     </div>
   `;
-}
 
 /* ============================
    DASHBOARD CHARTS
@@ -1224,7 +1236,7 @@ function buildCentersTab() {
   document.getElementById('centersTable').innerHTML = centerList.map(c => `
     <div class="ckpi-row">
       <div>
-        <div class="center-name">${c.name}</div>
+        <div class="center-name">${escapeHtml(c.name)}</div>
         <div class="center-sub">${c.sessions} جلسة</div>
       </div>
       <div class="metric-val" style="color:${SCORE_COLOR(c.avg)}">${c.avg}%</div>
@@ -1359,10 +1371,10 @@ function renderTable(data) {
     const badgeTxt = m.status==='submitted' ? '✅ مُرسل' : '⏳ جاري';
     return `<tr>
       <td style="color:var(--text-sub);font-weight:600">${idx+1}</td>
-      <td style="font-weight:700">${m.inspector||'—'}</td>
-      <td>${m.center||'—'}</td>
-      <td style="white-space:nowrap">${m.date||'—'}</td>
-      <td style="text-align:center">${m.round||'—'}</td>
+      <td style="font-weight:700">${escapeHtml(m.inspector)}</td>
+      <td>${escapeHtml(m.center)}</td>
+      <td style="white-space:nowrap">${escapeHtml(m.date)}</td>
+      <td style="text-align:center">${escapeHtml(m.round)}</td>
       <td><span class="score-chip" style="color:${scC};font-weight:800">${sc!=null?sc+'%':'—'}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:6px">
@@ -1376,9 +1388,9 @@ function renderTable(data) {
       <td style="font-size:11px;white-space:nowrap">${subT}</td>
       <td>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
-          <button class="action-btn center-dash" onclick="openCenterDash('${m.center||''}')">🏥 داش المركز</button>
-          <button class="action-btn view" onclick="openDetail('${s.key}')">📄 عرض</button>
-          <button class="action-btn del" onclick="deleteSession('${s.key}')">حذف</button>
+        <button class="action-btn center-dash" data-center="${escapeHtml(m.center||'')}" onclick="openCenterDash(this.dataset.center)">🏥 داش المركز</button>
+        <button class="action-btn view" data-key="${escapeHtml(s.key)}" onclick="openDetail(this.dataset.key)">📄 عرض</button>
+        <button class="action-btn del" data-key="${escapeHtml(s.key)}" onclick="deleteSession(this.dataset.key)">حذف</button>
         </div>
       </td>
     </tr>`;
@@ -1740,12 +1752,12 @@ document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
   const scC = sc!=null?SCORE_COLOR(sc):'#6b7280';
   const subT = m.submitTime?new Date(m.submitTime).toLocaleString('ar-SA'):'—';
 
-  let html = `<div class="meta-grid">
-    <div class="meta-item"><span>المشرف</span><b>${m.inspector||'—'}</b></div>
-    <div class="meta-item"><span>المركز</span><b>${m.center||'—'}</b></div>
-    <div class="meta-item"><span>المنطقة</span><b>${m.region||'—'}</b></div>
-    <div class="meta-item"><span>التاريخ</span><b>${m.date||'—'}</b></div>
-    <div class="meta-item"><span>الجولة</span><b>${m.round||'—'}</b></div>
+    let html = `<div class="meta-grid">
+    <div class="meta-item"><span>المشرف</span><b>${escapeHtml(m.inspector)}</b></div>
+    <div class="meta-item"><span>المركز</span><b>${escapeHtml(m.center)}</b></div>
+    <div class="meta-item"><span>المنطقة</span><b>${escapeHtml(m.region)}</b></div>
+    <div class="meta-item"><span>التاريخ</span><b>${escapeHtml(m.date)}</b></div>
+    <div class="meta-item"><span>الجولة</span><b>${escapeHtml(m.round)}</b></div>
     <div class="meta-item"><span>الدرجة</span><b style="color:${scC};font-size:20px;font-weight:800">${sc!=null?sc+'%':'—'}</b></div>
     <div class="meta-item"><span>مطابق</span><b style="color:#0f7b6c">${m.ok||0}</b></div>
     <div class="meta-item"><span>غير مطابق</span><b style="color:#9b1c1c">${m.no||0}</b></div>
