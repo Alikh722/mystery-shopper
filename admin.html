@@ -723,25 +723,24 @@ tr:last-child td { border-bottom: none; }
 <!-- ===== DASHBOARD TAB ===== -->
 <div class="tab-panel active" id="panel-dashboard">
   <div class="page-wrap">
-    <div class="kpi-grid" id="kpiGrid">
-      <div class="kpi-card c1"><div class="kpi-icon">📋</div><div class="kpi-val" id="k-total">—</div><div class="kpi-lbl">إجمالي الجلسات</div></div>
-      <div class="kpi-card c2"><div class="kpi-icon">✅</div><div class="kpi-val" id="k-submitted">—</div><div class="kpi-lbl">تقارير مُرسلة نهائياً</div></div>
-      <div class="kpi-card c3"><div class="kpi-icon">⏳</div><div class="kpi-val" id="k-progress">—</div><div class="kpi-lbl">قيد التنفيذ</div></div>
-      <div class="kpi-card c4"><div class="kpi-icon">🎯</div><div class="kpi-val" id="k-avg">—</div><div class="kpi-lbl">متوسط الدرجة الكلي</div></div>
-    </div>
-    <div class="insight-row" id="insightRow"></div>
+    
+    <div class="kpi-grid" id="kpiGrid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;"></div>
+    
     <div class="charts-row">
-      <div class="chart-card"><div class="chart-title">توزيع درجات الامتثال <span class="chart-subtitle">(%)</span></div><canvas id="chScores" height="200"></canvas></div>
-      <div class="chart-card"><div class="chart-title">أداء المراكز مقارنةً <span class="chart-subtitle">متوسط الدرجة</span></div><canvas id="chCenters" height="200"></canvas></div>
+      <div class="chart-card"><div class="chart-title">توزيع درجات الامتثال <span class="chart-subtitle">(%)</span></div><canvas id="chScores" height="320"></canvas></div>
+      <div class="chart-card"><div class="chart-title">أداء المراكز مقارنةً <span class="chart-subtitle">متوسط الدرجة</span></div><canvas id="chCenters" height="320"></canvas></div>
     </div>
+    
     <div class="charts-row">
-      <div class="chart-card"><div class="chart-title">توزيع الملاحظات حسب القسم <span class="chart-subtitle">عدد البنود غير المطابقة</span></div><canvas id="chSections" height="200"></canvas></div>
-      <div class="chart-card"><div class="chart-title">تطور الإرسال عبر الزمن <span class="chart-subtitle">التقارير المُرسلة</span></div><canvas id="chTimeline" height="200"></canvas></div>
+      <div class="chart-card"><div class="chart-title">توزيع الملاحظات حسب القسم <span class="chart-subtitle">عدد البنود غير المطابقة</span></div><canvas id="chSections" height="320"></canvas></div>
+      <div class="chart-card"><div class="chart-title">تطور الإرسال عبر الزمن <span class="chart-subtitle">التقارير المُرسلة</span></div><canvas id="chTimeline" height="320"></canvas></div>
     </div>
-    <div class="chart-card section-gap">
+    
+    <div class="chart-card section-gap" style="margin-bottom: 40px;">
       <div class="chart-title">مستوى الامتثال حسب مستوى الخطورة <span class="chart-subtitle">عبر جميع المراكز</span></div>
-      <canvas id="chRisk" height="100"></canvas>
+      <canvas id="chRisk" height="200"></canvas>
     </div>
+
   </div>
 </div>
 
@@ -1103,70 +1102,82 @@ function showTab(name) {
 /* ============================
    MAIN RENDER
    ============================ */
+/* ============================
+   MAIN RENDER (المحرك المدمج الجديد للوحة الرئيسية)
+   ============================ */
 window.renderDashboard = function(data) {
   const sessions = Object.entries(data || {}).map(([k, v]) => ({key: k, ...v}));
   const submitted = sessions.filter(s => s.meta?.status === 'submitted');
   const inProg    = sessions.filter(s => s.meta?.status === 'in_progress');
-  const scores    = submitted.filter(s => s.meta?.score != null).map(s => s.meta.score);
-  const avg       = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
 
-  document.getElementById('k-total').textContent     = sessions.length || '—';
-  document.getElementById('k-submitted').textContent = submitted.length || '—';
-  document.getElementById('k-progress').textContent  = inProg.length || '—';
-  document.getElementById('k-avg').textContent       = avg != null ? avg + '%' : '—';
+  // 1. حساب الجودة والامتثال
+  const scores = submitted.filter(s => s.meta?.score != null).map(s => s.meta.score);
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
-  buildInsightRow(submitted);
-  buildDashboardCharts(submitted, sessions);
-  renderTable(data);
-};
-
-/* ============================
-   INSIGHT ROW
-   ============================ */
-function buildInsightRow(submitted) {
-  if (!submitted.length) return;
-  let totalNon = 0, totalOk = 0, totalNA = 0;
+  let totalNon = 0, totalOk = 0;
   const centerMap = {};
+  
   submitted.forEach(s => {
     const m = s.meta || {};
     totalOk  += (m.ok  || 0);
     totalNon += (m.no  || 0);
-    Object.values(s.state || {}).forEach(v => { if (v.status === 'na') totalNA++; });
     const c = m.center || 'غير محدد';
     if (!centerMap[c]) centerMap[c] = [];
     centerMap[c].push(m.score || 0);
   });
+
   const compRate = totalOk + totalNon > 0 ? Math.round(totalOk / (totalOk + totalNon) * 100) : 0;
+
+  // 2. حساب أفضل وأسوأ مركز
   const centerAvgs = Object.entries(centerMap).map(([c, sc]) => ({
     c, avg: Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)
   }));
-  const bestCenter  = [...centerAvgs].sort((a,b)=>b.avg-a.avg)[0];
-  const worstCenter = [...centerAvgs].sort((a,b)=>a.avg-b.avg)[0];
+  const bestCenter  = centerAvgs.length ? [...centerAvgs].sort((a,b)=>b.avg-a.avg)[0] : {c:'—', avg:0};
+  const worstCenter = centerAvgs.length ? [...centerAvgs].sort((a,b)=>a.avg-b.avg)[0] : {c:'—', avg:0};
 
-    document.getElementById('insightRow').innerHTML = `
-    <div class="insight-card">
-      <div class="insight-icon">✅</div>
-      <div class="insight-val">${compRate}%</div>
-      <div class="insight-lbl">معدل الامتثال الكلي</div>
-      <span class="insight-pct" style="background:${compRate>=75?'#dcfce7':'#fce8e8'};color:${compRate>=75?'#166534':'#9b1c1c'}">${compRate>=75?'جيد':'يحتاج تحسين'}</span>
+  // 3. بناء الـ 4 كروت الاستراتيجية (بدلاً من الـ 8 القديمة المشتتة)
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card c1" style="padding:24px;">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-val" style="font-size:38px;">${submitted.length}</div>
+      <div class="kpi-lbl" style="font-size:15px;">جولة تفتيشية مكتملة</div>
+      <div style="font-size:13px; color:var(--text-sub); margin-top:12px; font-weight:700">
+        ⏳ ${inProg.length} جولة قيد التنفيذ حالياً
+      </div>
     </div>
-    <div class="insight-card">
-      <div class="insight-icon">🏆</div>
-      <div class="insight-val" style="font-size:18px">${escapeHtml(bestCenter?.c)}</div>
-      <div class="insight-lbl">أعلى مركز أداءً (${bestCenter?.avg || 0}%)</div>
+
+    <div class="kpi-card c2" style="padding:24px;">
+      <div class="kpi-icon">🎯</div>
+      <div class="kpi-val" style="font-size:38px;">${avg}%</div>
+      <div class="kpi-lbl" style="font-size:15px;">متوسط التقييم العام</div>
+      <div style="font-size:13px; color:${compRate>=75?'#0f7b6c':'#b45309'}; margin-top:12px; font-weight:700">
+        ${compRate>=75?'✔️':'⚠️'} نسبة الامتثال الكلية: ${compRate}%
+      </div>
     </div>
-    <div class="insight-card">
-      <div class="insight-icon">⚠️</div>
-      <div class="insight-val" style="font-size:18px">${escapeHtml(worstCenter?.c)}</div>
-      <div class="insight-lbl">أدنى مركز أداءً (${worstCenter?.avg || 0}%)</div>
+
+    <div class="kpi-card c4" style="padding:24px; border-right: 5px solid var(--gov-blue)">
+      <div class="kpi-icon" style="margin-bottom:8px">⚖️</div>
+      <div class="kpi-val" style="font-size:18px; margin-bottom:10px; line-height:1.4">
+        ${window.escapeHtml?window.escapeHtml(bestCenter.c):bestCenter.c} <span style="font-size:14px;color:#0f7b6c;float:left">(${bestCenter.avg}%) 🏆</span><br>
+        ${window.escapeHtml?window.escapeHtml(worstCenter.c):worstCenter.c} <span style="font-size:14px;color:#9b1c1c;float:left">(${worstCenter.avg}%) ⚠️</span>
+      </div>
+      <div class="kpi-lbl" style="margin-top:12px; border-top:1px solid #eee; padding-top:10px; font-size:14px;">الأعلى والأدنى أداءً</div>
     </div>
-    <div class="insight-card">
-      <div class="insight-icon">📌</div>
-      <div class="insight-val">${totalNon}</div>
-      <div class="insight-lbl">إجمالي الملاحظات غير المطابقة</div>
+
+    <div class="kpi-card c3" style="padding:24px; border-right: 5px solid #9b1c1c; background: #fffcfc;">
+      <div class="kpi-icon" style="background:#fce8e8; color:#9b1c1c">❌</div>
+      <div class="kpi-val" style="font-size:38px; color:#9b1c1c">${totalNon}</div>
+      <div class="kpi-lbl" style="color:#9b1c1c; font-size:15px;">إجمالي البنود المخالفة</div>
+      <div style="font-size:13px; color:var(--text-sub); margin-top:12px; font-weight:700">
+        تتطلب تدخلاً تصحيحياً فورياً
+      </div>
     </div>
   `;
-  }
+
+  // تشغيل باقي وظائف الداش بورد
+  if (window.buildDashboardCharts) buildDashboardCharts(submitted, sessions);
+  if (window.renderTable) renderTable(data);
+};
 
 /* ============================
    DASHBOARD CHARTS
