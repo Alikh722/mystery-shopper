@@ -1449,10 +1449,15 @@ function renderTable(data) {
 /* ============================
    CENTER DASHBOARD
    ============================ */
+/* ============================
+   CENTER DASHBOARD (With CAPA & Trend Analysis)
+   ============================ */
 function openCenterDash(centerName) {
   if (!centerName) return;
   const data = window.allSessions || {};
-  const centerSessions = Object.values(data).filter(s =>
+  
+  // 1. جلب جميع جلسات المركز وتصفيتها
+  let centerSessions = Object.values(data).filter(s =>
     (s.meta?.center || '') === centerName && s.meta?.status === 'submitted'
   );
 
@@ -1461,14 +1466,13 @@ function openCenterDash(centerName) {
     return;
   }
 
-  const allScores = centerSessions.map(s => s.meta?.score || 0);
-  const avgScore  = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
-  const totalOk   = centerSessions.reduce((a,s)=>a+(s.meta?.ok||0),0);
-  const totalNon  = centerSessions.reduce((a,s)=>a+(s.meta?.no||0),0);
-  const totalItems= totalOk + totalNon;
-  const compRate  = totalItems > 0 ? Math.round(totalOk/totalItems*100) : 0;
-  const latestSession = centerSessions.sort((a,b)=>(b.meta?.date||'').localeCompare(a.meta?.date||''))[0];
+  // 2. الترتيب الزمني الدقيق (من الأقدم للأحدث) لضمان المقارنة الصحيحة
+  centerSessions.sort((a,b) => new Date(a.meta.submitTime || a.meta.date) - new Date(b.meta.submitTime || b.meta.date));
 
+  const latestSession = centerSessions[centerSessions.length - 1];
+  const previousSession = centerSessions.length > 1 ? centerSessions[centerSessions.length - 2] : null;
+
+  // 3. بناء الحالة المدمجة لمعرفة الوضع الحالي الحقيقي للمركز
   const mergedState = {};
   centerSessions.forEach(s => {
     Object.entries(s.state||{}).forEach(([k,v]) => {
@@ -1477,6 +1481,81 @@ function openCenterDash(centerName) {
     });
   });
 
+  // حساب المؤشرات الحالية الدقيقة
+  const allScores = centerSessions.map(s => s.meta?.score || 0);
+  const avgScore  = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
+  let currentOk = 0, currentNon = 0, currentNa = 0;
+  
+  Object.values(mergedState).forEach(v => {
+    if(v.status === 'compliant') currentOk++;
+    else if(v.status === 'non') currentNon++;
+    else if(v.status === 'na') currentNa++;
+  });
+  
+  const totalItems = currentOk + currentNon;
+  const compRate   = totalItems > 0 ? Math.round(currentOk/totalItems*100) : 0;
+
+  // 4. خوارزمية الذكاء الاصطناعي لمقارنة الزيارات (Delta Analysis)
+  const correctedItems = [];
+  const recurringItems = [];
+  const newItems = [];
+
+  if (previousSession) {
+    const prevSt = previousSession.state || {};
+    const currSt = latestSession.state || {};
+
+    Object.keys(currSt).forEach(k => {
+       const pV = prevSt[k]?.status;
+       const cV = currSt[k]?.status;
+       const detail = SECTIONS_DETAIL[k];
+       if (!detail) return;
+
+       if (pV === 'non' && cV === 'compliant') {
+          correctedItems.push({ key:k, detail, ...currSt[k] });
+       } else if (pV === 'non' && cV === 'non') {
+          recurringItems.push({ key:k, detail, ...currSt[k] });
+       } else if ((!pV || pV !== 'non') && cV === 'non') {
+          newItems.push({ key:k, detail, ...currSt[k] });
+       }
+    });
+  }
+
+  // 5. توليد واجهة المقارنة (التطور والتصحيح)
+  let capaHtml = '';
+  if (!previousSession) {
+     capaHtml = '<div class="empty-state"><span class="ei">📊</span><p>هذه هي الزيارة التفتيشية الأولى للمركز. ستظهر إحصائيات التصحيح والمقارنة عند إجراء الزيارة القادمة.</p></div>';
+  } else {
+     const renderCapaCard = (arr, title, icon, color, bg) => {
+        if (!arr.length) return '';
+        return `<div style="margin-bottom:24px">
+           <div style="font-size:14px;font-weight:700;color:${color};margin-bottom:12px;display:flex;align-items:center;gap:8px">
+             <span style="background:${bg};padding:5px 10px;border-radius:6px;border:1px solid ${color}40">${icon} ${title} (${arr.length})</span>
+           </div>
+           <div class="nc-grid">
+             ${arr.map(item => `
+               <div class="nc-card" style="border-right-color:${color}; border-color:${color}40; background:#fff">
+                  <div class="nc-card-top">
+                    <div>
+                      <div class="nc-card-title">${item.detail.t}</div>
+                      <div class="nc-card-sec">📁 ${item.detail.sec}</div>
+                    </div>
+                  </div>
+               </div>
+             `).join('')}
+           </div>
+        </div>`;
+     };
+
+     capaHtml += renderCapaCard(correctedItems, 'تم تصحيحها (تحسن)', '✅', '#0f7b6c', '#dcfce7');
+     capaHtml += renderCapaCard(newItems, 'مخالفات جديدة (تراجع)', '⚠️', '#d97706', '#fef3c7');
+     capaHtml += renderCapaCard(recurringItems, 'مخالفات متكررة (لم تُعالج)', '❌', '#9b1c1c', '#fce8e8');
+
+     if(correctedItems.length===0 && newItems.length===0 && recurringItems.length===0) {
+         capaHtml = '<div class="empty-state"><span class="ei">⚖️</span><p>لا توجد تغييرات جوهرية في الملاحظات بين الزيارة السابقة والحالية.</p></div>';
+     }
+  }
+
+  // تجهيز باقي البيانات للواجهة
   const nonItems = Object.entries(mergedState)
     .filter(([,v]) => v.status === 'non')
     .map(([k,v]) => ({ key:k, ...v, detail: SECTIONS_DETAIL[k] }))
@@ -1496,18 +1575,23 @@ function openCenterDash(centerName) {
   const lastDate = latestSession.meta?.date || '—';
   const lastInspector = latestSession.meta?.inspector || '—';
 
+  // بناء التبويبات
   const tabsHtml = `
     <div class="cd-sec-tab active" onclick="cdShowSec('overview', this)">📊 نظرة عامة</div>
+    <div class="cd-sec-tab" onclick="cdShowSec('capa', this)" style="border-color:#0f7b6c; color:#0f7b6c; background:#f0fdf4">
+      🔄 التطور الزمني ${previousSession && correctedItems.length > 0 ? `<span class="tab-badge" style="background:#0f7b6c;color:#fff">${correctedItems.length}</span>` : ''}
+    </div>
     ${SECTIONS_META.map(sm => {
       const st = secStats[sm.id];
       if (!st || st.total === 0) return '';
       const badge = st.non > 0 ? `<span class="tab-badge">${st.non}</span>` : '';
       return `<div class="cd-sec-tab" onclick="cdShowSec('sec_${sm.id}', this)">${badge}${sm.title.replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','').substring(0,12)}</div>`;
     }).join('')}
-    <div class="cd-sec-tab" onclick="cdShowSec('noncompliant', this)">⚠️ الملاحظات (${nonItems.length})</div>
-    <div class="cd-sec-tab" onclick="cdShowSec('history', this)">📅 السجل</div>
+    <div class="cd-sec-tab" onclick="cdShowSec('noncompliant', this)">⚠️ جميع الملاحظات (${nonItems.length})</div>
+    <div class="cd-sec-tab" onclick="cdShowSec('history', this)">📅 سجل الجولات</div>
   `;
 
+  // بناء كروت الأقسام (نظرة عامة)
   const secScoreGridHtml = SECTIONS_META.map(sm => {
     const st = secStats[sm.id];
     if (!st || st.total === 0) return '';
@@ -1526,6 +1610,7 @@ function openCenterDash(centerName) {
     </div>`;
   }).join('');
 
+  // تفاصيل البنود في الأقسام
   const secPanelsHtml = SECTIONS_META.map(sm => {
     const items = Object.entries(mergedState).filter(([k]) => k.startsWith(sm.id+'_'));
     if (!items.length) return '';
@@ -1558,26 +1643,23 @@ function openCenterDash(centerName) {
         <div class="items-section-hdr">
           <div class="items-section-hdr-title">${sm.id}. ${sm.title}</div>
           <div class="items-section-hdr-stats">
-            <span class="items-section-hdr-stat">✅ ${okC} مطابق</span>
-            <span class="items-section-hdr-stat">❌ ${nonC} غير مطابق</span>
-            <span class="items-section-hdr-stat">⬜ ${naC} لا ينطبق</span>
+            <span class="items-section-hdr-stat">✅ ${okC}</span>
+            <span class="items-section-hdr-stat">❌ ${nonC}</span>
+            <span class="items-section-hdr-stat">⬜ ${naC}</span>
           </div>
         </div>
-        <div style="overflow-x:auto">
-          <div style="min-width:600px">
-            <div class="mobile-hide-hdr" style="display:grid;grid-template-columns:36px 1fr 90px 100px auto;gap:10px;padding:8px 18px;background:#f8fafc;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text-sub)">
-              <div>#</div><div>البند</div><div>الخطورة</div><div>النتيجة</div><div>صور</div>
-            </div>
-            ${rows}
+        <div style="overflow-x:auto"><div style="min-width:600px">
+          <div class="mobile-hide-hdr" style="display:grid;grid-template-columns:36px 1fr 90px 100px auto;gap:10px;padding:8px 18px;background:#f8fafc;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text-sub)">
+            <div>#</div><div>البند</div><div>الخطورة</div><div>النتيجة</div><div>صور</div>
           </div>
-        </div>
+          ${rows}
+        </div></div>
       </div>
     </div>`;
   }).join('');
 
-  // إظهار الصور في بطاقات الملاحظات
   const ncHtml = nonItems.length === 0
-    ? '<div class="empty-state"><span class="ei">✅</span><p>لا توجد ملاحظات غير مطابقة</p></div>'
+    ? '<div class="empty-state"><span class="ei">✅</span><p>لا توجد ملاحظات غير مطابقة حالياً</p></div>'
     : `<div class="nc-grid">${nonItems.map(item => {
         const rClass = `risk-${item.detail.r}`;
         const itemPhotosHtml = (item.photos && item.photos.length > 0)
@@ -1588,10 +1670,7 @@ function openCenterDash(centerName) {
 
         return `<div class="nc-card">
           <div class="nc-card-top">
-            <div>
-              <div class="nc-card-title">${item.detail.t}</div>
-              <div class="nc-card-sec">📁 ${item.detail.sec}</div>
-            </div>
+            <div><div class="nc-card-title">${item.detail.t}</div><div class="nc-card-sec">📁 ${item.detail.sec}</div></div>
             <span class="risk-pill ${rClass}" style="flex-shrink:0">${RISK_LABEL[item.detail.r]}</span>
           </div>
           ${item.note?`<div class="nc-card-note">📝 ${item.note}</div>`:''}
@@ -1609,24 +1688,18 @@ function openCenterDash(centerName) {
       return `<div class="sh-card">
         <div class="sh-round">${i+1}</div>
         <div class="sh-info">
-          <div class="sh-info-title">جولة رقم ${m.round||i+1} — ${m.inspector||'—'}</div>
+          <div class="sh-info-title">جولة ${m.round||i+1} — ${m.inspector||'—'}</div>
           <div class="sh-info-sub">📅 ${m.date||'—'} • أُرسل: ${subT}</div>
         </div>
         <div class="sh-score-area">
           <span class="sh-score" style="color:${scC}">${sc}%</span>
-          <div class="sh-stats">
-            <span class="sh-stat-ok">✅ ${m.ok||0}</span>
-            <span class="sh-stat-no">❌ ${m.no||0}</span>
-          </div>
         </div>
-        <span class="badge ${sc>=90?'badge-ok':sc>=75?'badge-blue':sc>=60?'badge-warn':'badge-critical'}">${sc>=90?'ممتاز':sc>=75?'جيد':sc>=60?'مقبول':'ضعيف'}</span>
       </div>`;
     }).join('');
 
   const r = 52, cx = 60, cy = 60;
   const circum = 2 * Math.PI * r;
   const dash = (avgScore / 100) * circum;
-  const ringColor = scoreColor;
 
   const html = `
     <div class="cd-header">
@@ -1637,11 +1710,11 @@ function openCenterDash(centerName) {
           <div class="cd-header-meta">
             <div class="cd-header-meta-item">👤 آخر مفتش: ${lastInspector}</div>
             <div class="cd-header-meta-item">📅 آخر زيارة: ${lastDate}</div>
-            <div class="cd-header-meta-item">📋 عدد الجلسات: ${centerSessions.length}</div>
+            <div class="cd-header-meta-item">📋 عدد الجولات: ${centerSessions.length}</div>
           </div>
         </div>
         <div class="cd-header-actions">
-          <button class="cd-print-btn" onclick="window.print()">🖨️ طباعة</button>
+          <button class="cd-print-btn" onclick="window.print()">🖨️ طباعة التقرير</button>
           <button class="cd-close-btn" onclick="closeCenterDash()">✕ إغلاق</button>
         </div>
       </div>
@@ -1650,31 +1723,17 @@ function openCenterDash(centerName) {
         <div class="cd-score-ring-wrap">
           <svg width="120" height="120" class="cd-score-ring">
             <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="10"/>
-            <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringColor}" stroke-width="10"
-              stroke-dasharray="${dash} ${circum}" stroke-linecap="round"/>
+            <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${scoreColor}" stroke-width="10" stroke-dasharray="${dash} ${circum}" stroke-linecap="round"/>
           </svg>
           <div class="cd-score-ring-val">
-            <div class="cd-score-num" style="color:${ringColor}">${avgScore}</div>
-            <div class="cd-score-pct">%</div>
+            <div class="cd-score-num" style="color:${scoreColor}">${avgScore}</div><div class="cd-score-pct">%</div>
           </div>
         </div>
         <div class="cd-kpi-row">
-          <div class="cd-kpi">
-            <div class="cd-kpi-val">${scoreLabel}</div>
-            <div class="cd-kpi-lbl">التقييم العام</div>
-          </div>
-          <div class="cd-kpi">
-            <div class="cd-kpi-val" style="color:#4ade80">${totalOk}</div>
-            <div class="cd-kpi-lbl">بند مطابق</div>
-          </div>
-          <div class="cd-kpi">
-            <div class="cd-kpi-val" style="color:#f87171">${totalNon}</div>
-            <div class="cd-kpi-lbl">بند غير مطابق</div>
-          </div>
-          <div class="cd-kpi">
-            <div class="cd-kpi-val">${compRate}%</div>
-            <div class="cd-kpi-lbl">معدل الامتثال</div>
-          </div>
+          <div class="cd-kpi"><div class="cd-kpi-val">${scoreLabel}</div><div class="cd-kpi-lbl">التقييم العام</div></div>
+          <div class="cd-kpi"><div class="cd-kpi-val" style="color:#4ade80">${currentOk}</div><div class="cd-kpi-lbl">مطابق (الوضع الحالي)</div></div>
+          <div class="cd-kpi"><div class="cd-kpi-val" style="color:#f87171">${currentNon}</div><div class="cd-kpi-lbl">مخالف (الوضع الحالي)</div></div>
+          <div class="cd-kpi"><div class="cd-kpi-val">${compRate}%</div><div class="cd-kpi-lbl">معدل الامتثال الفعلي</div></div>
         </div>
       </div>
     </div>
@@ -1684,30 +1743,31 @@ function openCenterDash(centerName) {
 
       <div class="cd-sec-content active" id="cd_overview">
         <div class="cd-charts-row">
-          <div class="cd-chart-card">
-            <div class="cd-chart-title">الامتثال حسب مستوى الخطورة</div>
-            <canvas id="cdChartRisk" height="200"></canvas>
-          </div>
-          <div class="cd-chart-card">
-            <div class="cd-chart-title">توزيع النتائج الكلية</div>
-            <canvas id="cdChartDist" height="200"></canvas>
-          </div>
+          <div class="cd-chart-card"><div class="cd-chart-title">الامتثال حسب مستوى الخطورة</div><canvas id="cdChartRisk" height="320"></canvas></div>
+          <div class="cd-chart-card"><div class="cd-chart-title">توزيع النتائج الكلية (الوضع الحالي)</div><canvas id="cdChartDist" height="320"></canvas></div>
         </div>
-        <div style="margin-bottom:16px">
-          <div style="font-size:14px;font-weight:700;color:var(--gov-navy);margin-bottom:12px">📐 أداء كل قسم</div>
-          <div class="sec-score-grid">${secScoreGridHtml}</div>
-        </div>
+        <div style="margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:var(--gov-navy);margin-bottom:12px">📐 أداء كل قسم</div><div class="sec-score-grid">${secScoreGridHtml}</div></div>
+      </div>
+
+      <div class="cd-sec-content" id="cd_capa">
+         <div style="background:#fff; border-radius:12px; padding:24px; border:1px solid var(--border); box-shadow:var(--shadow)">
+            <h3 style="margin-bottom:6px; color:var(--gov-navy); font-size:18px">المقارنة المعيارية للتصحيحات</h3>
+            <p style="font-size:13px; color:var(--text-sub); margin-bottom:24px; border-bottom:1px solid var(--border); padding-bottom:16px">
+              تقارن هذه الشاشة بين نتائج آخر زيارة (${latestSession?.meta?.inspector||''}) والزيارة التي سبقتها (${previousSession?.meta?.inspector||'لا يوجد'}) لاكتشاف التحسن أو التراجع.
+            </p>
+            ${capaHtml}
+         </div>
       </div>
 
       ${secPanelsHtml}
 
       <div class="cd-sec-content" id="cd_noncompliant">
-        <div style="font-size:14px;font-weight:700;color:#9b1c1c;margin-bottom:12px">⚠️ البنود غير المطابقة (${nonItems.length})</div>
+        <div style="font-size:16px;font-weight:700;color:#9b1c1c;margin-bottom:16px">⚠️ سجل الملاحظات غير المطابقة (الوضع الراهن)</div>
         ${ncHtml}
       </div>
 
       <div class="cd-sec-content" id="cd_history">
-        <div style="font-size:14px;font-weight:700;color:var(--gov-navy);margin-bottom:12px">📅 سجل الزيارات التفتيشية</div>
+        <div style="font-size:16px;font-weight:700;color:var(--gov-navy);margin-bottom:16px">📅 سجل الزيارات التفتيشية</div>
         <div class="session-history">${historyHtml}</div>
       </div>
     </div>
@@ -1721,7 +1781,6 @@ function openCenterDash(centerName) {
 }
 
 function buildCenterDashCharts(mergedState) {
-  // Risk compliance
   const riskS = {critical:{ok:0,non:0}, high:{ok:0,non:0}, medium:{ok:0,non:0}, low:{ok:0,non:0}};
   Object.entries(mergedState).forEach(([k,v]) => {
     const d = SECTIONS_DETAIL[k]; if (!d) return;
@@ -1738,20 +1797,16 @@ function buildCenterDashCharts(mergedState) {
     options:{ responsive:true, plugins:{legend:{position:'top'}}, scales:{x:{grid:{display:false}},y:{grid:{color:'#f1f5f9'}}} }
   });
 
-  // Distribution
   let ok=0,non=0,na=0,pend=0;
   Object.values(mergedState).forEach(v=>{
-    if(v.status==='compliant')ok++;
-    else if(v.status==='non')non++;
-    else if(v.status==='na')na++;
-    else pend++;
+    if(v.status==='compliant')ok++; else if(v.status==='non')non++; else if(v.status==='na')na++; else pend++;
   });
   const ctxD = document.getElementById('cdChartDist');
   if (ctxD) new Chart(ctxD, {
     type:'doughnut',
     data:{labels:['مطابق','غير مطابق','لا ينطبق','لم يُقيَّم'],
       datasets:[{data:[ok,non,na,pend], backgroundColor:['#0f7b6c','#9b1c1c','#9ca3af','#fbbf24'], borderWidth:3, borderColor:'#fff'}]},
-    options:{responsive:true, plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10}}}}
+    options:{responsive:true, plugins:{legend:{position:'bottom',labels:{font:{size:13},padding:12}}}}
   });
 }
 
