@@ -802,7 +802,14 @@ function addPhoto(k, input) {
           const photoIndex = state[k].photos.length - 1;
           const storagePath = `photos/${sessionKey}/${k}_${Date.now()}`;
           const imgRef = window._firebaseSRef(window._firebaseStorage, storagePath);
-          window._firebaseUpload(imgRef, compressedDataUrl, 'data_url')
+          
+          // === التعديل الأمني (Security Patch) ===
+          // جلب هوية المفتش المجهول وإرفاقها كبيانات وصفية (Metadata) مع الصورة
+          const currentUserUid = window._firebaseAuthInstance.currentUser.uid;
+          const metadata = { customMetadata: { uid: currentUserUid } };
+
+          // رفع الصورة مع البيانات الوصفية (تمرير metadata كمعامل رابع)
+          window._firebaseUpload(imgRef, compressedDataUrl, 'data_url', metadata)
             .then(snapshot => window._firebaseGetURL(snapshot.ref))
             .then(downloadURL => {
               if(state[k] && state[k].photos[photoIndex]){
