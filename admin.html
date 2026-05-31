@@ -9,7 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+// التحديث المعماري: استيراد دوال onChild لجلب الفروقات فقط بدلاً من onValue
+import { getDatabase, ref, onChildAdded, onChildChanged, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -45,25 +46,53 @@ window.checkPW = async function() {
 // الدوال العامة للواجهة (الطباعة، التبويبات، الإغلاق)
 window.closeModal = () => document.getElementById('detailOverlay').classList.remove('open');
 
+// === هندسة الأداء العالي (High-Performance Architecture) ===
+window.allSessions = {}; // كائن لتخزين الجلسات محلياً
+let renderTimer = null;
+
+// دالة (Debounce) لتأخير تجميع التحديثات لمنع إرهاق متصفح الأدمن
+const triggerRender = () => {
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(() => {
+    // التأكد من تحميل واجهة المستخدم قبل رسم البيانات
+    const tryRender = () => {
+      if (window.renderDashboard) {
+        window.renderDashboard(window.allSessions);
+      } else {
+        setTimeout(tryRender, 100);
+      }
+    };
+    tryRender();
+  }, 300); // تجميع التحديثات كل 300 جزء من الثانية لضمان أقصى سرعة وأداء
+};
+
 onAuthStateChanged(auth, (user) => {
   const loginScreen = document.getElementById('loginScreen');
   if (user && user.email === 'admin@ras-health.gov.sa') {
     loginScreen.style.display = 'none';
-    if (window._unsubSessions) window._unsubSessions();
-    window._unsubSessions = onValue(ref(db, 'sessions'), (snapshot) => {
-      if (!snapshot.exists()) return;
-      window.allSessions = snapshot.val() || {};
-      const tryRender = () => {
-        if (window.renderDashboard) {
-          window.renderDashboard(window.allSessions);
-        } else {
-          setTimeout(tryRender, 100);
-        }
-      };
-      tryRender();
+    
+    const sessionsRef = ref(db, 'sessions');
+    
+    // 1. الاستماع للجلسات الجديدة (يتم تحميلها مرة واحدة عند الدخول)
+    onChildAdded(sessionsRef, (data) => {
+      window.allSessions[data.key] = data.val();
+      triggerRender();
     });
+
+    // 2. الاستماع للتغييرات فقط (يتم تحميل الجلسة التي تغيرت فقط وليس كل القاعدة)
+    onChildChanged(sessionsRef, (data) => {
+      window.allSessions[data.key] = data.val();
+      triggerRender();
+    });
+
+    // 3. مسح الجلسات المحذوفة من الشاشة فوراً
+    onChildRemoved(sessionsRef, (data) => {
+      delete window.allSessions[data.key];
+      triggerRender();
+    });
+
   } else {
-    if (window._unsubSessions) { window._unsubSessions(); window._unsubSessions = null; }
+    window.allSessions = {}; // تصفير الذاكرة عند تسجيل الخروج لحماية البيانات
     loginScreen.style.display = 'flex';
   }
 });
