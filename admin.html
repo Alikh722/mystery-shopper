@@ -1751,7 +1751,7 @@ function openCenterDash(centerName) {
       return `<div class="cd-sec-tab" onclick="cdShowSec('sec_${sm.id}', this)">${badge}${sm.title.replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','').substring(0,12)}</div>`;
     }).join('')}
     <div class="cd-sec-tab" onclick="cdShowSec('noncompliant', this)">⚠️ جميع الملاحظات (${nonItems.length})</div>
-        <div class="cd-sec-tab" style="background:linear-gradient(135deg,#0b1f35,#1a3f6f);color:#fff;border-color:#1a3f6f;" onclick="openPresMode(window._currentPresData, window._currentPresCenter)"> عرض تقديمي (\${nonItems.length})</div>
+    <div class="cd-sec-tab" style="background:linear-gradient(135deg,#0b1f35,#1a3f6f);color:#fff;border-color:#1a3f6f;" onclick="openPresMode(window._currentPresData, window._currentPresCenter)">🎬 عرض تقديمي (\${nonItems.length})</div>
     <div class="cd-sec-tab" onclick="cdShowSec('history', this)">📅 سجل الجولات</div>
   `;
 
@@ -2178,10 +2178,15 @@ function presSetRisk(r) {
 function presRenderSlides() {
   const area = document.getElementById('presSlideArea');
   area.querySelectorAll('.pres-slide').forEach(el => el.remove());
-  const RISK_ORDER = {critical:0, high:1, medium:2, low:3};
+    const RISK_ORDER = {critical:0, high:1, medium:2, low:3};
   const filtered = presSlides
     .filter(i => presRiskFilter === 'all' || i.detail.r === presRiskFilter)
-    .sort((a,b) => RISK_ORDER[a.detail.r] - RISK_ORDER[b.detail.r]);
+    .sort((a, b) => {
+      const secA = parseInt(a.key.split('_')[0]) || 0;
+      const secB = parseInt(b.key.split('_')[0]) || 0;
+      if (secA !== secB) return secA - secB;
+      return RISK_ORDER[a.detail.r] - RISK_ORDER[b.detail.r];
+    });
   document.getElementById('presCountLbl').textContent = filtered.length;
   const empty = document.getElementById('presEmpty');
   if (filtered.length === 0) { empty.style.display = 'flex'; presUpdateNav(0, 0); return; }
