@@ -1503,9 +1503,31 @@ function buildCentersTab() {
     type: 'radar',
     data: {
       labels: ['الفناء','الأمن','الصيانة','الصيدلية','مكافحة العدوى','التمريض','الاستقبال'],
-      datasets: topCenters.map((c, i) => {
+            datasets: topCenters.map((c, i) => {
         const colors = ['#1a4480','#0f7b6c','#d97706','#9b1c1c','#7c3aed','#be185d'];
-        return { label: c.name, data: Array(7).fill(0).map(()=>Math.min(100, Math.max(30, c.avg + (Math.random()-0.5)*30))), borderColor: colors[i], backgroundColor: colors[i]+'22', borderWidth: 2, pointRadius: 3 };
+        
+        // حساب الأداء الحقيقي للأقسام (الفناء، الأمن، الصيانة، الصيدلية، مكافحة العدوى، التمريض، الاستقبال)
+        const realData = [1, 2, 3, 4, 5, 6, 8].map(secId => {
+          let ok = 0, total = 0;
+          c.sessions.forEach(s => {
+            Object.entries(s.state || {}).forEach(([k, v]) => {
+              if (k.startsWith(secId + '_')) {
+                if (v.status === 'compliant') ok++;
+                if (v.status !== 'na' && v.status !== 'pending') total++;
+              }
+            });
+          });
+          return total > 0 ? Math.round((ok / total) * 100) : 0;
+        });
+        
+        return { 
+          label: c.name, 
+          data: realData, 
+          borderColor: colors[i], 
+          backgroundColor: colors[i]+'22', 
+          borderWidth: 2, 
+          pointRadius: 3 
+        };
       })
     },
     options: { responsive: true, scales: { r:{min:0,max:100,ticks:{display:false}} }, plugins:{legend:{position:'bottom',labels:{font:{size:10}}}} }
