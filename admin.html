@@ -594,71 +594,108 @@ tr:last-child td { border-bottom: none; }
   .meta-grid { grid-template-columns: 1fr; } /* عمود واحد في الشاشات الصغيرة جداً */
 }
 
-/* ===== PRINT STYLES (إصلاح تداخل الطباعة جذرياً) ===== */
+/* ===== PRINT STYLES (هندسة الطباعة الاحترافية - UI/UX Expert) ===== */
 @media print {
-  /* 1. إخفاء كل شيء في الصفحة الأساسية عبر الـ visibility للحفاظ على الهيكل الداخلي وتجنب انهيار الـ layout */
-  body * {
-    visibility: hidden;
+  /* 1. الإعدادات العامة للطباعة وتفعيل الألوان بدقة */
+  @page { margin: 1cm; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important; /* إزالة الظلال لتوفير الحبر وضمان النقاء */
   }
-  
-  /* 2. إظهار النوافذ المنبثقة وما بداخلها فقط */
-  .overlay.open, .overlay.open *,
-  .center-overlay.open, .center-overlay.open * {
-    visibility: visible;
+
+  /* 2. إخفاء أزرار التحكم غير الضرورية في الورق تماماً */
+  .topbar-actions, .tab-nav, .mclose, .cd-print-btn, .cd-close-btn, .cd-sec-tabs, .action-btn, .filter-btn, .search-input {
+    display: none !important;
   }
-  
-  /* 3. إخراج النوافذ من تموضعها لتأخذ الصفحة كاملة بدون خلفية داكنة */
-  .overlay.open, .center-overlay.open {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+
+  /* 3. العزل الذكي للنوافذ المنبثقة (Modals) */
+  /* إذا كانت نافذة التقرير أو داش المركز مفتوحة، يتم إعدام باقي الصفحة جذرياً لتجنب الفراغات */
+  body:has(.overlay.open) .topbar,
+  body:has(.overlay.open) .page-wrap,
+  body:has(.center-overlay.open) .topbar,
+  body:has(.center-overlay.open) .page-wrap {
+    display: none !important;
+  }
+
+  /* 4. تحرير النوافذ المنبثقة لتأخذ مساحة الورقة كاملة */
+  .overlay, .center-overlay {
+    position: relative !important;
     background: transparent !important;
+    display: none; 
     padding: 0 !important;
   }
-  
-  /* 4. إلغاء التمرير (Scroll) والأحجام الثابتة ليتم طباعة كل المحتوى للأسفل */
+  .overlay.open, .center-overlay.open {
+    display: block !important;
+  }
+
   .modal, .center-modal {
-    position: static !important;
-    max-height: none !important;
-    height: auto !important;
-    box-shadow: none !important;
+    position: relative !important;
     width: 100% !important;
     max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    border-radius: 0 !important;
     background: #fff !important;
+    animation: none !important;
+    margin: 0 !important;
   }
-  
+
   .modal-body, .cd-body {
     overflow: visible !important;
     height: auto !important;
     max-height: none !important;
+    padding: 10px 0 !important;
     margin: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-  
-  /* 5. إخفاء أزرار الإغلاق والطباعة في الورق */
-  .mclose, .cd-print-btn, .cd-close-btn, .cd-sec-tabs {
-    display: none !important;
-  }
-  
-  /* 6. منع انقسام السطور والجداول بين صفحتين (Page Break) */
-  .sec-block, .cd-item-row, .nc-card, .sh-card {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-  
-  /* 7. إظهار المحتوى التابع للأقسام المخفية في داش بورد المركز لتُطبع كلها */
-  .cd-sec-content {
-    display: block !important;
-    margin-top: 20px;
   }
 
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  /* 5. طباعة لوحة التحكم الرئيسية (التبويبات) */
+  .tab-panel:not(.active) {
+    display: none !important; /* طباعة التبويب المعروض فقط */
   }
+  .page-wrap {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* 6. التمدد التسلسلي لأقسام المركز (طباعة التقرير كاملاً بلمسة زر) */
+  .cd-sec-content {
+    display: block !important; /* إلغاء الإخفاء للتبويبات غير النشطة */
+    margin-top: 30px !important;
+    border-top: 2px solid #e2e8f0 !important;
+    padding-top: 20px !important;
+    page-break-before: auto;
+  }
+
+  /* 7. الحماية من الانقسام (Page Break Logic) */
+  .kpi-card, .chart-card, .sec-block, .cd-item-row, .nc-card, .sh-card, .ssg-card, .ckpi-head, .ckpi-row, tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 8. تحجيم المخططات البيانية والجداول (Charts & Tables) */
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid !important;
+  }
+  div[style*="overflow-x:auto"], div[style*="overflow-x: auto"] {
+    overflow: visible !important; /* تحرير الجداول من السكرول لتُطبع كاملة */
+  }
+  
+  /* 9. تحسين تباين الترويسة العليا لداش بورد المركز لتناسب جميع الطابعات */
+  .cd-header {
+    background: #f8fafc !important; /* خلفية ورقية مريحة للعين */
+    border: 2px solid #0d2137 !important;
+    color: #000 !important;
+    padding: 20px !important;
+    border-radius: 12px !important;
+  }
+  .cd-header h1 { color: #0d2137 !important; }
+  .cd-header-meta-item { color: #333 !important; font-weight: 600 !important; }
+  .cd-header-badge { border-color: #0d2137 !important; color: #0d2137 !important; }
+  .cd-score-ring circle { stroke: #e2e8f0 !important; } /* تفتيح لون الدائرة الخلفية */
+}
 }
 
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-sub); }
