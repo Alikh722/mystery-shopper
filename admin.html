@@ -1734,6 +1734,9 @@ function openCenterDash(centerName) {
   const scoreLabel = avgScore>=90?'ممتاز':avgScore>=75?'جيد':avgScore>=60?'مقبول':'يحتاج تحسين';
   const lastDate = latestSession.meta?.date || '—';
   const lastInspector = latestSession.meta?.inspector || '—';
+  // حفظ البيانات في الذاكرة لتفادي أخطاء الأزرار
+  window._currentPresData = nonItems;
+  window._currentPresCenter = centerName;
 
   // بناء التبويبات
   const tabsHtml = `
@@ -1748,7 +1751,7 @@ function openCenterDash(centerName) {
       return `<div class="cd-sec-tab" onclick="cdShowSec('sec_${sm.id}', this)">${badge}${sm.title.replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','').substring(0,12)}</div>`;
     }).join('')}
     <div class="cd-sec-tab" onclick="cdShowSec('noncompliant', this)">⚠️ جميع الملاحظات (${nonItems.length})</div>
-    <div class="cd-sec-tab" style="background:linear-gradient(135deg,#0b1f35,#1a3f6f);color:#fff;border-color:#1a3f6f;" onclick="openPresMode(${JSON.stringify(nonItems)}, '${escapeHtml(centerName)}')">🎬 عرض تقديمي (${nonItems.length})</div>
+        <div class="cd-sec-tab" style="background:linear-gradient(135deg,#0b1f35,#1a3f6f);color:#fff;border-color:#1a3f6f;" onclick="openPresMode(window._currentPresData, window._currentPresCenter)"> عرض تقديمي (\${nonItems.length})</div>
     <div class="cd-sec-tab" onclick="cdShowSec('history', this)">📅 سجل الجولات</div>
   `;
 
