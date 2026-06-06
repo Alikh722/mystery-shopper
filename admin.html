@@ -2284,6 +2284,12 @@ document.getElementById('detailOverlay').onclick = function(e) { if(e.target===t
 
 function deleteSession(key) {
   if (!confirm('هل تريد حذف هذه الجلسة نهائياً؟')) return;
+  const pwd = prompt('🔒 أدخل كلمة مرور الحذف للتأكيد:');
+  if (pwd === null) return; // المستخدم ضغط إلغاء
+  if (pwd !== 'Do2026!') {
+    alert('❌ كلمة المرور غير صحيحة. تم إلغاء الحذف.');
+    return;
+  }
   if (window._dbRemove) window._dbRemove('sessions/'+key);
 }
 
