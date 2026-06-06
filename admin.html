@@ -1775,6 +1775,7 @@ function openCenterDash(centerName) {
   }
 
   // تجهيز باقي البيانات للواجهة
+    window._currentMergedState = mergedState; // حفظ للطباعة المخصصة
   const nonItems = Object.entries(mergedState)
     .filter(([,v]) => v.status === 'non')
     .map(([k,v]) => ({ key:k, ...v, detail: SECTIONS_DETAIL[k] }))
@@ -1937,7 +1938,7 @@ function openCenterDash(centerName) {
           </div>
         </div>
         <div class="cd-header-actions">
-          <button class="cd-print-btn" onclick="window.print()">🖨️ طباعة التقرير</button>
+                    <button class="cd-print-btn" onclick="printObservationsReport()">🖨️ طباعة الملاحظات فقط</button>
           <button class="cd-close-btn" onclick="closeCenterDash()">✕ إغلاق</button>
         </div>
       </div>
@@ -2049,6 +2050,143 @@ function cdShowSecById(id) {
       cdShowSec(`sec_${id}`, t);
     }
   });
+}
+// ===== دالة الطباعة المخصصة: الملاحظات غير المطابقة + لا تنطبق فقط =====
+function printObservationsReport() {
+  // جمع بيانات المركز من الـ modal المفتوح حالياً
+  const modal = document.getElementById('centerDashModal');
+  if (!modal) return;
+
+  const centerName = modal.querySelector('.cd-header h1')?.textContent || 'المركز الصحي';
+  const lastInspector = modal.querySelector('.cd-header-meta-item')?.textContent?.replace('👤 آخر مفتش: ', '') || '—';
+  const metaItems = modal.querySelectorAll('.cd-header-meta-item');
+  const lastDate = metaItems[1]?.textContent?.replace('📅 آخر زيارة: ', '') || '—';
+
+  // جمع بيانات البنود من الذاكرة
+  const mergedState = window._currentMergedState || {};
+  const allItems = Object.entries(mergedState)
+    .filter(([, v]) => v.status === 'non' || v.status === 'na')
+    .map(([k, v]) => ({ key: k, ...v, detail: SECTIONS_DETAIL[k] }))
+    .filter(i => i.detail);
+
+  const nonItems = allItems.filter(i => i.status === 'non');
+  const naItems  = allItems.filter(i => i.status === 'na');
+
+  // بناء صفوف HTML لكل مجموعة
+  function buildRows(items, bgColor, borderColor, labelText, labelBg) {
+    return items.map((item, idx) => {
+      const riskColors = { critical: '#9b1c1c', high: '#c05621', medium: '#b45309', low: '#1e40af' };
+      const riskBg     = { critical: '#fee2e2', high: '#ffedd5', medium: '#fef9c3', low: '#dbeafe' };
+      const rc = riskColors[item.detail.r] || '#374151';
+      const rb = riskBg[item.detail.r]    || '#f1f5f9';
+      const photosHtml = (item.photos && item.photos.length > 0)
+        ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb;">
+            ${item.photos.map(src =>
+              `<img src="${src}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1.5px solid #e2e8f0;print-color-adjust:exact;">`
+            ).join('')}
+           </div>`
+        : '';
+      const noteHtml = item.note
+        ? `<div style="margin-top:6px;padding:5px 10px;background:#fffbeb;border-right:3px solid #fbbf24;border-radius:4px;font-size:11px;color:#92400e;">📝 ${item.note}</div>`
+        : '';
+      return `
+        <div style="background:${bgColor};border:1px solid ${borderColor};border-right:4px solid ${rc};border-radius:8px;padding:12px 14px;margin-bottom:8px;page-break-inside:avoid;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:700;color:#1e293b;line-height:1.6;">${idx + 1}. ${item.detail.t}</div>
+              <div style="font-size:10.5px;color:#64748b;margin-top:2px;">📁 ${item.detail.sec}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+              <span style="background:${rb};color:${rc};padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;">${RISK_LABEL[item.detail.r] || item.detail.r}</span>
+              <span style="background:${labelBg};color:#fff;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;">${labelText}</span>
+            </div>
+          </div>
+          ${noteHtml}
+          ${photosHtml}
+        </div>`;
+    }).join('');
+  }
+
+  const nonHtml = nonItems.length > 0
+    ? `<div style="margin-bottom:24px;">
+        <div style="background:#9b1c1c;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:12px;">
+          ❌ البنود غير المطابقة (${nonItems.length} بند)
+        </div>
+        ${buildRows(nonItems, '#fff8f8', '#f0b4b4', 'غير مطابق', '#9b1c1c')}
+       </div>`
+    : '';
+
+  const naHtml = naItems.length > 0
+    ? `<div style="margin-bottom:24px;">
+        <div style="background:#374151;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:12px;">
+          ⬜ البنود التي لا تنطبق (${naItems.length} بند)
+        </div>
+        ${buildRows(naItems, '#f8fafc', '#e2e8f0', 'لا ينطبق', '#6b7280')}
+       </div>`
+    : '';
+
+  const emptyHtml = (nonItems.length === 0 && naItems.length === 0)
+    ? `<div style="text-align:center;padding:40px;color:#64748b;font-size:14px;">✅ لا توجد ملاحظات غير مطابقة أو بنود لا تنطبق</div>`
+    : '';
+
+  // بناء صفحة الطباعة
+  const printWindow = window.open('', '_blank', 'width=900,height=700');
+  printWindow.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير الملاحظات — ${centerName}</title>
+  <style>
+    @page { margin: 1.2cm; size: A4; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; direction: rtl; margin: 0; padding: 0; background: #fff; color: #1e293b; font-size: 12px; }
+    .print-header { background: #0d2137; color: #fff; padding: 16px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .print-header h1 { margin: 0; font-size: 18px; font-weight: 800; }
+    .print-header .meta { font-size: 11px; opacity: .85; margin-top: 5px; }
+    .print-stats { display: flex; gap: 12px; margin-bottom: 20px; }
+    .stat-box { flex: 1; border-radius: 8px; padding: 10px 14px; text-align: center; border: 1.5px solid; }
+    .stat-box .val { font-size: 22px; font-weight: 800; }
+    .stat-box .lbl { font-size: 10px; margin-top: 2px; opacity: .8; }
+    .print-footer { margin-top: 24px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="print-header">
+    <div>
+      <div style="font-size:11px;opacity:.7;margin-bottom:4px;">⚠️ تقرير الملاحظات التفتيشية</div>
+      <h1>${centerName}</h1>
+      <div class="meta">👤 المفتش: ${lastInspector} &nbsp;|&nbsp; 📅 تاريخ آخر زيارة: ${lastDate} &nbsp;|&nbsp; 🖨️ طُبع: ${new Date().toLocaleDateString('ar-SA')}</div>
+    </div>
+    <div style="text-align:center;background:rgba(255,255,255,.1);padding:10px 16px;border-radius:8px;">
+      <div style="font-size:28px;font-weight:800;">${allItems.length}</div>
+      <div style="font-size:11px;opacity:.8;">إجمالي الملاحظات</div>
+    </div>
+  </div>
+
+  <div class="print-stats">
+    <div class="stat-box" style="background:#fff8f8;border-color:#f0b4b4;color:#9b1c1c;">
+      <div class="val">${nonItems.length}</div>
+      <div class="lbl">❌ غير مطابق</div>
+    </div>
+    <div class="stat-box" style="background:#f8fafc;border-color:#e2e8f0;color:#374151;">
+      <div class="val">${naItems.length}</div>
+      <div class="lbl">⬜ لا ينطبق</div>
+    </div>
+  </div>
+
+  ${nonHtml}
+  ${naHtml}
+  ${emptyHtml}
+
+  <div class="print-footer">
+    نظام التفتيش الصحي — تقرير آلي مُنشأ بتاريخ ${new Date().toLocaleString('ar-SA')}
+  </div>
+
+  <script>window.onload = function() { window.print(); };<\/script>
+</body>
+</html>`);
+  printWindow.document.close();
 }
 
 function closeCenterDash() {
