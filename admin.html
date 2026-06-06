@@ -1326,7 +1326,7 @@ window.renderDashboard = function(data) {
     <div class="kpi-card c1" style="padding:24px;">
       <div class="kpi-icon">📋</div>
       <div class="kpi-val" style="font-size:38px;">${submitted.length}</div>
-      <div class="kpi-lbl" style="font-size:15px;">جولة تفتيشية مكتملة</div>
+      <div class="kpi-lbl" style="font-size:15px;">جولة إشرافية مكتملة</div>
       <div style="font-size:13px; color:var(--text-sub); margin-top:12px; font-weight:700">
         ⏳ ${inProg.length} جولة قيد التنفيذ حالياً
       </div>
@@ -1742,7 +1742,7 @@ function openCenterDash(centerName) {
   // 5. توليد واجهة المقارنة (التطور والتصحيح)
   let capaHtml = '';
   if (!previousSession) {
-     capaHtml = '<div class="empty-state"><span class="ei">📊</span><p>هذه هي الزيارة التفتيشية الأولى للمركز. ستظهر إحصائيات التصحيح والمقارنة عند إجراء الزيارة القادمة.</p></div>';
+     capaHtml = '<div class="empty-state"><span class="ei">📊</span><p>هذه هي الزيارة الإشرافية الأولى للمركز. ستظهر إحصائيات التصحيح والمقارنة عند إجراء الزيارة القادمة.</p></div>';
   } else {
      const renderCapaCard = (arr, title, icon, color, bg) => {
         if (!arr.length) return '';
@@ -1991,7 +1991,7 @@ function openCenterDash(centerName) {
       </div>
 
       <div class="cd-sec-content" id="cd_history">
-        <div style="font-size:16px;font-weight:700;color:var(--gov-navy);margin-bottom:16px">📅 سجل الزيارات التفتيشية</div>
+        <div style="font-size:16px;font-weight:700;color:var(--gov-navy);margin-bottom:16px">📅 سجل الزيارات الإشرافية</div>
         <div class="session-history">${historyHtml}</div>
       </div>
     </div>
@@ -2154,7 +2154,7 @@ function printObservationsReport() {
 <body>
   <div class="print-header">
     <div>
-      <div style="font-size:11px;opacity:.7;margin-bottom:4px;">⚠️ تقرير الملاحظات التفتيشية</div>
+      <div style="font-size:11px;opacity:.7;margin-bottom:4px;">⚠️ تقرير الملاحظات الإشرافية</div>
       <h1>${centerName}</h1>
       <div class="meta">👤 المشرف: ${lastInspector} &nbsp;|&nbsp; 📅 تاريخ آخر زيارة: ${lastDate} &nbsp;|&nbsp; 🖨️ طُبع: ${new Date().toLocaleDateString('ar-SA')}</div>
     </div>
@@ -2180,7 +2180,7 @@ function printObservationsReport() {
   ${emptyHtml}
 
   <div class="print-footer">
-    نظام التفتيش الصحي — تقرير آلي مُنشأ بتاريخ ${new Date().toLocaleString('ar-SA')}
+    نظام الإشراف الصحي — تقرير مُنشأ بواسطة المسؤول بتاريخ ${new Date().toLocaleString('ar-SA')}
   </div>
 
   <script>window.onload = function() { window.print(); };<\/script>
