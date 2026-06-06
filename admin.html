@@ -2156,7 +2156,7 @@ function printObservationsReport() {
     <div>
       <div style="font-size:11px;opacity:.7;margin-bottom:4px;">⚠️ تقرير الملاحظات التفتيشية</div>
       <h1>${centerName}</h1>
-      <div class="meta">👤 المفتش: ${lastInspector} &nbsp;|&nbsp; 📅 تاريخ آخر زيارة: ${lastDate} &nbsp;|&nbsp; 🖨️ طُبع: ${new Date().toLocaleDateString('ar-SA')}</div>
+      <div class="meta">👤 المشرف: ${lastInspector} &nbsp;|&nbsp; 📅 تاريخ آخر زيارة: ${lastDate} &nbsp;|&nbsp; 🖨️ طُبع: ${new Date().toLocaleDateString('ar-SA')}</div>
     </div>
     <div style="text-align:center;background:rgba(255,255,255,.1);padding:10px 16px;border-radius:8px;">
       <div style="font-size:28px;font-weight:800;">${allItems.length}</div>
@@ -2425,7 +2425,7 @@ function presRenderSlides() {
         <div class="pres-text-zone" style="${hasPhotos?'':'flex:1'}">
           <div class="pres-obs-lbl">الملاحظة غير المطابقة</div>
           <div class="pres-obs-text">${escapeHtml(item.detail.t)}</div>
-          ${item.note ? `<div class="pres-note-block"><div class="pres-note-lbl">📝 ملاحظة المفتش</div><div class="pres-note-txt">${escapeHtml(item.note)}</div></div>` : ''}
+          ${item.note ? `<div class="pres-note-block"><div class="pres-note-lbl">📝 ملاحظة المشرف</div><div class="pres-note-txt">${escapeHtml(item.note)}</div></div>` : ''}
         </div>
       </div>
       <div class="pres-ftr">
