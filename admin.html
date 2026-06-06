@@ -1932,7 +1932,7 @@ function openCenterDash(centerName) {
           <div class="cd-header-badge">🏥 داش بورد المركز الصحي</div>
           <h1>${centerName}</h1>
           <div class="cd-header-meta">
-            <div class="cd-header-meta-item">👤 آخر مفتش: ${lastInspector}</div>
+            <div class="cd-header-meta-item">👤 آخر مشرف: ${lastInspector}</div>
             <div class="cd-header-meta-item">📅 آخر زيارة: ${lastDate}</div>
             <div class="cd-header-meta-item">📋 عدد الجولات: ${centerSessions.length}</div>
           </div>
@@ -2058,7 +2058,7 @@ function printObservationsReport() {
   if (!modal) return;
 
   const centerName = modal.querySelector('.cd-header h1')?.textContent || 'المركز الصحي';
-  const lastInspector = modal.querySelector('.cd-header-meta-item')?.textContent?.replace('👤 آخر مفتش: ', '') || '—';
+  const lastInspector = modal.querySelector('.cd-header-meta-item')?.textContent?.replace('👤 آخر مشرف: ', '') || '—';
   const metaItems = modal.querySelectorAll('.cd-header-meta-item');
   const lastDate = metaItems[1]?.textContent?.replace('📅 آخر زيارة: ', '') || '—';
 
