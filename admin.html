@@ -1300,65 +1300,115 @@ window.renderDashboard = function(data) {
   const scores = submitted.filter(s => s.meta?.score != null).map(s => s.meta.score);
   const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
-  let totalNon = 0, totalOk = 0;
-  const centerMap = {};
-  
-  submitted.forEach(s => {
-    const m = s.meta || {};
-    totalOk  += (m.ok  || 0);
-    totalNon += (m.no  || 0);
-    const c = m.center || 'غير محدد';
-    if (!centerMap[c]) centerMap[c] = [];
-    centerMap[c].push(m.score || 0);
+// ═══════════════════════════════════════════════════
+// [تعديل 1] الحسابات المسبقة + الكروت الاستراتيجية
+// ═══════════════════════════════════════════════════
+
+// ── حسابات أساسية ──
+let totalNon = 0, totalOk = 0;
+const centerMap = {};
+submitted.forEach(s => {
+  const m = s.meta || {};
+  totalOk  += (m.ok  || 0);
+  totalNon += (m.no  || 0);
+  const c = m.center || 'غير محدد';
+  if (!centerMap[c]) centerMap[c] = [];
+  centerMap[c].push(m.score || 0);
+});
+const compRate = (totalOk + totalNon) > 0
+  ? Math.round(totalOk / (totalOk + totalNon) * 100) : 0;
+
+const centerAvgs = Object.entries(centerMap)
+  .map(([c, sc]) => ({ c, avg: Math.round(sc.reduce((a,b) => a+b, 0) / sc.length) }));
+const bestCenter  = centerAvgs.length ? [...centerAvgs].sort((a,b) => b.avg - a.avg)[0]  : { c: '—', avg: 0 };
+const worstCenter = centerAvgs.length ? [...centerAvgs].sort((a,b) => a.avg - b.avg)[0] : { c: '—', avg: 0 };
+const gapValue = bestCenter.avg - worstCenter.avg;
+const uniqueCentersVisited = Object.keys(centerMap).length;
+
+// ── الامتثال المرجّح بالمخاطر (Weighted Compliance) ──
+const RISK_WEIGHTS = { critical: 4, high: 3, medium: 2, low: 1 };
+let weightedOk = 0, weightedTotal = 0;
+let criticalNon = 0, highNon = 0;
+
+submitted.forEach(s => {
+  Object.entries(s.state || {}).forEach(([k, v]) => {
+    const d = SECTIONS_DETAIL[k];
+    if (!d) return;
+    const w = RISK_WEIGHTS[d.r] || 1;
+    if (v.status === 'compliant') {
+      weightedOk += w;
+    }
+    if (v.status !== 'na' && v.status !== 'pending') {
+      weightedTotal += w;
+    }
+    if (v.status === 'non') {
+      if (d.r === 'critical') criticalNon++;
+      if (d.r === 'high')    highNon++;
+    }
   });
+});
 
-  const compRate = totalOk + totalNon > 0 ? Math.round(totalOk / (totalOk + totalNon) * 100) : 0;
+const weightedRate = weightedTotal > 0
+  ? Math.round((weightedOk / weightedTotal) * 100) : 0;
 
-  // 2. حساب أفضل وأسوأ مركز
-  const centerAvgs = Object.entries(centerMap).map(([c, sc]) => ({
-    c, avg: Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)
-  }));
-  const bestCenter  = centerAvgs.length ? [...centerAvgs].sort((a,b)=>b.avg-a.avg)[0] : {c:'—', avg:0};
-  const worstCenter = centerAvgs.length ? [...centerAvgs].sort((a,b)=>a.avg-b.avg)[0] : {c:'—', avg:0};
+// ── حقن الكروت ──
+document.getElementById('kpiGrid').innerHTML = `
 
-  // 3. بناء الـ 4 كروت الاستراتيجية (بدلاً من الـ 8 القديمة المشتتة)
-  document.getElementById('kpiGrid').innerHTML = `
-    <div class="kpi-card c1" style="padding:24px;">
-      <div class="kpi-icon">📋</div>
-      <div class="kpi-val" style="font-size:38px;">${submitted.length}</div>
-      <div class="kpi-lbl" style="font-size:15px;">جولة إشرافية مكتملة</div>
-      <div style="font-size:13px; color:var(--text-sub); margin-top:12px; font-weight:700">
-        ⏳ ${inProg.length} جولة قيد التنفيذ حالياً
-      </div>
+  <div class="kpi-card c1" style="padding:24px;">
+    <div class="kpi-icon">🗺️</div>
+    <div class="kpi-val" style="font-size:34px;">${uniqueCentersVisited}</div>
+    <div class="kpi-lbl">مركزاً تم تقييمه</div>
+    <div style="font-size:12px;color:var(--text-sub);margin-top:10px;font-weight:700;">
+      ✅ ${submitted.length} جولة مكتملة &nbsp;|&nbsp;
+      🔄 ${inProg.length} جارية
     </div>
+  </div>
 
-    <div class="kpi-card c2" style="padding:24px;">
-      <div class="kpi-icon">🎯</div>
-      <div class="kpi-val" style="font-size:38px;">${avg}%</div>
-      <div class="kpi-lbl" style="font-size:15px;">متوسط التقييم العام</div>
-      <div style="font-size:13px; color:${compRate>=75?'#0f7b6c':'#b45309'}; margin-top:12px; font-weight:700">
-        ${compRate>=75?'✔️':'⚠️'} نسبة الامتثال الكلية: ${compRate}%
-      </div>
+  <div class="kpi-card c2" style="padding:24px;">
+    <div class="kpi-icon">⚖️</div>
+    <div class="kpi-val" style="font-size:34px;">${weightedRate}%</div>
+    <div class="kpi-lbl">الامتثال المرجّح بالمخاطر</div>
+    <div style="font-size:12px;margin-top:10px;font-weight:700;
+      color:${weightedRate>=85?'#0f7b6c':weightedRate>=75?'#b45309':'#9b1c1c'}">
+      ${weightedRate>=85?'🟢 ممتاز':weightedRate>=75?'🟡 مقبول':'🔴 يحتاج تدخل'}
+      &nbsp;|&nbsp; متوسط الدرجات: ${avg}%
     </div>
+  </div>
 
-    <div class="kpi-card c4" style="padding:24px; border-right: 5px solid var(--gov-blue)">
-      <div class="kpi-icon" style="margin-bottom:8px">⚖️</div>
-      <div class="kpi-val" style="font-size:18px; margin-bottom:10px; line-height:1.4">
-        ${window.escapeHtml?window.escapeHtml(bestCenter.c):bestCenter.c} <span style="font-size:14px;color:#0f7b6c;float:left">(${bestCenter.avg}%) 🏆</span><br>
-        ${window.escapeHtml?window.escapeHtml(worstCenter.c):worstCenter.c} <span style="font-size:14px;color:#9b1c1c;float:left">(${worstCenter.avg}%) ⚠️</span>
-      </div>
-      <div class="kpi-lbl" style="margin-top:12px; border-top:1px solid #eee; padding-top:10px; font-size:14px;">الأعلى والأدنى أداءً</div>
+  <div class="kpi-card c4" style="padding:24px; border-right:5px solid var(--gov-blue);">
+    <div class="kpi-icon">📊</div>
+    <div style="font-size:13px;font-weight:700;color:#0f7b6c;margin-bottom:6px;">
+      🏆 ${escapeHtml(bestCenter.c)}
+      <span style="float:left;font-size:14px;">${bestCenter.avg}%</span>
     </div>
+    <div style="font-size:13px;font-weight:700;color:#9b1c1c;margin-bottom:10px;">
+      ⚠️ ${escapeHtml(worstCenter.c)}
+      <span style="float:left;font-size:14px;">${worstCenter.avg}%</span>
+    </div>
+    <div class="kpi-lbl" style="border-top:1px solid #eee;padding-top:8px;">
+      فجوة الأداء:
+      <b style="color:${gapValue>35?'#9b1c1c':gapValue>20?'#b45309':'#0f7b6c'}">
+        ${gapValue} نقطة
+      </b>
+    </div>
+  </div>
 
-    <div class="kpi-card c3" style="padding:24px; border-right: 5px solid #9b1c1c; background: #fffcfc;">
-      <div class="kpi-icon" style="background:#fce8e8; color:#9b1c1c">❌</div>
-      <div class="kpi-val" style="font-size:38px; color:#9b1c1c">${totalNon}</div>
-      <div class="kpi-lbl" style="color:#9b1c1c; font-size:15px;">إجمالي البنود المخالفة</div>
-      <div style="font-size:13px; color:var(--text-sub); margin-top:12px; font-weight:700">
-        تتطلب تدخلاً تصحيحياً فورياً
-      </div>
+  <div class="kpi-card c3" style="padding:24px;border-right:5px solid #9b1c1c;background:#fffcfc;">
+    <div class="kpi-icon" style="background:#fce8e8;color:#9b1c1c;">🚨</div>
+    <div class="kpi-val" style="font-size:34px;color:#9b1c1c;">${totalNon}</div>
+    <div class="kpi-lbl" style="color:#9b1c1c;">إجمالي البنود المخالفة</div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <span style="background:#fce8e8;color:#9b1c1c;padding:3px 10px;border-radius:99px;
+        font-size:12px;font-weight:700;border:1px solid #f0b4b4;">
+        🔴 حرج: ${criticalNon}
+      </span>
+      <span style="background:#fff3cd;color:#b45309;padding:3px 10px;border-radius:99px;
+        font-size:12px;font-weight:700;border:1px solid #fcd34d;">
+        🟠 عالي: ${highNon}
+      </span>
     </div>
-  `;
+  </div>
+`;
 
   // تشغيل باقي وظائف الداش بورد
   if (window.buildDashboardCharts) buildDashboardCharts(submitted, sessions);
@@ -1400,37 +1450,131 @@ function buildDashboardCharts(submitted, allSessions) {
     options: { responsive: true, plugins: { legend:{display:false} }, scales: { y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
   });
 
-  const sectionNon = {};
-  SECTIONS_META.forEach(s => { sectionNon[s.title] = 0; });
-  submitted.forEach(s => {
-    Object.entries(s.state || {}).forEach(([k, v]) => {
-      if (v.status === 'non') {
-        const secMeta = SECTIONS_META.find(sm => k.startsWith(sm.id + '_'));
-        if (secMeta) sectionNon[secMeta.title] = (sectionNon[secMeta.title]||0) + 1;
-      }
-    });
-  });
-  const secSorted = Object.entries(sectionNon).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const secColors = ['#9b1c1c','#d97706','#1a4480','#0f7b6c','#7c3aed','#be185d','#b45309','#065f46'];
-  if (CH.sections) CH.sections.destroy();
-  CH.sections = new Chart(document.getElementById('chSections'), {
-    type: 'bar',
-    data: { labels: secSorted.map(x=>x[0].replace('قسم ','').replace('برنامج ','').replace('وصحة البيئة','')), datasets: [{ label:'عدد الملاحظات', data: secSorted.map(x=>x[1]), backgroundColor: secColors, borderRadius: 5 }] },
-    options: { indexAxis: 'y', responsive: true, plugins: { legend:{display:false} }, scales: { x:{grid:{color:'#f1f5f9'}}, y:{grid:{display:false}} } }
-  });
+  // ═══════════════════════════════════════════════════
+// [تعديل 2] chSections — نسبة عدم الامتثال داخل كل قسم
+// ═══════════════════════════════════════════════════
+const sectionNonCount = {};
+const sectionTotalCount = {};
 
-  const byDate = {};
-  submitted.forEach(s => {
-    const d = s.meta?.date || s.meta?.submitTime?.split('T')[0] || 'غير محدد';
-    byDate[d] = (byDate[d]||0)+1;
+submitted.forEach(s => {
+  Object.entries(s.state || {}).forEach(([k, v]) => {
+    if (v.status === 'pending' || v.status === 'na') return;
+    const secMeta = SECTIONS_META.find(sm => k.startsWith(String(sm.id) + '_') || k === String(sm.id));
+    if (!secMeta) return;
+    sectionTotalCount[secMeta.title] = (sectionTotalCount[secMeta.title] || 0) + 1;
+    if (v.status === 'non') {
+      sectionNonCount[secMeta.title] = (sectionNonCount[secMeta.title] || 0) + 1;
+    }
   });
-  const dates = Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]));
-  if (CH.timeline) CH.timeline.destroy();
-  CH.timeline = new Chart(document.getElementById('chTimeline'), {
-    type: 'line',
-    data: { labels: dates.map(x=>x[0]), datasets: [{ label: 'التقارير المُرسلة', data: dates.map(x=>x[1]), borderColor: '#1a4480', backgroundColor: 'rgba(26,68,128,.1)', borderWidth: 2.5, fill: true, tension: .4, pointBackgroundColor: '#1a4480', pointRadius: 4 }] },
-    options: { responsive: true, plugins: { legend:{display:false} }, scales: { y:{ticks:{stepSize:1},grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
-  });
+});
+
+const secRateSorted = Object.entries(sectionNonCount)
+  .map(([title, nonCnt]) => ({
+    title,
+    pct: Math.round((nonCnt / (sectionTotalCount[title] || 1)) * 100)
+  }))
+  .filter(x => x.pct > 0)
+  .sort((a, b) => b.pct - a.pct)
+  .slice(0, 8);
+
+if (CH.sections) CH.sections.destroy();
+CH.sections = new Chart(document.getElementById('chSections'), {
+  type: 'bar',
+  data: {
+    labels: secRateSorted.map(x =>
+      x.title.replace('قسم ','').replace('برنامج ','').substring(0, 12)),
+    datasets: [
+      {
+        label: '% عدم الامتثال داخل القسم',
+        data: secRateSorted.map(x => x.pct),
+        backgroundColor: secRateSorted.map(x =>
+          x.pct > 40 ? '#9b1c1ccc' : x.pct > 20 ? '#d97706cc' : '#1a4480cc'),
+        borderRadius: 5
+      },
+      {
+        label: 'العتبة المقبولة 15%',
+        data: secRateSorted.map(() => 15),
+        type: 'line',
+        borderColor: '#d97706',
+        borderWidth: 1.5,
+        borderDash: [5, 4],
+        pointRadius: 0,
+        fill: false
+      }
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: true, position: 'top' } },
+    scales: {
+      x: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f1f5f9' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+
+  // ═══════════════════════════════════════════════════
+// [تعديل 3] اتجاه الجودة عبر الزمن — متوسط الدرجة
+// ═══════════════════════════════════════════════════
+const byDateScore = {};
+const byDateCount = {};
+submitted.forEach(s => {
+  const d = s.meta?.date || s.meta?.submitTime?.split('T')[0] || 'غير محدد';
+  const sc = s.meta?.score;
+  if (sc != null) {
+    byDateScore[d] = (byDateScore[d] || 0) + sc;
+    byDateCount[d] = (byDateCount[d] || 0) + 1;
+  }
+});
+const dateEntries = Object.entries(byDateScore)
+  .sort((a, b) => a[0].localeCompare(b[0]))
+  .map(([d]) => ({ d, avg: Math.round(byDateScore[d] / byDateCount[d]) }));
+
+if (CH.timeline) CH.timeline.destroy();
+CH.timeline = new Chart(document.getElementById('chTimeline'), {
+  type: 'line',
+  data: {
+    labels: dateEntries.map(x => x.d),
+    datasets: [
+      {
+        label: 'متوسط الدرجة %',
+        data: dateEntries.map(x => x.avg),
+        borderColor: '#0f7b6c',
+        backgroundColor: 'rgba(15,123,108,.08)',
+        borderWidth: 2.5,
+        fill: true,
+        tension: .4,
+        pointBackgroundColor: dateEntries.map(x =>
+          x.avg >= 85 ? '#0f7b6c' : x.avg >= 75 ? '#d97706' : '#9b1c1c'),
+        pointRadius: 5,
+        pointHoverRadius: 7
+      },
+      {
+        label: 'الهدف 85%',
+        data: dateEntries.map(() => 85),
+        borderColor: '#d97706',
+        borderWidth: 1.5,
+        borderDash: [6, 4],
+        pointRadius: 0,
+        fill: false,
+        tension: 0
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: 'top' },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}%` } }
+    },
+    scales: {
+      y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f1f5f9' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
 
   const riskStats = {critical:{ok:0,non:0}, high:{ok:0,non:0}, medium:{ok:0,non:0}, low:{ok:0,non:0}};
   submitted.forEach(s => {
@@ -1532,15 +1676,55 @@ function buildCentersTab() {
     },
     options: { responsive: true, scales: { r:{min:0,max:100,ticks:{display:false}} }, plugins:{legend:{position:'bottom',labels:{font:{size:10}}}} }
   });
-  if (CH.centerStack) CH.centerStack.destroy();
-  CH.centerStack = new Chart(document.getElementById('chCenterStack'), {
-    type: 'bar',
-    data: { labels: topCenters.map(c=>c.name), datasets: [
-      { label:'مطابق', data:topCenters.map(c=>c.ok), backgroundColor:'#0f7b6ccc', borderRadius:4 },
-      { label:'غير مطابق', data:topCenters.map(c=>c.non), backgroundColor:'#9b1c1ccc', borderRadius:4 }
-    ]},
-    options: { responsive: true, plugins: { legend:{position:'top'} }, scales: { x:{grid:{display:false}}, y:{grid:{color:'#f1f5f9'}} } }
-  });
+  // ═══════════════════════════════════════════════════
+// [تعديل 4] Gap Analysis — الفجوة القسمية بين المراكز
+// ═══════════════════════════════════════════════════
+if (CH.centerStack) CH.centerStack.destroy();
+
+const gapData = [1,2,3,4,5,6,7,8,9,10,11,12,13].map(secId => {
+  const secMeta = SECTIONS_META.find(s => s.id === secId);
+  const title = secMeta ? secMeta.title.replace('قسم ','').replace('برنامج ','').substring(0, 10) : String(secId);
+  const scores = centerList.map(c => {
+    let ok = 0, total = 0;
+    c.sessions.forEach(s => {
+      Object.entries(s.state || {}).forEach(([k, v]) => {
+        if (k.startsWith(secId + '_') || k.startsWith(String(secId) + '_')) {
+          if (v.status === 'compliant') ok++;
+          if (v.status !== 'na' && v.status !== 'pending') total++;
+        }
+      });
+    });
+    return total > 0 ? Math.round((ok / total) * 100) : null;
+  }).filter(v => v !== null);
+
+  if (scores.length < 2) return { title, gap: 0 };
+  return { title, gap: Math.max(...scores) - Math.min(...scores) };
+}).sort((a, b) => b.gap - a.gap);
+
+CH.centerStack = new Chart(document.getElementById('chCenterStack'), {
+  type: 'bar',
+  data: {
+    labels: gapData.map(x => x.title),
+    datasets: [{
+      label: 'الفجوة بين المراكز (نقطة)',
+      data: gapData.map(x => x.gap),
+      backgroundColor: gapData.map(x =>
+        x.gap > 40 ? '#9b1c1ccc' : x.gap > 20 ? '#d97706cc' : '#0f7b6ccc'),
+      borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` الفجوة: ${ctx.parsed.y} نقطة` } }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { min: 0, max: 100, ticks: { callback: v => v + 'pt' }, grid: { color: '#f1f5f9' } }
+    }
+  }
+});
 }
 
 /* ============================
