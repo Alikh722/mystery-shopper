@@ -851,6 +851,177 @@ tr:last-child td { border-bottom: none; }
   .pres-text-zone { padding: 18px; }
   .pres-hdr-right { display: none; }
 }
+/* ══════════════════════════════════════════════════════════════
+   CAPA TIMELINE — التطور الزمني الاحترافي  v2.0
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── شريط اختيار الجولات ── */
+.capa-selector-bar {
+  background: linear-gradient(135deg, #0d2137 0%, #1a4480 100%);
+  border-radius: 16px; padding: 22px 26px; margin-bottom: 22px;
+  color: #fff; box-shadow: 0 6px 28px rgba(13,33,55,.25);
+}
+.capa-selector-title {
+  font-size: 14px; font-weight: 700; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.capa-rounds-row {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start;
+}
+.capa-round-chip {
+  background: rgba(255,255,255,.10); border: 1.5px solid rgba(255,255,255,.22);
+  border-radius: 11px; padding: 9px 15px; cursor: pointer;
+  transition: all .18s cubic-bezier(.16,1,.3,1);
+  color: rgba(255,255,255,.82); font-size: 12px; font-weight: 600;
+  min-width: 95px; text-align: center; font-family: inherit;
+}
+.capa-round-chip:hover {
+  background: rgba(255,255,255,.20); border-color: rgba(255,255,255,.5);
+  transform: translateY(-1px);
+}
+.capa-round-chip.sel-a {
+  background: #0f7b6c; border-color: #0f7b6c; color: #fff;
+  box-shadow: 0 3px 12px rgba(15,123,108,.55);
+}
+.capa-round-chip.sel-b {
+  background: #c9a227; border-color: #c9a227; color: #fff;
+  box-shadow: 0 3px 12px rgba(201,162,39,.55);
+}
+.capa-round-chip-date {
+  font-size: 10px; opacity: .72; margin-top: 3px; line-height: 1.3;
+}
+.capa-fullscreen-btn {
+  padding: 7px 16px; border-radius: 8px;
+  background: rgba(255,255,255,.13); border: 1.5px solid rgba(255,255,255,.28);
+  color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: .18s; white-space: nowrap; margin-right: auto;
+}
+.capa-fullscreen-btn:hover { background: rgba(255,255,255,.25); }
+.capa-legend {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 14px;
+  padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1);
+}
+.capa-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; opacity: .78; }
+.capa-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── KPI Summary ── */
+.capa-result-header {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px;
+}
+.capa-kpi-box {
+  background: #fff; border-radius: 14px; padding: 18px 16px;
+  border: 1px solid var(--border); box-shadow: var(--shadow); text-align: center;
+  transition: box-shadow .18s;
+}
+.capa-kpi-box:hover { box-shadow: 0 6px 24px rgba(13,33,55,.1); }
+.capa-kpi-val { font-size: 30px; font-weight: 800; line-height: 1; }
+.capa-kpi-lbl { font-size: 11px; color: var(--text-sub); margin-top: 6px; font-weight: 600; }
+
+/* ── شريط الملخص ── */
+.capa-summary-bar {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  padding: 14px 18px; background: #f8fafc; border-radius: 10px;
+  margin-bottom: 22px; border: 1px solid #e2e8f0;
+}
+.capa-sum-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+
+/* ── بطاقة ملاحظة مقارِنة ── */
+.capa-obs-card {
+  background: #fff; border-radius: 13px; border: 1px solid #e2e8f0;
+  overflow: hidden; box-shadow: 0 2px 10px rgba(13,33,55,.06);
+  margin-bottom: 14px; transition: box-shadow .18s;
+}
+.capa-obs-card:hover { box-shadow: 0 6px 22px rgba(13,33,55,.11); }
+.capa-obs-header {
+  padding: 13px 18px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid #f1f5f9; background: #fafbfd;
+}
+.capa-obs-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0; color: #fff;
+}
+.capa-obs-title { font-size: 13px; font-weight: 700; color: #0d2137; flex: 1; line-height: 1.4; }
+.capa-obs-sec { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+
+/* ── النصفان (جولة أ / جولة ب) ── */
+.capa-halves { display: grid; grid-template-columns: 1fr 1fr; }
+.capa-half { padding: 16px 18px; }
+.capa-half:first-child { border-left: 1px solid #f1f5f9; }
+.capa-half-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; margin-bottom: 10px; display: flex;
+  align-items: center; gap: 6px; color: var(--text-sub);
+}
+.capa-half-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.capa-half-note {
+  font-size: 11px; color: #92400e; background: #fffbeb; border-radius: 7px;
+  padding: 6px 10px; border-right: 3px solid #fbbf24; margin-bottom: 10px; line-height: 1.55;
+}
+.capa-photos-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.capa-photo-thumb {
+  width: 74px; height: 74px; border-radius: 9px; overflow: hidden;
+  border: 2px solid #e2e8f0; cursor: zoom-in; flex-shrink: 0; transition: all .18s;
+}
+.capa-photo-thumb:hover { border-color: #1a4480; transform: scale(1.05); box-shadow: 0 3px 10px rgba(0,0,0,.18); }
+.capa-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.capa-no-photo { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 5px; padding: 4px 0; }
+
+/* ── Pills التغيير ── */
+.capa-change-pill {
+  padding: 3px 11px; border-radius: 99px; font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0;
+}
+.pill-improved  { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.pill-regressed { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.pill-recurring { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.pill-new       { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
+
+/* ── Lightbox ── */
+#capaLightbox {
+  display: none; position: fixed; inset: 0; z-index: 9999999;
+  background: rgba(0,0,0,.93); align-items: center; justify-content: center; cursor: zoom-out;
+}
+#capaLightbox.open { display: flex; }
+#capaLightbox img {
+  max-width: 92vw; max-height: 92vh; border-radius: 14px;
+  box-shadow: 0 10px 70px rgba(0,0,0,.85);
+}
+
+/* ── Fullscreen Overlay ── */
+#capaFullscreenOverlay {
+  display: none; position: fixed; inset: 0; z-index: 999990;
+  background: #071423; overflow-y: auto;
+}
+#capaFullscreenOverlay.open { display: block; }
+.capa-fs-topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(7,20,35,.96); backdrop-filter: blur(14px);
+  padding: 13px 26px; border-bottom: 1px solid rgba(255,255,255,.09);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.capa-fs-title { font-size: 15px; font-weight: 700; color: #fff; flex: 1; }
+.capa-fs-body { padding: 28px; max-width: 1140px; margin: 0 auto; }
+.capa-fs-chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.capa-fs-close-btn {
+  padding: 8px 20px; background: rgba(220,50,50,.22);
+  border: 1.5px solid rgba(220,50,50,.45); border-radius: 8px;
+  color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: .18s; white-space: nowrap;
+}
+.capa-fs-close-btn:hover { background: rgba(220,50,50,.4); }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .capa-halves { grid-template-columns: 1fr; }
+  .capa-half:first-child { border-left: none; border-bottom: 1px solid #f1f5f9; }
+  .capa-result-header { grid-template-columns: repeat(2, 1fr); }
+  .capa-rounds-row { gap: 8px; }
+  .capa-round-chip { min-width: 80px; padding: 7px 11px; font-size: 11px; }
+  .capa-selector-bar { padding: 16px 18px; }
+  .capa-fs-topbar { padding: 10px 16px; gap: 8px; }
+  .capa-fs-body { padding: 16px; }
+}
 
 </style>
 </head>
@@ -1923,40 +2094,12 @@ function openCenterDash(centerName) {
     });
   }
 
-  // 5. توليد واجهة المقارنة (التطور والتصحيح)
-  let capaHtml = '';
-  if (!previousSession) {
-     capaHtml = '<div class="empty-state"><span class="ei">📊</span><p>هذه هي الزيارة الإشرافية الأولى للمركز. ستظهر إحصائيات التصحيح والمقارنة عند إجراء الزيارة القادمة.</p></div>';
-  } else {
-     const renderCapaCard = (arr, title, icon, color, bg) => {
-        if (!arr.length) return '';
-        return `<div style="margin-bottom:24px">
-           <div style="font-size:14px;font-weight:700;color:${color};margin-bottom:12px;display:flex;align-items:center;gap:8px">
-             <span style="background:${bg};padding:5px 10px;border-radius:6px;border:1px solid ${color}40">${icon} ${title} (${arr.length})</span>
-           </div>
-           <div class="nc-grid">
-             ${arr.map(item => `
-               <div class="nc-card" style="border-right-color:${color}; border-color:${color}40; background:#fff">
-                  <div class="nc-card-top">
-                    <div>
-                      <div class="nc-card-title">${item.detail.t}</div>
-                      <div class="nc-card-sec">📁 ${item.detail.sec}</div>
-                    </div>
-                  </div>
-               </div>
-             `).join('')}
-           </div>
-        </div>`;
-     };
 
-     capaHtml += renderCapaCard(correctedItems, 'تم تصحيحها (تحسن)', '✅', '#0f7b6c', '#dcfce7');
-     capaHtml += renderCapaCard(newItems, 'مخالفات جديدة (تراجع)', '⚠️', '#d97706', '#fef3c7');
-     capaHtml += renderCapaCard(recurringItems, 'مخالفات متكررة (لم تُعالج)', '❌', '#9b1c1c', '#fce8e8');
+    // 5. تحضير بيانات التطور الزمني للمحرك الديناميكي الجديد
+  window._capaAllSessions = centerSessions;
+  window._capaCenter      = centerName;
+  let capaHtml = ''; // الواجهة تُبنى في buildCapaCompareUI()
 
-     if(correctedItems.length===0 && newItems.length===0 && recurringItems.length===0) {
-         capaHtml = '<div class="empty-state"><span class="ei">⚖️</span><p>لا توجد تغييرات جوهرية في الملاحظات بين الزيارة السابقة والحالية.</p></div>';
-     }
-  }
 
   // تجهيز باقي البيانات للواجهة
     window._currentMergedState = mergedState; // حفظ للطباعة المخصصة
@@ -1984,9 +2127,8 @@ function openCenterDash(centerName) {
 
   // بناء التبويبات
   const tabsHtml = `
-    <div class="cd-sec-tab active" onclick="cdShowSec('overview', this)">📊 نظرة عامة</div>
-    <div class="cd-sec-tab" onclick="cdShowSec('capa', this)" style="border-color:#0f7b6c; color:#0f7b6c; background:#f0fdf4">
-      🔄 التطور الزمني ${previousSession && correctedItems.length > 0 ? `<span class="tab-badge" style="background:#0f7b6c;color:#fff">${correctedItems.length}</span>` : ''}
+        <div class="cd-sec-tab" onclick="cdShowSec('capa', this); buildCapaCompareUI()" style="border-color:#0f7b6c; color:#0f7b6c; background:#f0fdf4">
+      🔄 التطور الزمني <span class="tab-badge" style="background:#0f7b6c;color:#fff;display:${centerSessions.length > 1 ? 'inline' : 'none'}">${centerSessions.length}</span>
     </div>
     ${SECTIONS_META.map(sm => {
       const st = secStats[sm.id];
@@ -2157,14 +2299,8 @@ function openCenterDash(centerName) {
         <div style="margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:var(--gov-navy);margin-bottom:12px">📐 أداء كل قسم</div><div class="sec-score-grid">${secScoreGridHtml}</div></div>
       </div>
 
-      <div class="cd-sec-content" id="cd_capa">
-         <div style="background:#fff; border-radius:12px; padding:24px; border:1px solid var(--border); box-shadow:var(--shadow)">
-            <h3 style="margin-bottom:6px; color:var(--gov-navy); font-size:18px">المقارنة المعيارية للتصحيحات</h3>
-            <p style="font-size:13px; color:var(--text-sub); margin-bottom:24px; border-bottom:1px solid var(--border); padding-bottom:16px">
-              تقارن هذه الشاشة بين نتائج آخر زيارة (${latestSession?.meta?.inspector||''}) والزيارة التي سبقتها (${previousSession?.meta?.inspector||'لا يوجد'}) لاكتشاف التحسن أو التراجع.
-            </p>
-            ${capaHtml}
-         </div>
+            <div class="cd-sec-content" id="cd_capa">
+        <div id="capaComparePanel"></div>
       </div>
 
       ${secPanelsHtml}
@@ -2185,7 +2321,7 @@ function openCenterDash(centerName) {
   document.getElementById('centerDashOverlay').classList.add('open');
   document.getElementById('centerDashModal').scrollTop = 0;
 
-  setTimeout(() => buildCenterDashCharts(mergedState), 100);
+  setTimeout(() => { buildCenterDashCharts(mergedState); buildCapaCompareUI(); }, 100);
 }
 
 function buildCenterDashCharts(mergedState) {
@@ -2235,6 +2371,294 @@ function cdShowSecById(id) {
     }
   });
 }
+  
+/* ════════════════════════════════════════════════════════════════
+   محرك التطور الزمني الديناميكي — CAPA Timeline Engine v2.0
+   ════════════════════════════════════════════════════════════════ */
+let _capaSelA = null, _capaSelB = null;
+let _capaLastClick = { idx: -1, time: 0 };
+let _capaFsLastClick = { idx: -1, time: 0 };
+
+/* ── بناء واجهة المقارنة الرئيسية ── */
+function buildCapaCompareUI() {
+  const panel = document.getElementById('capaComparePanel');
+  if (!panel) return;
+  const sessions = window._capaAllSessions || [];
+
+  if (sessions.length === 0) {
+    panel.innerHTML = '<div class="empty-state"><span class="ei">📊</span><p>لا توجد جلسات مُرسلة لهذا المركز.</p></div>';
+    return;
+  }
+  if (sessions.length === 1) {
+    panel.innerHTML = '<div class="empty-state"><span class="ei">📊</span><p>هذه هي الزيارة الإشرافية الأولى. ستظهر المقارنة عند تسجيل زيارة قادمة.</p></div>';
+    return;
+  }
+
+  // الاختيار التلقائي: أ = الأقدم، ب = الأحدث
+  if (!_capaSelA) _capaSelA = sessions[0];
+  if (!_capaSelB) _capaSelB = sessions[sessions.length - 1];
+
+  panel.innerHTML = _capaGetSelectorHtml(sessions, false) +
+    '<div id="capaResultArea"></div>' +
+    '<div id="capaLightbox" onclick="this.classList.remove(\'open\')"><img id="capaLbImg" src="" alt=""></div>';
+
+  _capaRenderResult('capaResultArea');
+}
+
+/* ── توليد HTML شريط الـ Chips ── */
+function _capaGetSelectorHtml(sessions, isFs) {
+  const chipsHtml = sessions.map((s, i) => {
+    const ts   = s.meta?.submitTime ? new Date(s.meta.submitTime) : (s.meta?.date ? new Date(s.meta.date) : null);
+    const dateStr = ts && !isNaN(ts)
+      ? ts.toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+      : (s.meta?.date || '—');
+    const inspector = (s.meta?.inspector || '—').substring(0, 15);
+    const score     = s.meta?.score != null ? s.meta.score + '%' : '—';
+    const isA = (_capaSelA === s), isB = (_capaSelB === s);
+    const cls   = isA ? 'capa-round-chip sel-a' : isB ? 'capa-round-chip sel-b' : 'capa-round-chip';
+    const label = isA ? '🟢 أ' : isB ? '🟡 ب' : String(i + 1);
+    const fn    = isFs ? `capaFsChip(${i})` : `capaChip(${i})`;
+    return `<button class="${cls}" onclick="${fn}" type="button">
+      <div style="font-size:13px;font-weight:800">${label} &nbsp;${score}</div>
+      <div class="capa-round-chip-date">${dateStr}</div>
+      <div class="capa-round-chip-date" style="opacity:.6">${inspector}</div>
+    </button>`;
+  }).join('');
+
+  return `
+    <div class="capa-selector-bar">
+      <div class="capa-selector-title">
+        🔄 اختر جولتين للمقارنة
+        ${!isFs ? `<button class="capa-fullscreen-btn" onclick="capaOpenFullscreen()" type="button">⛶ ملء الشاشة</button>` : ''}
+      </div>
+      <div class="capa-rounds-row">${chipsHtml}</div>
+      <div class="capa-legend">
+        <div class="capa-legend-item"><div class="capa-legend-dot" style="background:#0f7b6c"></div>الجولة (أ)</div>
+        <div class="capa-legend-item"><div class="capa-legend-dot" style="background:#c9a227"></div>الجولة (ب)</div>
+        <div style="font-size:10px;opacity:.55;margin-right:8px">ضغطة = جولة (أ) &nbsp;|&nbsp; ضغطتان متتاليتان = جولة (ب)</div>
+      </div>
+    </div>`;
+}
+
+/* ── اختيار الـ chip داخل الـ panel العادي ── */
+function capaChip(idx) {
+  const sessions = window._capaAllSessions || [];
+  const now = Date.now();
+  const isDbl = (_capaLastClick.idx === idx && (now - _capaLastClick.time) < 480);
+  _capaLastClick = { idx, time: now };
+  if (isDbl) {
+    _capaSelB = sessions[idx];
+  } else {
+    _capaSelA = sessions[idx];
+    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.min(idx + 1, sessions.length - 1)];
+  }
+  buildCapaCompareUI();
+  _capaSyncFs();
+}
+
+/* ── اختيار الـ chip داخل الـ fullscreen ── */
+function capaFsChip(idx) {
+  const sessions = window._capaAllSessions || [];
+  const now = Date.now();
+  const isDbl = (_capaFsLastClick.idx === idx && (now - _capaFsLastClick.time) < 480);
+  _capaFsLastClick = { idx, time: now };
+  if (isDbl) {
+    _capaSelB = sessions[idx];
+  } else {
+    _capaSelA = sessions[idx];
+    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.min(idx + 1, sessions.length - 1)];
+  }
+  _capaRebuildFsChips();
+  _capaRenderResult('capaFsResultArea');
+  buildCapaCompareUI(); // مزامنة مع الـ panel العادي
+}
+
+/* ── مزامنة Fullscreen عند تغيير الاختيار من Panel العادي ── */
+function _capaSyncFs() {
+  const ov = document.getElementById('capaFullscreenOverlay');
+  if (!ov?.classList.contains('open')) return;
+  _capaRebuildFsChips();
+  _capaRenderResult('capaFsResultArea');
+}
+
+/* ── إعادة رسم chips داخل fullscreen فقط ── */
+function _capaRebuildFsChips() {
+  const sessions = window._capaAllSessions || [];
+  const row = document.getElementById('capaFsChipsRow');
+  if (!row) return;
+  row.innerHTML = sessions.map((s, i) => {
+    const ts  = s.meta?.submitTime ? new Date(s.meta.submitTime) : new Date(s.meta?.date || '');
+    const dStr = !isNaN(ts) ? ts.toLocaleDateString('ar-SA',{month:'short',day:'numeric'}) : (s.meta?.date||'—');
+    const sc  = s.meta?.score != null ? s.meta.score + '%' : '—';
+    const isA = (_capaSelA === s), isB = (_capaSelB === s);
+    const cls = isA ? 'capa-round-chip sel-a' : isB ? 'capa-round-chip sel-b' : 'capa-round-chip';
+    const lbl = isA ? '🟢 أ' : isB ? '🟡 ب' : String(i + 1);
+    return `<button class="${cls}" onclick="capaFsChip(${i})" type="button">${lbl} ${sc}<div class="capa-round-chip-date">${dStr}</div></button>`;
+  }).join('');
+}
+
+/* ── المنطق الأساسي: حساب وعرض نتائج المقارنة ── */
+function _capaRenderResult(containerId) {
+  const area = document.getElementById(containerId);
+  if (!area || !_capaSelA || !_capaSelB || _capaSelA === _capaSelB) {
+    if (area) area.innerHTML = '<div class="empty-state"><span class="ei">🔄</span><p>اختر جولتين مختلفتين للمقارنة.</p></div>';
+    return;
+  }
+
+  const stA = _capaSelA.state || {};
+  const stB = _capaSelB.state || {};
+  const changes = { improved:[], regressed:[], recurring:[], newNon:[] };
+  const allKeys = new Set([...Object.keys(stA), ...Object.keys(stB)]);
+
+  allKeys.forEach(k => {
+    const detail = SECTIONS_DETAIL[k];
+    if (!detail) return;
+    const vA = stA[k]?.status, vB = stB[k]?.status;
+    const item = {
+      key: k, detail,
+      stateA: stA[k] || null, stateB: stB[k] || null,
+      photosA: (stA[k]?.photos || []).filter(u => typeof u === 'string' && u.startsWith('http')),
+      photosB: (stB[k]?.photos || []).filter(u => typeof u === 'string' && u.startsWith('http')),
+      noteA: stA[k]?.note || '', noteB: stB[k]?.note || ''
+    };
+    if      (vA === 'non' && vB === 'compliant') changes.improved.push(item);
+    else if (vA === 'compliant' && vB === 'non') changes.regressed.push(item);
+    else if (vA === 'non' && vB === 'non')        changes.recurring.push(item);
+    else if ((!vA || vA !== 'non') && vB === 'non') changes.newNon.push(item);
+  });
+
+  const fmtDate = s => {
+    const ts = s.meta?.submitTime ? new Date(s.meta.submitTime) : new Date(s.meta?.date || '');
+    return !isNaN(ts) ? ts.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'}) : (s.meta?.date||'—');
+  };
+  const infoA = `${fmtDate(_capaSelA)} — ${_capaSelA.meta?.inspector||'—'} (${_capaSelA.meta?.score??'—'}%)`;
+  const infoB = `${fmtDate(_capaSelB)} — ${_capaSelB.meta?.inspector||'—'} (${_capaSelB.meta?.score??'—'}%)`;
+
+  const kpiHtml = `
+    <div class="capa-result-header">
+      <div class="capa-kpi-box" style="border-top:3px solid #0f7b6c">
+        <div class="capa-kpi-val" style="color:#0f7b6c">${changes.improved.length}</div>
+        <div class="capa-kpi-lbl">✅ تم تصحيحها (تحسن)</div>
+      </div>
+      <div class="capa-kpi-box" style="border-top:3px solid #9b1c1c">
+        <div class="capa-kpi-val" style="color:#9b1c1c">${changes.regressed.length + changes.newNon.length}</div>
+        <div class="capa-kpi-lbl">⚠️ مخالفات جديدة (تراجع)</div>
+      </div>
+      <div class="capa-kpi-box" style="border-top:3px solid #d97706">
+        <div class="capa-kpi-val" style="color:#d97706">${changes.recurring.length}</div>
+        <div class="capa-kpi-lbl">❌ مخالفات متكررة</div>
+      </div>
+    </div>
+    <div class="capa-summary-bar">
+      <div class="capa-sum-item">🟢 الجولة (أ):&nbsp;<span style="color:#0f7b6c;font-weight:600">${infoA}</span></div>
+      <div style="flex:1"></div>
+      <div class="capa-sum-item">🟡 الجولة (ب):&nbsp;<span style="color:#c9a227;font-weight:600">${infoB}</span></div>
+    </div>`;
+
+  const RISK_COLORS = {critical:'#9b1c1c',high:'#d97706',medium:'#eab308',low:'#1a4480'};
+  const lbFn = `document.getElementById('capaLbImg').src=this.dataset.src;document.getElementById('capaLightbox').classList.add('open')`;
+  const fsLbFn = `document.getElementById('capaFsLightbox').querySelector('img').src=this.dataset.src;document.getElementById('capaFsLightbox').classList.add('open')`;
+  const isFs = (containerId === 'capaFsResultArea');
+  const photoFn = isFs ? fsLbFn : lbFn;
+
+  const renderHalf = (photos, note, label, dotColor) => `
+    <div class="capa-half">
+      <div class="capa-half-label"><div class="capa-half-dot" style="background:${dotColor}"></div>${label}</div>
+      ${note ? `<div class="capa-half-note">📝 ${escapeHtml(note)}</div>` : ''}
+      ${photos.length > 0
+        ? `<div class="capa-photos-grid">${photos.map(src =>
+            `<div class="capa-photo-thumb" data-src="${src}" onclick="${photoFn}"><img src="${src}" loading="lazy" alt="صورة ملاحظة"></div>`
+          ).join('')}</div>`
+        : `<div class="capa-no-photo">📷 لا توجد صور</div>`
+      }
+    </div>`;
+
+  const renderSection = (arr, title, icon, pillClass, pill) => {
+    if (!arr.length) return '';
+    return `
+      <div style="margin-bottom:26px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <span style="font-size:16px">${icon}</span>
+          <h4 style="font-size:14px;font-weight:800;color:#0d2137;margin:0">${title}</h4>
+          <span class="capa-change-pill ${pillClass}">${arr.length}</span>
+        </div>
+        ${arr.map((item, i) => {
+          const rc = RISK_COLORS[item.detail.r] || '#1a4480';
+          const sLblA = item.stateA?.status==='compliant'?'✅ مطابق':item.stateA?.status==='non'?'❌ غير مطابق':item.stateA?.status==='na'?'⬜ لا ينطبق':'—';
+          const sLblB = item.stateB?.status==='compliant'?'✅ مطابق':item.stateB?.status==='non'?'❌ غير مطابق':item.stateB?.status==='na'?'⬜ لا ينطبق':'—';
+          return `
+          <div class="capa-obs-card">
+            <div class="capa-obs-header">
+              <div class="capa-obs-num" style="background:${rc}">${i+1}</div>
+              <div style="flex:1">
+                <div class="capa-obs-title">${escapeHtml(item.detail.t)}</div>
+                <div class="capa-obs-sec">📁 ${escapeHtml(item.detail.sec)} &nbsp;•&nbsp; <span style="color:${rc};font-weight:700">${RISK_LABEL[item.detail.r]||''}</span></div>
+              </div>
+              <span class="capa-change-pill ${pillClass}">${pill}</span>
+            </div>
+            <div class="capa-halves">
+              ${renderHalf(item.photosA, item.noteA, `الجولة (أ) — ${sLblA}`, '#0f7b6c')}
+              ${renderHalf(item.photosB, item.noteB, `الجولة (ب) — ${sLblB}`, '#c9a227')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  };
+
+  const cardsHtml =
+    renderSection(changes.improved,  'تم تصحيحها — تحسّن ملحوظ',             '✅','pill-improved', '↑ تحسّن')  +
+    renderSection(changes.regressed, 'تراجع — كانت مطابقة وأصبحت مخالفة',    '⚠️','pill-regressed','↓ تراجع') +
+    renderSection(changes.newNon,    'مخالفات جديدة — لم تكن موجودة سابقاً', '🆕','pill-new',      '+ جديد')   +
+    renderSection(changes.recurring, 'متكررة — لم تُعالج بعد',               '🔁','pill-recurring', '∞ متكررة');
+
+  const isEmpty = !changes.improved.length && !changes.regressed.length && !changes.newNon.length && !changes.recurring.length;
+  area.innerHTML = kpiHtml + (isEmpty
+    ? '<div class="empty-state"><span class="ei">⚖️</span><p>لا توجد فروقات جوهرية بين الجولتين المحددتين.</p></div>'
+    : cardsHtml);
+}
+
+/* ── وضع ملء الشاشة ── */
+function capaOpenFullscreen() {
+  let ov = document.getElementById('capaFullscreenOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'capaFullscreenOverlay';
+    document.body.appendChild(ov);
+  }
+  const sessions = window._capaAllSessions || [];
+  const centerName = escapeHtml(window._capaCenter || '');
+  ov.innerHTML = `
+    <div class="capa-fs-topbar">
+      <div style="font-size:20px">🔄</div>
+      <div class="capa-fs-title">التطور الزمني — ${centerName}</div>
+      <div class="capa-fs-chips" id="capaFsChipsRow"></div>
+      <div style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap">ضغطة=(أ) &nbsp; ضغطتان=(ب)</div>
+      <button type="button" class="capa-fs-close-btn" onclick="capaCloseFullscreen()">✕ إغلاق</button>
+    </div>
+    <div class="capa-fs-body">
+      <div id="capaFsResultArea"></div>
+    </div>
+    <div id="capaFsLightbox" onclick="this.classList.remove('open')" style="display:none;position:fixed;inset:0;z-index:9999999;background:rgba(0,0,0,.93);align-items:center;justify-content:center;cursor:zoom-out">
+      <img style="max-width:92vw;max-height:92vh;border-radius:14px;box-shadow:0 10px 70px rgba(0,0,0,.85)" alt="">
+    </div>`;
+  ov.classList.add('open');
+  _capaRebuildFsChips();
+  _capaRenderResult('capaFsResultArea');
+
+  // Keyboard navigation
+  ov._capaKeyHandler = e => {
+    if (e.key === 'Escape') capaCloseFullscreen();
+  };
+  document.addEventListener('keydown', ov._capaKeyHandler);
+}
+
+function capaCloseFullscreen() {
+  const ov = document.getElementById('capaFullscreenOverlay');
+  if (!ov) return;
+  if (ov._capaKeyHandler) document.removeEventListener('keydown', ov._capaKeyHandler);
+  ov.classList.remove('open');
+}
+
 // ===== دالة الطباعة المخصصة: الملاحظات غير المطابقة + لا تنطبق فقط =====
 function printObservationsReport() {
   // جمع بيانات المركز من الـ modal المفتوح حالياً
