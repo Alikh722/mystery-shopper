@@ -2042,7 +2042,7 @@ function openCenterDash(centerName) {
 
   // 2. الترتيب الزمني بثلاث مستويات ضمان
     centerSessions.sort((a, b) => {
-    const keyComp = (a._fbKey || '').localeCompare(b._fbKey || '');
+    const keyComp = (b._fbKey || '').localeCompare(a._fbKey || '');
     if (keyComp !== 0) return keyComp;
     const rA = parseInt(a.meta?.round || 0);
     const rB = parseInt(b.meta?.round || 0);
