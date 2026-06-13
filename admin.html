@@ -2040,16 +2040,17 @@ function openCenterDash(centerName) {
     return;
   }
 
-  // 2. الترتيب الزمني بثلاث مستويات ضمان
+   // 2. الترتيب الزمني بثلاث مستويات ضمان
+  // الأولوية: رقم الجولة (إن وُجد) ثم تاريخ الإرسال الفعلي (الأدق)
+  // وأخيراً مفتاح Firebase كحَكَم فقط عند التعادل الكامل
     centerSessions.sort((a, b) => {
-    const keyComp = (b._fbKey || '').localeCompare(a._fbKey || '');
-    if (keyComp !== 0) return keyComp;
     const rA = parseInt(a.meta?.round || 0);
     const rB = parseInt(b.meta?.round || 0);
     if (rA && rB && rA !== rB) return rA - rB;
     const tA = a.meta?.submitTime ? new Date(a.meta.submitTime).getTime() : 0;
     const tB = b.meta?.submitTime ? new Date(b.meta.submitTime).getTime() : 0;
-    return tA - tB;
+    if (tA && tB && tA !== tB) return tA - tB;
+    return (a._fbKey || '').localeCompare(b._fbKey || '');
   });
 
   const latestSession  = centerSessions[centerSessions.length - 1];
