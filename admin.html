@@ -2041,14 +2041,15 @@ function openCenterDash(centerName) {
   }
 
   // 2. الترتيب الزمني بثلاث مستويات ضمان
-  centerSessions.sort((a, b) => {
-    const tA = a.meta?.submitTime ? new Date(a.meta.submitTime).getTime() : 0;
-    const tB = b.meta?.submitTime ? new Date(b.meta.submitTime).getTime() : 0;
-    if (tA && tB) return tA - tB;
+    centerSessions.sort((a, b) => {
+    const keyComp = (a._fbKey || '').localeCompare(b._fbKey || '');
+    if (keyComp !== 0) return keyComp;
     const rA = parseInt(a.meta?.round || 0);
     const rB = parseInt(b.meta?.round || 0);
     if (rA && rB && rA !== rB) return rA - rB;
-    return (a._fbKey || '').localeCompare(b._fbKey || '');
+    const tA = a.meta?.submitTime ? new Date(a.meta.submitTime).getTime() : 0;
+    const tB = b.meta?.submitTime ? new Date(b.meta.submitTime).getTime() : 0;
+    return tA - tB;
   });
 
   const latestSession  = centerSessions[centerSessions.length - 1];
