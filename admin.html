@@ -2458,12 +2458,12 @@ function capaChip(idx) {
   const now = Date.now();
   const isDbl = (_capaLastClick.idx === idx && (now - _capaLastClick.time) < 480);
   _capaLastClick = { idx, time: now };
-  if (isDbl) {
-    _capaSelA = sessions[idx];
-    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
-  } else {
+    if (isDbl) {
     _capaSelB = sessions[idx];
     if (_capaSelA === _capaSelB) _capaSelA = sessions[Math.min(idx + 1, sessions.length - 1)];
+  } else {
+    _capaSelA = sessions[idx];
+    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
   }
   buildCapaCompareUI();
   _capaSyncFs();
@@ -2476,12 +2476,12 @@ function capaFsChip(idx) {
   const now = Date.now();
   const isDbl = (_capaFsLastClick.idx === idx && (now - _capaFsLastClick.time) < 480);
   _capaFsLastClick = { idx, time: now };
-  if (isDbl) {
-    _capaSelA = sessions[idx];
-    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
-  } else {
+    if (isDbl) {
     _capaSelB = sessions[idx];
     if (_capaSelA === _capaSelB) _capaSelA = sessions[Math.min(idx + 1, sessions.length - 1)];
+  } else {
+    _capaSelA = sessions[idx];
+    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
   }
   _capaRebuildFsChips();
   _capaRenderResult('capaFsResultArea');
