@@ -2030,31 +2030,39 @@ function openCenterDash(centerName) {
   if (!centerName) return;
   const data = window.allSessions || {};
   
-  // 1. جلب جميع جلسات المركز وتصفيتها
-  let centerSessions = Object.values(data).filter(s =>
-    (s.meta?.center || '') === centerName && s.meta?.status === 'submitted'
-  );
+  // 1. جلب جميع جلسات المركز وتصفيتها (مع الاحتفاظ بـ Firebase key للترتيب)
+  let centerSessions = Object.entries(data)
+    .map(([fbKey, s]) => ({ ...s, _fbKey: fbKey }))
+    .filter(s => (s.meta?.center || '') === centerName && s.meta?.status === 'submitted');
 
   if (!centerSessions.length) {
     alert('لا توجد جلسات مُرسلة لهذا المركز بعد.');
     return;
   }
 
-  // 2. الترتيب الزمني الدقيق (من الأقدم للأحدث) لضمان المقارنة الصحيحة
-  centerSessions.sort((a,b) => new Date(a.meta.submitTime || a.meta.date) - new Date(b.meta.submitTime || b.meta.date));
+  // 2. الترتيب الزمني بثلاث مستويات ضمان
+  centerSessions.sort((a, b) => {
+    const tA = a.meta?.submitTime ? new Date(a.meta.submitTime).getTime() : 0;
+    const tB = b.meta?.submitTime ? new Date(b.meta.submitTime).getTime() : 0;
+    if (tA && tB) return tA - tB;
+    const rA = parseInt(a.meta?.round || 0);
+    const rB = parseInt(b.meta?.round || 0);
+    if (rA && rB && rA !== rB) return rA - rB;
+    return (a._fbKey || '').localeCompare(b._fbKey || '');
+  });
 
-  const latestSession = centerSessions[centerSessions.length - 1];
+  const latestSession  = centerSessions[centerSessions.length - 1];
   const previousSession = centerSessions.length > 1 ? centerSessions[centerSessions.length - 2] : null;
 
   // 3. بناء الحالة المدمجة لمعرفة الوضع الحالي الحقيقي للمركز
   const mergedState = {};
   centerSessions.forEach(s => {
-    Object.entries(s.state||{}).forEach(([k,v]) => {
+    Object.entries(s.state || {}).forEach(([k, v]) => {
       if (!mergedState[k]) mergedState[k] = v;
-      else if (v.status !== 'pending') mergedState[k] = v; 
+      else if (v.status !== 'pending') mergedState[k] = v;
     });
   });
-
+  
   // حساب المؤشرات الحالية الدقيقة
   const allScores = centerSessions.map(s => s.meta?.score || 0);
   const avgScore  = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
