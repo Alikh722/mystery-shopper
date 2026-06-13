@@ -2098,6 +2098,8 @@ function openCenterDash(centerName) {
     // 5. تحضير بيانات التطور الزمني للمحرك الديناميكي الجديد
   window._capaAllSessions = centerSessions;
   window._capaCenter      = centerName;
+  _capaSelA = null; // إعادة تصفير عند فتح كل مركز جديد
+  _capaSelB = null; // إعادة تصفير عند فتح كل مركز جديد
   let capaHtml = ''; // الواجهة تُبنى في buildCapaCompareUI()
 
 
