@@ -2394,9 +2394,9 @@ function buildCapaCompareUI() {
     return;
   }
 
-  // الاختيار التلقائي: أ = الأقدم، ب = الأحدث
-  if (!_capaSelA) _capaSelA = sessions[0];
-  if (!_capaSelB) _capaSelB = sessions[sessions.length - 1];
+  // الاختيار التلقائي: أ = الأحدث (الجديد)، ب = الأقدم (للمقارنة)
+  if (!_capaSelA) _capaSelA = sessions[sessions.length - 1];
+  if (!_capaSelB) _capaSelB = sessions[sessions.length > 1 ? sessions.length - 2 : 0];
 
   panel.innerHTML = _capaGetSelectorHtml(sessions, false) +
     '<div id="capaResultArea"></div>' +
@@ -2447,14 +2447,16 @@ function capaChip(idx) {
   const isDbl = (_capaLastClick.idx === idx && (now - _capaLastClick.time) < 480);
   _capaLastClick = { idx, time: now };
   if (isDbl) {
-    _capaSelB = sessions[idx];
-  } else {
     _capaSelA = sessions[idx];
-    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.min(idx + 1, sessions.length - 1)];
+    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
+  } else {
+    _capaSelB = sessions[idx];
+    if (_capaSelA === _capaSelB) _capaSelA = sessions[Math.min(idx + 1, sessions.length - 1)];
   }
   buildCapaCompareUI();
   _capaSyncFs();
 }
+
 
 /* ── اختيار الـ chip داخل الـ fullscreen ── */
 function capaFsChip(idx) {
@@ -2463,14 +2465,15 @@ function capaFsChip(idx) {
   const isDbl = (_capaFsLastClick.idx === idx && (now - _capaFsLastClick.time) < 480);
   _capaFsLastClick = { idx, time: now };
   if (isDbl) {
-    _capaSelB = sessions[idx];
-  } else {
     _capaSelA = sessions[idx];
-    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.min(idx + 1, sessions.length - 1)];
+    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
+  } else {
+    _capaSelB = sessions[idx];
+    if (_capaSelA === _capaSelB) _capaSelA = sessions[Math.min(idx + 1, sessions.length - 1)];
   }
   _capaRebuildFsChips();
   _capaRenderResult('capaFsResultArea');
-  buildCapaCompareUI(); // مزامنة مع الـ panel العادي
+  buildCapaCompareUI();
 }
 
 /* ── مزامنة Fullscreen عند تغيير الاختيار من Panel العادي ── */
@@ -2521,10 +2524,10 @@ function _capaRenderResult(containerId) {
       photosB: (stB[k]?.photos || []).filter(u => typeof u === 'string' && u.startsWith('http')),
       noteA: stA[k]?.note || '', noteB: stB[k]?.note || ''
     };
-    if      (vA === 'non' && vB === 'compliant') changes.improved.push(item);
-    else if (vA === 'compliant' && vB === 'non') changes.regressed.push(item);
-    else if (vA === 'non' && vB === 'non')        changes.recurring.push(item);
-    else if ((!vA || vA !== 'non') && vB === 'non') changes.newNon.push(item);
+        if      (vB === 'non' && vA === 'compliant') changes.improved.push(item);
+    else if (vB === 'compliant' && vA === 'non') changes.regressed.push(item);
+    else if (vB === 'non' && vA === 'non')        changes.recurring.push(item);
+    else if ((!vB || vB !== 'non') && vA === 'non') changes.newNon.push(item);
   });
 
   const fmtDate = s => {
