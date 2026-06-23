@@ -1017,7 +1017,9 @@ tr:last-child td { border-bottom: none; }
   .capa-half:first-child { border-left: none; border-bottom: 1px solid #f1f5f9; }
   .capa-result-header { grid-template-columns: repeat(2, 1fr); }
   .capa-rounds-row { gap: 8px; }
-  .capa-round-chip { min-width: 80px; padding: 7px 11px; font-size: 11px; }
+  .capa-round-card { min-width: 110px; padding: 10px 11px; }
+  .capa-card-score { font-size: 18px; }
+  .capa-btn-a, .capa-btn-b { padding: 4px 9px; font-size: 10px; }
   .capa-selector-bar { padding: 16px 18px; }
   .capa-fs-topbar { padding: 10px 16px; gap: 8px; }
   .capa-fs-body { padding: 16px; }
@@ -2388,8 +2390,7 @@ function cdShowSecById(id) {
    محرك التطور الزمني الديناميكي — CAPA Timeline Engine v2.0
    ════════════════════════════════════════════════════════════════ */
 let _capaSelA = null, _capaSelB = null;
-let _capaLastClick = { idx: -1, time: 0 };
-let _capaFsLastClick = { idx: -1, time: 0 };
+/* تم إلغاء منطق الـ double-click — الاختيار الآن عبر زرَّي أ / ب */
 
 /* ── بناء واجهة المقارنة الرئيسية ── */
 function buildCapaCompareUI() {
@@ -2418,71 +2419,76 @@ function buildCapaCompareUI() {
 }
 
 /* ── توليد HTML شريط الـ Chips ── */
+/* ── توليد HTML بطاقات الجولات بزرَّي الاختيار ── */
 function _capaGetSelectorHtml(sessions, isFs) {
-  const chipsHtml = sessions.map((s, i) => {
-    const ts   = s.meta?.submitTime ? new Date(s.meta.submitTime) : (s.meta?.date ? new Date(s.meta.date) : null);
+  const cardsHtml = sessions.map((s, i) => {
+    const ts      = s.meta?.submitTime ? new Date(s.meta.submitTime) : (s.meta?.date ? new Date(s.meta.date) : null);
     const dateStr = ts && !isNaN(ts)
       ? ts.toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
       : (s.meta?.date || '—');
-    const inspector = (s.meta?.inspector || '—').substring(0, 15);
+    const inspector = (s.meta?.inspector || '—').substring(0, 18);
     const score     = s.meta?.score != null ? s.meta.score + '%' : '—';
-    const isA = (_capaSelA === s), isB = (_capaSelB === s);
-    const cls   = isA ? 'capa-round-chip sel-a' : isB ? 'capa-round-chip sel-b' : 'capa-round-chip';
-    const label = isA ? '🟢 أ' : isB ? '🟡 ب' : String(i + 1);
-    const fn    = isFs ? `capaFsChip(${i})` : `capaChip(${i})`;
-    return `<button class="${cls}" onclick="${fn}" type="button">
-      <div style="font-size:13px;font-weight:800">${label} &nbsp;${score}</div>
-      <div class="capa-round-chip-date">${dateStr}</div>
-      <div class="capa-round-chip-date" style="opacity:.6">${inspector}</div>
-    </button>`;
+    const isA  = (_capaSelA === s), isB = (_capaSelB === s);
+    const cls  = isA ? 'capa-round-card sel-a' : isB ? 'capa-round-card sel-b' : 'capa-round-card';
+    const scCls = isA ? 'capa-card-score score-a' : isB ? 'capa-card-score score-b' : 'capa-card-score';
+    const fnA  = isFs ? `capaFsSetA(${i})` : `capaSetA(${i})`;
+    const fnB  = isFs ? `capaFsSetB(${i})` : `capaSetB(${i})`;
+    return `<div class="${cls}">
+      <div class="capa-card-num">الجولة ${i + 1}</div>
+      <div class="${scCls}">${score}</div>
+      <div class="capa-card-date">${dateStr}</div>
+      <div class="capa-card-inspector">${inspector}</div>
+      <div class="capa-card-btns">
+        <button class="capa-btn-a${isA ? ' btn-active' : ''}" onclick="${fnA}" type="button">🟢 أ</button>
+        <button class="capa-btn-b${isB ? ' btn-active' : ''}" onclick="${fnB}" type="button">🟡 ب</button>
+      </div>
+    </div>`;
   }).join('');
 
   return `
     <div class="capa-selector-bar">
       <div class="capa-selector-title">
-        🔄 اختر جولتين للمقارنة
+        📊 اختر جولتين للمقارنة
         ${!isFs ? `<button class="capa-fullscreen-btn" onclick="capaOpenFullscreen()" type="button">⛶ ملء الشاشة</button>` : ''}
       </div>
-      <div class="capa-rounds-row">${chipsHtml}</div>
+      <div class="capa-rounds-row">${cardsHtml}</div>
       <div class="capa-legend">
-        <div class="capa-legend-item"><div class="capa-legend-dot" style="background:#0f7b6c"></div>الجولة (أ)</div>
-        <div class="capa-legend-item"><div class="capa-legend-dot" style="background:#c9a227"></div>الجولة (ب)</div>
-        <div style="font-size:10px;opacity:.55;margin-right:8px">ضغطة = جولة (أ) &nbsp;|&nbsp; ضغطتان متتاليتان = جولة (ب)</div>
+        <div class="capa-legend-item"><div class="capa-legend-dot" style="background:#0f7b6c"></div>الجولة (أ) — الأساسية</div>
+        <div class="capa-legend-item"><div class="capa-legend-dot" style="background:#c9a227"></div>الجولة (ب) — المقارنة</div>
       </div>
     </div>`;
 }
 
-/* ── اختيار الـ chip داخل الـ panel العادي ── */
-function capaChip(idx) {
+/* ── تعيين الجولة أ/ب في اللوحة الرئيسية ── */
+function capaSetA(idx) {
   const sessions = window._capaAllSessions || [];
-  const now = Date.now();
-  const isDbl = (_capaLastClick.idx === idx && (now - _capaLastClick.time) < 480);
-  _capaLastClick = { idx, time: now };
-    if (isDbl) {
-    _capaSelB = sessions[idx];
-    if (_capaSelA === _capaSelB) _capaSelA = sessions[Math.min(idx + 1, sessions.length - 1)];
-  } else {
-    _capaSelA = sessions[idx];
-    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
-  }
+  _capaSelA = sessions[idx];
+  if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
+  buildCapaCompareUI();
+  _capaSyncFs();
+}
+function capaSetB(idx) {
+  const sessions = window._capaAllSessions || [];
+  _capaSelB = sessions[idx];
+  if (_capaSelA === _capaSelB) _capaSelA = sessions[Math.min(idx + 1, sessions.length - 1)];
   buildCapaCompareUI();
   _capaSyncFs();
 }
 
-
 /* ── اختيار الـ chip داخل الـ fullscreen ── */
-function capaFsChip(idx) {
+/* ── تعيين الجولة أ/ب في وضع ملء الشاشة ── */
+function capaFsSetA(idx) {
   const sessions = window._capaAllSessions || [];
-  const now = Date.now();
-  const isDbl = (_capaFsLastClick.idx === idx && (now - _capaFsLastClick.time) < 480);
-  _capaFsLastClick = { idx, time: now };
-    if (isDbl) {
-    _capaSelB = sessions[idx];
-    if (_capaSelA === _capaSelB) _capaSelA = sessions[Math.min(idx + 1, sessions.length - 1)];
-  } else {
-    _capaSelA = sessions[idx];
-    if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
-  }
+  _capaSelA = sessions[idx];
+  if (_capaSelA === _capaSelB) _capaSelB = sessions[Math.max(idx - 1, 0)];
+  _capaRebuildFsChips();
+  _capaRenderResult('capaFsResultArea');
+  buildCapaCompareUI();
+}
+function capaFsSetB(idx) {
+  const sessions = window._capaAllSessions || [];
+  _capaSelB = sessions[idx];
+  if (_capaSelA === _capaSelB) _capaSelA = sessions[Math.min(idx + 1, sessions.length - 1)];
   _capaRebuildFsChips();
   _capaRenderResult('capaFsResultArea');
   buildCapaCompareUI();
@@ -2502,13 +2508,20 @@ function _capaRebuildFsChips() {
   const row = document.getElementById('capaFsChipsRow');
   if (!row) return;
   row.innerHTML = sessions.map((s, i) => {
-    const ts  = s.meta?.submitTime ? new Date(s.meta.submitTime) : new Date(s.meta?.date || '');
+    const ts   = s.meta?.submitTime ? new Date(s.meta.submitTime) : new Date(s.meta?.date || '');
     const dStr = !isNaN(ts) ? ts.toLocaleDateString('ar-SA',{month:'short',day:'numeric'}) : (s.meta?.date||'—');
-    const sc  = s.meta?.score != null ? s.meta.score + '%' : '—';
-    const isA = (_capaSelA === s), isB = (_capaSelB === s);
-    const cls = isA ? 'capa-round-chip sel-a' : isB ? 'capa-round-chip sel-b' : 'capa-round-chip';
-    const lbl = isA ? '🟢 أ' : isB ? '🟡 ب' : String(i + 1);
-    return `<button class="${cls}" onclick="capaFsChip(${i})" type="button">${lbl} ${sc}<div class="capa-round-chip-date">${dStr}</div></button>`;
+    const sc   = s.meta?.score != null ? s.meta.score + '%' : '—';
+    const isA  = (_capaSelA === s), isB = (_capaSelB === s);
+    const cls  = isA ? 'capa-round-card sel-a' : isB ? 'capa-round-card sel-b' : 'capa-round-card';
+    const scCls = isA ? 'capa-card-score score-a' : isB ? 'capa-card-score score-b' : 'capa-card-score';
+    return `<div class="${cls}" style="min-width:95px;padding:9px 11px">
+      <div class="${scCls}" style="font-size:16px">${sc}</div>
+      <div class="capa-card-date">${dStr}</div>
+      <div class="capa-card-btns" style="margin-top:8px">
+        <button class="capa-btn-a${isA?' btn-active':''}" onclick="capaFsSetA(${i})" type="button">أ</button>
+        <button class="capa-btn-b${isB?' btn-active':''}" onclick="capaFsSetB(${i})" type="button">ب</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
@@ -2647,7 +2660,6 @@ function capaOpenFullscreen() {
       <div style="font-size:20px">🔄</div>
       <div class="capa-fs-title">التطور الزمني — ${centerName}</div>
       <div class="capa-fs-chips" id="capaFsChipsRow"></div>
-      <div style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap">ضغطة=(أ) &nbsp; ضغطتان=(ب)</div>
       <button type="button" class="capa-fs-close-btn" onclick="capaCloseFullscreen()">✕ إغلاق</button>
     </div>
     <div class="capa-fs-body">
