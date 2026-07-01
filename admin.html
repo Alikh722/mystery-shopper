@@ -10,9 +10,9 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 // التحديث المعماري: استيراد دوال onChild لجلب الفروقات فقط بدلاً من onValue
-import { getDatabase, ref, onChildAdded, onChildChanged, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onChildAdded, onChildChanged, onChildRemoved, remove, update, get, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
+import { getStorage, ref as sRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 const firebaseConfig = {
   apiKey: "AIzaSyDgwu6EfFZ10d_tT6X49kp6krpd6VtIP-k",
   authDomain: "mystery-shopper-ras-65e4d.firebaseapp.com",
@@ -26,7 +26,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
+// === أدوات التحرير الإدارية (Admin Edit Toolkit) ===
+window._dbUpdate      = (path, obj) => update(ref(db, path), obj);
+window._dbPush        = (path, obj) => push(ref(db, path), obj);
+window._dbGet         = (path) => get(ref(db, path));
+window._firebaseStorage = storage;
+window._firebaseSRef    = sRef;
+window._firebaseUpload  = uploadString;
+window._firebaseGetURL  = getDownloadURL;
 // الدوال الأساسية للنظام
 window._signIn = (email, pw) => signInWithEmailAndPassword(auth, email, pw);
 window._authSignOut = () => signOut(auth);
@@ -68,8 +77,10 @@ const triggerRender = () => {
 
 onAuthStateChanged(auth, (user) => {
   const loginScreen = document.getElementById('loginScreen');
-  if (user && user.email === 'admin@ras-health.gov.sa') {
+if (user && user.email === 'admin@ras-health.gov.sa') {
     loginScreen.style.display = 'none';
+    window._adminUid   = user.uid;
+    window._adminEmail = user.email;
     
     const sessionsRef = ref(db, 'sessions');
     
@@ -429,6 +440,34 @@ tr:last-child td { border-bottom: none; }
 .is-pend { background: #fef9ec; color: #92400e; border: 1px solid #fcd34d; }
 .item-text { flex: 1; line-height: 1.6; color: #1e293b; font-weight: 500;}
 .note-text { font-size: 12px; color: #92400e; font-style: italic; margin-top: 6px; padding: 6px 10px; background: #fffbeb; border-radius: 6px; border-right: 3px solid #fbbf24; }
+  /* ===== EDIT MODE (وضع تحرير الأدمن) ===== */
+.edit-banner { display:flex; align-items:center; gap:8px; background:linear-gradient(90deg,#fef3c7,#fde68a); border:1px solid #c9a227; color:#7a5b06; font-size:12px; font-weight:700; padding:10px 16px; border-radius:8px; margin-bottom:18px; }
+.edit-input { width:100%; border:1.5px solid var(--border); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:13px; font-weight:700; color:var(--gov-navy); background:#fff; }
+.edit-input:focus { outline:none; border-color:var(--gov-gold); }
+.edit-item-row { display:flex; gap:12px; padding:14px 16px; border-bottom:1px solid #f1f5f9; align-items:flex-start; }
+.edit-item-row:last-child { border-bottom:none; }
+.edit-status-sel { min-width:120px; flex-shrink:0; border:1.5px solid var(--border); border-radius:7px; padding:6px 8px; font-family:inherit; font-size:11px; font-weight:700; background:#fff; cursor:pointer; }
+.edit-note-ta { width:100%; min-height:52px; margin-top:8px; border:1.5px solid var(--border); border-radius:7px; padding:8px 10px; font-family:inherit; font-size:12px; resize:vertical; background:#fffefb; }
+.edit-note-ta:focus { outline:none; border-color:var(--gov-gold); }
+.edit-photos-zone { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.edit-photo-thumb { position:relative; width:64px; height:64px; border-radius:7px; overflow:hidden; border:1.5px solid var(--border); }
+.edit-photo-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.edit-photo-thumb.uploading img { opacity:.4; }
+.edit-photo-thumb .ph-spin { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--gov-blue); background:rgba(255,255,255,.7); }
+.edit-photo-remove { position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:rgba(155,28,28,.9); color:#fff; border:none; font-size:11px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.edit-addphoto-btn { display:inline-flex; align-items:center; gap:4px; margin-top:8px; padding:6px 12px; border:1.5px dashed var(--gov-blue); border-radius:7px; font-size:11px; font-weight:700; color:var(--gov-blue); cursor:pointer; background:#f0f6ff; }
+.edit-addphoto-btn:hover { background:#e0ecff; }
+.edit-actionbar { position:sticky; bottom:-30px; margin:24px -30px -30px; padding:14px 30px; background:#fff; border-top:2px solid var(--border); display:flex; gap:10px; justify-content:flex-end; align-items:center; box-shadow:0 -4px 16px rgba(13,33,55,.08); }
+.edit-save-btn { padding:11px 26px; border:none; border-radius:8px; background:linear-gradient(135deg,var(--gov-teal),#0f9b86); color:#fff; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+.edit-save-btn:hover { opacity:.92; }
+.edit-save-btn:disabled { opacity:.5; cursor:not-allowed; }
+.edit-cancel-btn { padding:11px 22px; border:1.5px solid var(--border); border-radius:8px; background:#fff; color:var(--text-sub); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+.edit-cancel-btn:hover { background:var(--bg-page); }
+.audit-log-item { padding:10px 14px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; font-size:12px; background:#fafbfd; }
+.audit-log-hdr { display:flex; justify-content:space-between; font-weight:700; color:var(--gov-navy); margin-bottom:6px; font-size:11px; }
+.audit-log-change { padding:3px 0; color:var(--text-sub); border-top:1px dashed var(--border); }
+.audit-log-change:first-of-type { border-top:none; }
+.audit-log-change b { color:var(--gov-navy); }
 
 /* ===== CENTER DASHBOARD MODAL ===== */
 /* (نفس الأكواد السابقة الخاصة بـ center-overlay تبقى كما هي) */
@@ -1408,6 +1447,8 @@ const SECTIONS_META = [
 
 const SCORE_COLOR = s => s >= 90 ? '#0f7b6c' : s >= 75 ? '#1a4480' : s >= 60 ? '#d97706' : '#9b1c1c';
 const RISK_LABEL  = {critical:'حرج', high:'عالي', medium:'متوسط', low:'منخفض'};
+// أوزان حساب النتيجة — مطابقة تماماً لملف المشرف index.html لضمان اتساق النتيجة (RW = Risk Weight)
+const RW = {critical:10, high:5, medium:2, low:1};
 const RISK_COLOR  = {critical:'#9b1c1c', high:'#d97706', medium:'#eab308', low:'#1a4480'};
 const STATUS_LABEL = {compliant:'✅ مطابق', non:'❌ غير مطابق', na:'⬜ لا ينطبق', pending:'⏳ لم يُقيَّم'};
 const STATUS_CLS   = {compliant:'sp-ok', non:'sp-no', na:'sp-na', pending:'sp-pend'};
@@ -2015,6 +2056,7 @@ function renderTable(data) {
         <div style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="action-btn center-dash" data-center="${escapeHtml(m.center||'')}" onclick="openCenterDash(this.dataset.center)">🏥 داش المركز</button>
         <button class="action-btn view" data-key="${escapeHtml(s.key)}" onclick="openDetail(this.dataset.key)">📄 عرض</button>
+        ${m.status==='submitted' ? `<button class="action-btn view" style="color:var(--gov-gold);border-color:var(--gov-gold)" data-key="${escapeHtml(s.key)}" onclick="openDetail(this.dataset.key);enterEditMode(this.dataset.key)">✏️ تحرير</button>` : ''}
         <button class="action-btn del" data-key="${escapeHtml(s.key)}" onclick="deleteSession(this.dataset.key)">حذف</button>
         </div>
       </td>
@@ -2844,6 +2886,8 @@ function openDetail(sessionKey) {
 document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
   <h2 id="modalTitle">${m.inspector||'—'} — ${m.center||'—'}</h2>
   <div style="display:flex;gap:8px">
+    ${m.status==='submitted' ? `<button class="mclose" style="background:rgba(201,162,39,.35)" onclick="enterEditMode('${sessionKey}')">✏️ تحرير</button>` : ''}
+    <button class="mclose" style="background:rgba(255,255,255,.15)" onclick="viewAuditLog('${sessionKey}')">🕓 السجل</button>
     <button class="mclose" style="background:rgba(255,255,255,.15);padding:4px 12px" onclick="window.print()">🖨️ طباعة</button>
     <button class="mclose" onclick="closeModal()">✕</button>
   </div>
@@ -2916,7 +2960,299 @@ document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
 
 function closeModal() { document.getElementById('detailOverlay').classList.remove('open'); }
 document.getElementById('detailOverlay').onclick = function(e) { if(e.target===this) closeModal(); };
+/* ============================================================
+   وضع التحرير الإداري (Admin Edit Mode)
+   ============================================================ */
 
+// يحسب النتيجة والعدادات بنفس معادلة index.html تماماً (بند بند حسب وزن الخطورة)
+function computeScoreFromState(state) {
+  let ok=0, no=0, na=0, wt=0, wm=0;
+  Object.keys(state).forEach(k => {
+    const d = SECTIONS_DETAIL[k];
+    const w = d ? (RW[d.r]||1) : 1;
+    const st = (state[k]||{}).status;
+    if (st==='compliant')   { ok++; wt+=w; wm+=w; }
+    else if (st==='non')    { no++; wm+=w; }
+    else if (st==='na')     { na++; }
+  });
+  return { score: wm>0 ? Math.round((wt/wm)*100) : 0, ok, no, na };
+}
+
+function enterEditMode(sessionKey) {
+  // === حماية وضع التحرير بكلمة مرور ===
+  const pwd = prompt('🔒 أدخل كلمة مرور تفعيل وضع التحرير:');
+  if (pwd === null) return; // ضغط المستخدم إلغاء
+  if (pwd !== 'Do2026!') {
+    alert('❌ كلمة المرور غير صحيحة. تم إلغاء الدخول لوضع التحرير.');
+    return;
+  }
+
+  const s = (window.allSessions||{})[sessionKey];
+  if (!s) return;
+  // لقطة أصلية غير قابلة للتعديل تُستخدم لبناء سجل الفروقات لاحقاً
+  window._editOriginal = JSON.parse(JSON.stringify({ meta: s.meta||{}, state: s.state||{} }));
+  // نسخة عمل (Buffer) تُعدَّل عليها الصور مباشرة (إضافة/حذف) قبل الحفظ النهائي
+  window._editBuffer   = JSON.parse(JSON.stringify({ meta: s.meta||{}, state: s.state||{} }));
+  window._editKey       = sessionKey;
+  renderEditForm(sessionKey);
+}
+
+function renderEditForm(sessionKey) {
+  const buf = window._editBuffer;
+  const m = buf.meta, st = buf.state;
+
+  document.querySelector('#detailOverlay .modal-hdr').innerHTML = `
+    <h2>✏️ تحرير — ${escapeHtml(m.inspector||'—')} — ${escapeHtml(m.center||'—')}</h2>
+    <div style="display:flex;gap:8px">
+      <button class="mclose" onclick="cancelEdit()">✕ إلغاء</button>
+    </div>
+  `;
+
+  let html = `<div class="edit-banner">✏️ وضع التحرير مُفعّل — أي تعديل سيُسجَّل في سجل التعديلات (Audit Log) ويُطبَّق مباشرة على الموقع فور الحفظ.</div>`;
+
+  html += `<div class="meta-grid">
+    <div class="meta-item"><span>المشرف</span><input class="edit-input" id="edm_inspector" value="${escapeHtml(m.inspector||'')}"></div>
+    <div class="meta-item"><span>المركز</span><input class="edit-input" id="edm_center" value="${escapeHtml(m.center||'')}"></div>
+    <div class="meta-item"><span>المنطقة</span><input class="edit-input" id="edm_region" value="${escapeHtml(m.region||'')}"></div>
+    <div class="meta-item"><span>التاريخ</span><input class="edit-input" type="date" id="edm_date" value="${escapeHtml(m.date||'')}"></div>
+    <div class="meta-item"><span>الجولة</span><input class="edit-input" id="edm_round" value="${escapeHtml(m.round||'')}"></div>
+    <div class="meta-item"><span>الدرجة (تُحسب تلقائياً)</span><b id="edm_scorePreview" style="font-size:20px;color:${SCORE_COLOR((computeScoreFromState(st)).score)}">${computeScoreFromState(st).score}%</b></div>
+  </div>`;
+
+  SECTIONS_META.forEach(sec => {
+    const items = Object.entries(st).filter(([k]) => k.startsWith(sec.id+'_'));
+    if (!items.length) return;
+    html += `<div class="sec-block">
+      <div class="sec-block-hdr"><div class="sec-block-title">${sec.id}. ${escapeHtml(sec.title)}</div></div>`;
+    items.forEach(([k,v]) => {
+      const d = SECTIONS_DETAIL[k];
+      const itemText = d ? d.t : `البند ${k.split('_')[1]||''}`;
+      const rClass = d ? `risk-${d.r}` : 'risk-low';
+      const rLabel = d ? (RISK_LABEL[d.r]||'') : '';
+      html += `<div class="edit-item-row" data-key="${k}">
+        <select class="edit-status-sel" id="eds_${k}" onchange="onEditStatusChange()">
+          <option value="compliant" ${v.status==='compliant'?'selected':''}>✅ مطابق</option>
+          <option value="non" ${v.status==='non'?'selected':''}>❌ غير مطابق</option>
+          <option value="na" ${v.status==='na'?'selected':''}>⬜ لا ينطبق</option>
+          <option value="pending" ${v.status==='pending'?'selected':''}>⏳ لم يُقيَّم</option>
+        </select>
+        <div style="flex:1">
+          <div class="item-text">${escapeHtml(itemText)} <span class="risk-pill ${rClass}" style="font-size:10px">${rLabel}</span></div>
+          <textarea class="edit-note-ta" id="edn_${k}" placeholder="ملاحظة المشرف...">${escapeHtml(v.note||'')}</textarea>
+          <div class="edit-photos-zone" id="edp_${k}">${renderEditPhotoThumbs(k)}</div>
+          <label class="edit-addphoto-btn">📷 إضافة صورة
+            <input type="file" accept="image/*" multiple style="display:none" onchange="addPhotoAdmin('${k}', this)">
+          </label>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  html += `<div class="edit-actionbar">
+    <button class="edit-cancel-btn" onclick="cancelEdit()">إلغاء</button>
+    <button class="edit-save-btn" id="editSaveBtn" onclick="saveEdits()">💾 حفظ التعديلات</button>
+  </div>`;
+
+  document.getElementById('modalBody').innerHTML = html;
+}
+
+function renderEditPhotoThumbs(k) {
+  const photos = (window._editBuffer.state[k] && window._editBuffer.state[k].photos) || [];
+  return photos.map((p, idx) => {
+    const src = typeof p === 'string' ? p : p.url;
+    const uploading = typeof p === 'object' && p.uploading;
+    return `<div class="edit-photo-thumb${uploading?' uploading':''}">
+      <img src="${src}" alt="">
+      ${uploading ? `<div class="ph-spin">جاري الرفع…</div>` : `<button class="edit-photo-remove" onclick="removePhotoAdmin('${k}',${idx})">✕</button>`}
+    </div>`;
+  }).join('');
+}
+
+function onEditStatusChange() { /* محجوزة لأي تحديث تفاعلي مستقبلي عند تغيير الحالة */ }
+
+// رفع صورة جديدة يضيفها الأدمن — نفس منطق ضغط الصور المستخدم في index.html بالضبط
+function addPhotoAdmin(k, input) {
+  const files = Array.from(input.files || []);
+  files.forEach(f => {
+    if (!f.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+        if (!window._editBuffer.state[k].photos) window._editBuffer.state[k].photos = [];
+        const arr = window._editBuffer.state[k].photos;
+        arr.push({ url: dataUrl, uploading: true });
+        const idx = arr.length - 1;
+        document.getElementById('edp_'+k).innerHTML = renderEditPhotoThumbs(k);
+
+        if (window._firebaseStorage && window._adminUid) {
+          const path = `photos/${window._editKey}/${k}_${Date.now()}_admin`;
+          const imgRef = window._firebaseSRef(window._firebaseStorage, path);
+          const metadata = { customMetadata: { uid: window._adminUid } };
+          window._firebaseUpload(imgRef, dataUrl, 'data_url', metadata)
+            .then(snap => window._firebaseGetURL(snap.ref))
+            .then(url => {
+              arr[idx] = { url, uploading: false };
+              const zone = document.getElementById('edp_'+k);
+              if (zone) zone.innerHTML = renderEditPhotoThumbs(k);
+            })
+            .catch(err => {
+              console.error('فشل رفع الصورة:', err);
+              arr[idx] = { url: dataUrl, uploading: false };
+              const zone = document.getElementById('edp_'+k);
+              if (zone) zone.innerHTML = renderEditPhotoThumbs(k);
+            });
+        } else {
+          arr[idx] = { url: dataUrl, uploading: false };
+          const zone = document.getElementById('edp_'+k);
+          if (zone) zone.innerHTML = renderEditPhotoThumbs(k);
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+// حذف صورة: يُزال رابطها من قاعدة البيانات فقط (لا يمكن حذف الملف من Storage — قواعد الأمان لا تسمح بعملية الحذف لأي طرف)
+function removePhotoAdmin(k, idx) {
+  const arr = (window._editBuffer.state[k] && window._editBuffer.state[k].photos) || [];
+  arr.splice(idx, 1);
+  const zone = document.getElementById('edp_'+k);
+  if (zone) zone.innerHTML = renderEditPhotoThumbs(k);
+}
+
+function cancelEdit() {
+  if (!confirm('هل تريد إلغاء التحرير؟ سيتم تجاهل كل التعديلات غير المحفوظة.')) return;
+  window._editBuffer = null; window._editOriginal = null;
+  openDetail(window._editKey);
+}
+
+async function saveEdits() {
+  const key = window._editKey;
+  const buf = window._editBuffer;
+  const orig = window._editOriginal;
+  if (!key || !buf) return;
+
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
+
+  try {
+    const newMeta = { ...buf.meta };
+    newMeta.inspector = document.getElementById('edm_inspector').value.trim();
+    newMeta.center    = document.getElementById('edm_center').value.trim();
+    newMeta.region    = document.getElementById('edm_region').value.trim();
+    newMeta.date      = document.getElementById('edm_date').value.trim();
+    newMeta.round     = document.getElementById('edm_round').value.trim();
+
+    const newState = {};
+    Object.keys(buf.state).forEach(k => {
+      const selEl = document.getElementById('eds_'+k);
+      const noteEl = document.getElementById('edn_'+k);
+      const photos = (buf.state[k].photos || []).filter(p => !(typeof p==='object' && p.uploading))
+                     .map(p => typeof p==='string' ? p : p.url);
+      newState[k] = {
+        status: selEl ? selEl.value : buf.state[k].status,
+        note: noteEl ? noteEl.value.trim() : (buf.state[k].note||''),
+        photos,
+        photoCount: photos.length
+      };
+    });
+
+    const { score, ok, no, na } = computeScoreFromState(newState);
+    newMeta.score = score; newMeta.ok = ok; newMeta.no = no; newMeta.na = na;
+
+    const changes = [];
+    ['inspector','center','region','date','round'].forEach(f => {
+      if ((orig.meta[f]||'') !== (newMeta[f]||'')) changes.push({ field: 'meta.'+f, old: orig.meta[f]||'', new: newMeta[f]||'' });
+    });
+    if (orig.meta.score !== newMeta.score) changes.push({ field: 'meta.score', old: orig.meta.score, new: newMeta.score });
+    Object.keys(newState).forEach(k => {
+      const o = orig.state[k] || {};
+      const n = newState[k];
+      const label = (SECTIONS_DETAIL[k] && SECTIONS_DETAIL[k].t) || k;
+      if ((o.status||'') !== (n.status||'')) changes.push({ field: `state.${k}.status`, label, old: o.status||'', new: n.status||'' });
+      if ((o.note||'') !== (n.note||'')) changes.push({ field: `state.${k}.note`, label, old: o.note||'', new: n.note||'' });
+      const oPhotos = (o.photos||[]).length, nPhotos = n.photos.length;
+      if (oPhotos !== nPhotos) changes.push({ field: `state.${k}.photos`, label, old: oPhotos+' صورة', new: nPhotos+' صورة' });
+    });
+
+    if (changes.length === 0) {
+      alert('لا توجد تعديلات لحفظها.');
+      btn.disabled = false; btn.textContent = '💾 حفظ التعديلات';
+      return;
+    }
+
+    await window._dbUpdate('sessions/'+key, { meta: newMeta, state: newState });
+
+    await window._dbPush('adminCorrections/'+key, {
+      adminEmail: window._adminEmail || 'admin@ras-health.gov.sa',
+      timestamp: new Date().toISOString(),
+      scoreBefore: orig.meta.score, scoreAfter: newMeta.score,
+      changes
+    });
+
+    window.allSessions[key] = { meta: newMeta, state: newState, lastUpdate: new Date().toISOString() };
+    if (window.renderDashboard) window.renderDashboard(window.allSessions);
+
+    window._editBuffer = null; window._editOriginal = null;
+    alert('✅ تم حفظ التعديلات بنجاح (' + changes.length + ' تغييراً) وتسجيلها في سجل التعديلات.');
+    openDetail(key);
+  } catch (err) {
+    console.error(err);
+    alert('❌ حدث خطأ أثناء الحفظ: ' + (err.message || err));
+    btn.disabled = false; btn.textContent = '💾 حفظ التعديلات';
+  }
+}
+
+// عرض سجل التعديلات (Audit Log) الخاص بجلسة معيّنة
+async function viewAuditLog(sessionKey) {
+  let html = `<div style="padding:20px;max-width:520px">
+    <h3 style="margin-bottom:14px;color:var(--gov-navy)">🕓 سجل تعديلات الأدمن</h3>
+    <div id="auditLogBody">⏳ جاري التحميل...</div>
+    <button class="edit-cancel-btn" style="margin-top:14px;width:100%" onclick="this.closest('.ov-audit').remove()">إغلاق</button>
+  </div>`;
+  const ov = document.createElement('div');
+  ov.className = 'ov-audit';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(13,33,55,.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = `<div style="background:#fff;border-radius:12px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">${html}</div>`;
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  document.body.appendChild(ov);
+
+  try {
+    const snap = await window._dbGet('adminCorrections/'+sessionKey);
+    const body = document.getElementById('auditLogBody');
+    if (!snap || !snap.exists || !snap.exists()) {
+      body.innerHTML = '<div style="color:var(--text-sub);font-size:12px">لا توجد تعديلات مسجّلة على هذه الجلسة بعد.</div>';
+      return;
+    }
+    const entries = Object.values(snap.val()).sort((a,b) => (b.timestamp||'').localeCompare(a.timestamp||''));
+    body.innerHTML = entries.map(entry => {
+      const dt = entry.timestamp ? new Date(entry.timestamp).toLocaleString('ar-SA') : '—';
+      const changesHtml = (entry.changes||[]).map(c =>
+        `<div class="audit-log-change">${c.label?escapeHtml(c.label)+' — ':''}<b>${escapeHtml(c.field)}</b>: "${escapeHtml(String(c.old))}" ← "${escapeHtml(String(c.new))}"</div>`
+      ).join('');
+      return `<div class="audit-log-item">
+        <div class="audit-log-hdr"><span>👤 ${escapeHtml(entry.adminEmail||'')}</span><span>${dt}</span></div>
+        ${entry.scoreBefore!=null?`<div style="font-size:11px;color:var(--text-sub);margin-bottom:6px">الدرجة: ${entry.scoreBefore}% ← ${entry.scoreAfter}%</div>`:''}
+        ${changesHtml}
+      </div>`;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    document.getElementById('auditLogBody').innerHTML = '<div style="color:var(--danger);font-size:12px">تعذّر تحميل السجل.</div>';
+  }
+}
 function deleteSession(key) {
   if (!confirm('هل تريد حذف هذه الجلسة نهائياً؟')) return;
   const pwd = prompt('🔒 أدخل كلمة مرور الحذف للتأكيد:');
