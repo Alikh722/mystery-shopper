@@ -3149,11 +3149,21 @@ async function saveEdits() {
 
   try {
     const newMeta = { ...buf.meta };
-    newMeta.inspector = document.getElementById('edm_inspector').value.trim();
-    newMeta.center    = document.getElementById('edm_center').value.trim();
+    // حماية: لا تسمح لأي من الحقول الإلزامية (inspector/center/date/uid) بالوصول فارغة لقاعدة البيانات
+    const vInspector = document.getElementById('edm_inspector').value.trim();
+    const vCenter    = document.getElementById('edm_center').value.trim();
+    const vDate      = document.getElementById('edm_date').value.trim();
+    if (!vInspector || !vCenter || !vDate) {
+      alert('⚠️ لا يمكن حفظ التعديلات: حقل "المشرف" أو "المركز" أو "التاريخ" فارغ. تأكد من تعبئتها جميعاً قبل الحفظ.');
+      throw new Error('حقل إلزامي فارغ');
+    }
+    newMeta.inspector = vInspector;
+    newMeta.center    = vCenter;
     newMeta.region    = document.getElementById('edm_region').value.trim();
-    newMeta.date      = document.getElementById('edm_date').value.trim();
+    newMeta.date      = vDate;
     newMeta.round     = document.getElementById('edm_round').value.trim();
+    if (!newMeta.uid) newMeta.uid = buf.meta.uid; // ضمان بقاء uid المفتش الأصلي دون تغيير
+
 
     const newState = {};
     Object.keys(buf.state).forEach(k => {
